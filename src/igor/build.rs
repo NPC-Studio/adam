@@ -7,8 +7,7 @@ pub struct BuildData {
     pub project_name: String,
     pub current_directory: PathBuf,
     pub user_dir: PathBuf,
-    pub user_name: String,
-    pub user_id: usize,
+    pub user_string: String,
     pub runtime_location: PathBuf,
     pub target_mask: usize,
     pub application_path: PathBuf,
@@ -16,7 +15,7 @@ pub struct BuildData {
 
 impl BuildData {
     #[allow(dead_code)]
-    pub fn output_build_bff(self) -> serde_json::Value {
+    pub fn output_build_bff(&self) -> serde_json::Value {
         let json_str = format!(
             r#"{{
     "targetFile": "",
@@ -34,7 +33,7 @@ impl BuildData {
     "projectPath": "{CURRENT_DIRECTORY}/{PROJECT_NAME}.yyp",
     "tempFolder": "{CACHE}",
     "tempFolderUnmapped": "{CACHE}",
-    "userDir": "{USER_DIR}/{USER_NAME}_{USER_ID}",
+    "userDir": "{USER_DIR}/{USER_STRING}",
     "runtimeLocation": "{RUNTIME_LOCATION}",
     "targetOptions": "{CACHE}/targetoptions.json",
     "targetMask": "{TARGET_MASK}",
@@ -54,8 +53,7 @@ impl BuildData {
             ),
             CURRENT_DIRECTORY = self.current_directory.display(),
             USER_DIR = self.user_dir.display(),
-            USER_NAME = self.user_name,
-            USER_ID = self.user_id,
+            USER_STRING = self.user_string,
             RUNTIME_LOCATION = self.runtime_location.display(),
             TARGET_MASK = self.target_mask,
             APPLICATION_PATH = self.application_path.display(),
@@ -65,9 +63,14 @@ impl BuildData {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 pub enum OutputKind {
+    #[serde(rename = "VM")]
     Vm,
+    #[allow(dead_code)]
+    #[serde(rename = "YYC")]
     Yyc,
 }
 
@@ -86,6 +89,7 @@ impl std::fmt::Display for OutputKind {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Platform {
     Windows,

@@ -1,58 +1,123 @@
-use std::env;
+use std::io::{BufRead, BufReader};
 
-mod gm;
 mod input;
+mod igor {
+    mod application_data;
+    pub use application_data::*;
 
-const OUTPUT_DIR: &str = "target";
+    mod build;
+    pub use build::*;
+
+    mod user_data;
+    pub use user_data::*;
+}
+
+mod gm_artifacts {
+    mod steam_options;
+    pub use steam_options::*;
+
+    mod macros;
+    pub use macros::*;
+
+    mod preferences;
+    pub use preferences::*;
+
+    mod target_options;
+    pub use target_options::*;
+}
+
+#[cfg(target_os = "macos")]
+const TARGET_MASK: usize = 2;
+
+#[cfg(target_os = "windows")]
+const TARGET_MASK: usize = 64;
 
 fn main() {
-    let user_directory = directories::UserDirs::new()
-        .unwrap()
-        .home_dir()
-        .join("AppData/Roaming/GameMakerStudio2");
+    let user_data = igor::UserData::new();
+    let application_data = igor::ApplicationData::new();
 
-    let current_directory = env::current_dir().expect("cannot work in current directory");
-
-    let um_json: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&user_directory.join("um.json")).unwrap())
-            .unwrap();
-
-    let user_id: usize = um_json
-        .get("userID")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .parse()
-        .unwrap();
-
-    let user_name = um_json
-        .get("username")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .split('@')
-        .next()
-        .unwrap()
-        .to_owned();
-
-    let build_bff = gm::BuildData {
-        output_folder: current_directory.join(OUTPUT_DIR),
-        output_kind: gm::OutputKind::Vm,
-        project_name: String::new(),
-        current_directory,
-        user_dir: user_directory,
-        user_name,
-        user_id,
+    let build_bff = igor::BuildData {
+        output_folder: application_data.output_folder,
+        output_kind: igor::OutputKind::Vm,
+        project_name: application_data.project_name,
+        current_directory: application_data.current_directory,
+        user_dir: user_data.user_dir,
+        user_string: user_data.user_string,
         runtime_location: std::path::Path::new(
-            "C:/ProgramData/GameMakerStudio2/Cache/runtimes/runtime-2.3.0.401",
+            "/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-2.3.0.401",
         )
         .to_owned(),
-        target_mask: 64,
+        target_mask: TARGET_MASK,
         application_path: std::path::Path::new(
-            "C:/Program Files/GameMaker Studio 2/GameMakerStudio.exe",
+            "/Applications/GameMaker Studio 2.app/Contents/MonoBundle/GameMaker Studio 2.exe",
         )
         .to_owned(),
     };
 
-    println!("{:#?}", build_bff);
+    // make our dir
+    let cache_folder = build_bff
+        .output_folder
+        .join(&format!("{}/cache", build_bff.output_kind));
+    std::fs::create_dir_all(&cache_folder).unwrap();
+
+    // write in the build.bff
+    std::fs::write(
+        cache_folder.join("build.bff"),
+        serde_json::to_string_pretty(&build_bff.output_build_bff()).unwrap(),
+    )
+    .unwrap();
+
+    // write in the preferences
+    std::fs::write(
+        cache_folder.join("preferences.json"),
+        serde_json::to_string_pretty(&gm_artifacts::GmPreferences::default()).unwrap(),
+    )
+    .unwrap();
+
+    // write in the targetoptions
+    std::fs::write(
+        cache_folder.join("targetoptions.json"),
+        serde_json::to_string_pretty(&gm_artifacts::GmTargetOptions {
+            runtime: build_bff.output_kind,
+        })
+        .unwrap(),
+    )
+    .unwrap();
+
+    // write in the steamoptions
+    std::fs::write(
+        cache_folder.join("steam_options.yy"),
+        serde_json::to_string_pretty(&gm_artifacts::GmSteamOptions::default()).unwrap(),
+    )
+    .unwrap();
+
+    // and the macros...
+    std::fs::write(
+        cache_folder.join("macros.json"),
+        serde_json::to_string_pretty(&gm_artifacts::build_macros(&build_bff)).unwrap(),
+    )
+    .unwrap();
+
+    let igor_output = std::process::Command::new(
+        "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono",
+    )
+    .arg("/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-2.3.0.401/bin/Igor.exe")
+    .arg("-j=8")
+    .arg(format!(
+        "-options={}",
+        cache_folder.join("build.bff").display()
+    ))
+    .arg("--")
+    .arg("Mac")
+    .arg("Run")
+    .stdout(std::process::Stdio::piped())
+    .spawn()
+    .unwrap();
+
+    let reader = BufReader::new(igor_output.stdout.unwrap());
+
+    reader
+        .lines()
+        .filter_map(|line| line.ok())
+        .for_each(|line| println!("{}", line));
 }

@@ -24,13 +24,10 @@ mod gm_artifacts {
 
     mod target_options;
     pub use target_options::*;
+
+    mod platform;
+    pub use platform::*;
 }
-
-#[cfg(target_os = "macos")]
-const TARGET_MASK: usize = 2;
-
-#[cfg(target_os = "windows")]
-const TARGET_MASK: usize = 64;
 
 fn main() {
     let user_data = igor::UserData::new();
@@ -43,15 +40,9 @@ fn main() {
         current_directory: application_data.current_directory,
         user_dir: user_data.user_dir,
         user_string: user_data.user_string,
-        runtime_location: std::path::Path::new(
-            "/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-2.3.0.401",
-        )
-        .to_owned(),
-        target_mask: TARGET_MASK,
-        application_path: std::path::Path::new(
-            "/Applications/GameMaker Studio 2.app/Contents/MonoBundle/GameMaker Studio 2.exe",
-        )
-        .to_owned(),
+        runtime_location: std::path::Path::new(gm_artifacts::RUNTIME_LOCATION).to_owned(),
+        target_mask: gm_artifacts::TARGET_MASK,
+        application_path: std::path::Path::new(gm_artifacts::APPLICATION_PATH).to_owned(),
     };
 
     // make our dir
@@ -98,21 +89,19 @@ fn main() {
     )
     .unwrap();
 
-    let igor_output = std::process::Command::new(
-        "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono",
-    )
-    .arg("/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-2.3.0.401/bin/Igor.exe")
-    .arg("-j=8")
-    .arg(format!(
-        "-options={}",
-        cache_folder.join("build.bff").display()
-    ))
-    .arg("--")
-    .arg("Mac")
-    .arg("Run")
-    .stdout(std::process::Stdio::piped())
-    .spawn()
-    .unwrap();
+    let igor_output = std::process::Command::new(gm_artifacts::RUNNER)
+        .arg(gm_artifacts::IGOR)
+        .arg("-j=8")
+        .arg(format!(
+            "-options={}",
+            cache_folder.join("build.bff").display()
+        ))
+        .arg("--")
+        .arg("Mac")
+        .arg("Run")
+        .stdout(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
 
     let reader = BufReader::new(igor_output.stdout.unwrap());
 

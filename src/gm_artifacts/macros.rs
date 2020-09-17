@@ -1,11 +1,47 @@
 use crate::igor::BuildData;
 
+/*
+{
+    // annoying bullshit
+    "Fonts": "C:\\Windows\\Fonts",
+    "Templates": "C:\\Users\\jjspi\\AppData\\Roaming\\Microsoft\\Windows\\Templates",
+    "ApplicationData": "C:\\Users\\jjspi\\AppData\\Roaming",
+    "LocalApplicationData": "C:\\Users\\jjspi\\AppData\\Local",
+    "CommonApplicationData": "C:\\ProgramData",
+    "Windows": "C:\\Windows",
+    "System": "C:\\Windows\\system32",
+    "ProgramFiles": "C:\\Program Files",
+    "SystemX86": "C:\\Windows\\SysWOW64",
+    "ProgramFilesX86": "C:\\Program Files (x86)",
+    "CommonProgramFiles": "C:\\Program Files\\Common Files",
+    "CommonProgramFilesX86": "C:\\Program Files (x86)\\Common Files",
+    "CommonTemplates": "C:\\ProgramData\\Microsoft\\Windows\\Templates",
+
+    // that TOASTY shit
+    "TempPath": "C:\\Users\\jjspi\\AppData\\Local",
+    "exe_path": "C:\\Program Files\\GameMaker Studio 2",
+    "updateURI": "https://gms.yoyogames.com/update-win.rss",
+
+    "licenses_path": "${exe_path}/Licenses",
+
+    // no exe on macros
+    "java_exe_path": "bin/java.exe",
+    "adb_exe_path": "platform-tools/adb.exe",
+    "keytool_exe_path": "bin/keytool.exe",
+    "openssl_exe_path": "bin/openssl.exe",
+
+    "skin_path": "C:\\Program Files\\GameMaker Studio 2\\GUI\\Skins",
+    "default_skin": "C:\\Program Files\\GameMaker Studio 2\\GUI\\Skins\\Dark",
+    "local_directory": "${ApplicationData}/${program_dir_name}",
+    "ide_cache_directory": "C:\\Users\\jjspi\\AppData\\Roaming\\GameMakerStudio2\\Cache\\GMS2IDE",
+*/
+
 pub fn build_macros(build_data: &BuildData) -> serde_json::Value {
     let macros_files = format!(
         r#"{{
     "Desktop": "{USER_DIR}/Desktop",
     "Programs": "",
-    "MyDocuments": "{USER_DIR}",
+    "MyDocuments": "{USER_DIR}/Documents",
     "Favorites": "{USER_DIR}/Library/Favorites",
     "Startup": "",
     "Recent": "",

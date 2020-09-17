@@ -27,17 +27,20 @@ mod gm_artifacts {
 
     mod platform;
     pub use platform::*;
+
+    mod build;
+    pub use build::*;
 }
 
 fn main() {
     let user_data = igor::UserData::new();
     let application_data = igor::ApplicationData::new();
 
-    let build_bff = igor::BuildData {
+    let build_data = igor::BuildData {
         output_folder: application_data.output_folder,
         output_kind: igor::OutputKind::Vm,
         project_name: application_data.project_name,
-        current_directory: application_data.current_directory,
+        project_directory: application_data.current_directory,
         user_dir: user_data.user_dir,
         user_string: user_data.user_string,
         runtime_location: std::path::Path::new(gm_artifacts::RUNTIME_LOCATION).to_owned(),
@@ -46,30 +49,33 @@ fn main() {
     };
 
     // make our dir
-    let cache_folder = build_bff
+    let cache_folder = build_data
         .output_folder
-        .join(&format!("{}/cache", build_bff.output_kind));
+        .join(&format!("{}/cache", build_data.output_kind));
     std::fs::create_dir_all(&cache_folder).unwrap();
+
+    let gm_build = gm_artifacts::GmBuild::new(&build_data);
+    let build_location = cache_folder.join("build.bff");
 
     // write in the build.bff
     std::fs::write(
-        cache_folder.join("build.bff"),
-        serde_json::to_string_pretty(&build_bff.output_build_bff()).unwrap(),
+        &build_location,
+        serde_json::to_string_pretty(&gm_build).unwrap(),
     )
     .unwrap();
 
     // write in the preferences
     std::fs::write(
-        cache_folder.join("preferences.json"),
+        &gm_build.preferences,
         serde_json::to_string_pretty(&gm_artifacts::GmPreferences::default()).unwrap(),
     )
     .unwrap();
 
     // write in the targetoptions
     std::fs::write(
-        cache_folder.join("targetoptions.json"),
+        &gm_build.target_options,
         serde_json::to_string_pretty(&gm_artifacts::GmTargetOptions {
-            runtime: build_bff.output_kind,
+            runtime: build_data.output_kind,
         })
         .unwrap(),
     )
@@ -77,27 +83,31 @@ fn main() {
 
     // write in the steamoptions
     std::fs::write(
-        cache_folder.join("steam_options.yy"),
+        &gm_build.steam_options,
         serde_json::to_string_pretty(&gm_artifacts::GmSteamOptions::default()).unwrap(),
     )
     .unwrap();
 
     // and the macros...
+    let macros = gm_artifacts::GmMacros::new(&build_data);
+
     std::fs::write(
-        cache_folder.join("macros.json"),
-        serde_json::to_string_pretty(&gm_artifacts::build_macros(&build_bff)).unwrap(),
+        &gm_build.macros,
+        serde_json::to_string_pretty(&macros).unwrap(),
     )
     .unwrap();
 
+    println!("{}", gm_artifacts::RUNNER);
+    println!("{}", macros.igor_path.display());
+    println!("{}", build_location.display());
+    println!("{}", gm_artifacts::PLATFORM.to_string());
+
     let igor_output = std::process::Command::new(gm_artifacts::RUNNER)
-        .arg(gm_artifacts::IGOR)
+        .arg(macros.igor_path)
         .arg("-j=8")
-        .arg(format!(
-            "-options={}",
-            cache_folder.join("build.bff").display()
-        ))
+        .arg(format!("-options={}", build_location.display()))
         .arg("--")
-        .arg("Mac")
+        .arg(gm_artifacts::PLATFORM.to_string())
         .arg("Run")
         .stdout(std::process::Stdio::piped())
         .spawn()

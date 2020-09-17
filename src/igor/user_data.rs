@@ -8,10 +8,7 @@ pub struct UserData {
 
 impl UserData {
     pub fn new() -> Self {
-        let user_directory = directories::UserDirs::new()
-            .unwrap()
-            .home_dir()
-            .join(".config/GameMakerStudio2");
+        let user_directory = crate::gm_artifacts::user_directory();
 
         let um_json: serde_json::Value = serde_json::from_str(
             &std::fs::read_to_string(&user_directory.join("um.json")).unwrap(),

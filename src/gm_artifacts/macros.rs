@@ -224,6 +224,7 @@ impl GmMacros {
             project_name,
             target_mask: _,
             user_string: _,
+            config: _,
         } = build_data;
 
         let build_dir = out.join(output_kind.to_string());

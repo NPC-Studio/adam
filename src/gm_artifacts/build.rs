@@ -63,6 +63,7 @@ impl GmBuild {
             target_mask: build_data.target_mask.to_string(),
             application_path: build_data.application_path.clone(),
             output_folder: build,
+            config: build_data.config.clone(),
 
             ..Default::default()
         }
@@ -100,43 +101,3 @@ impl Default for GmBuild {
         }
     }
 }
-
-/*
-    pub fn output_build_bff(&self) -> serde_json::Value {
-        let json_str = format!(
-            r#"{{
-    "compile_output_file_name": "{OUTPUT_FOLDER}/{OUTPUT_KIND}/{PROJECT_NAME}.win",
-    "steamOptions": "{CACHE}/steam_options.yy",
-    "outputFolder": "{OUTPUT_FOLDER}/{OUTPUT_KIND}",
-    "projectName": "{PROJECT_NAME}",
-    "macros": "{CACHE}/macros.json",
-    "projectDir": "{CURRENT_DIRECTORY}",
-    "preferences": "{CACHE}/preferences.json",
-    "projectPath": "{CURRENT_DIRECTORY}/{PROJECT_NAME}.yyp",
-    "tempFolder": "{CACHE}",
-    "tempFolderUnmapped": "{CACHE}",
-    "userDir": "{USER_DIR}/{USER_STRING}",
-    "runtimeLocation": "{RUNTIME_LOCATION}",
-    "targetOptions": "{CACHE}/targetoptions.json",
-    "targetMask": "{TARGET_MASK}",
-    "applicationPath": "{APPLICATION_PATH}",
-}}"#,
-            OUTPUT_FOLDER = self.output_folder.display(),
-            OUTPUT_KIND = self.output_kind,
-            PROJECT_NAME = self.project_name,
-            CACHE = format!(
-                "{}/{}/cache",
-                self.output_folder.display(),
-                self.output_kind
-            ),
-            CURRENT_DIRECTORY = self.project_directory.display(),
-            USER_DIR = self.user_dir.display(),
-            USER_STRING = self.user_string,
-            RUNTIME_LOCATION = self.runtime_location.display(),
-            TARGET_MASK = self.target_mask,
-            APPLICATION_PATH = self.application_path.display(),
-        );
-
-        serde_json::from_str(&json_str).unwrap()
-    }
-*/

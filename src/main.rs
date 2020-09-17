@@ -1,4 +1,6 @@
+use console::style;
 use std::io::{BufRead, BufReader};
+use std::time;
 
 mod input;
 mod igor {
@@ -33,6 +35,8 @@ mod gm_artifacts {
 }
 
 fn main() {
+    let start_time = time::Instant::now();
+
     let user_data = igor::UserData::new();
     let application_data = igor::ApplicationData::new();
 
@@ -46,6 +50,7 @@ fn main() {
         runtime_location: std::path::Path::new(gm_artifacts::RUNTIME_LOCATION).to_owned(),
         target_mask: gm_artifacts::TARGET_MASK,
         application_path: std::path::Path::new(gm_artifacts::APPLICATION_PATH).to_owned(),
+        config: "debug".to_string(),
     };
 
     // make our dir
@@ -97,11 +102,6 @@ fn main() {
     )
     .unwrap();
 
-    println!("{}", gm_artifacts::RUNNER);
-    println!("{}", macros.igor_path.display());
-    println!("{}", build_location.display());
-    println!("{}", gm_artifacts::PLATFORM.to_string());
-
     let igor_output = std::process::Command::new(format!("{}", macros.igor_path.display()))
         .arg("-j=8")
         .arg(format!("-options={}", build_location.display()))
@@ -114,8 +114,23 @@ fn main() {
 
     let reader = BufReader::new(igor_output.stdout.unwrap());
 
-    reader
-        .lines()
-        .filter_map(|line| line.ok())
-        .for_each(|line| println!("{}", line));
+    for line in reader.lines() {
+        if let Ok(l) = line {
+            if l.contains("WARN") {
+                println!("{}", style(&l).yellow());
+            } else if l.contains("INFO") {
+                println!("{}", style(&l).green());
+            } else if l.contains("ERROR") {
+                println!("{}", style(&l).red());
+            } else {
+                println!("{}", l);
+            }
+
+            if l == "Entering main loop." {
+                let loop_start = time::Instant::now();
+                let diff: time::Duration = loop_start - start_time;
+                println!("End to End compile time was {:?}", diff);
+            }
+        }
+    }
 }

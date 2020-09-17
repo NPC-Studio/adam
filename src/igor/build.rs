@@ -12,6 +12,7 @@ pub struct BuildData {
     pub runtime_location: PathBuf,
     pub target_mask: usize,
     pub application_path: PathBuf,
+    pub config: String,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

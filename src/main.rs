@@ -102,8 +102,7 @@ fn main() {
     println!("{}", build_location.display());
     println!("{}", gm_artifacts::PLATFORM.to_string());
 
-    let igor_output = std::process::Command::new(gm_artifacts::RUNNER)
-        .arg(format!("{}", macros.igor_path.display()))
+    let igor_output = std::process::Command::new(format!("{}", macros.igor_path.display()))
         .arg("-j=8")
         .arg(format!("-options={}", build_location.display()))
         .arg("--")

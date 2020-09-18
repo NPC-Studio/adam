@@ -15,7 +15,7 @@ pub fn run_command(
     sub_command: &str,
     build_kind: &str,
 ) {
-    let mut reader = invoke(&macros.igor_path, build_bff, sub_command);
+    let mut reader = invoke(&macros, build_bff, sub_command);
     if verbose {
         for line in reader {
             if let Ok(l) = line {
@@ -43,8 +43,32 @@ pub fn run_command(
 }
 
 #[cfg(target_os = "windows")]
-fn invoke(igor_path: &Path, build_bff: &Path, sub_command: &str) -> Lines<BufReader<ChildStdout>> {
-    let igor_output = std::process::Command::new(igor_path)
+fn invoke(
+    macros: &gm_artifacts::GmMacros,
+    build_bff: &Path,
+    sub_command: &str,
+) -> Lines<BufReader<ChildStdout>> {
+    let igor_output = std::process::Command::new(macros.igor_path)
+        .arg("-j=8")
+        .arg(format!("-options={}", build_bff.display()))
+        .arg("--")
+        .arg(gm_artifacts::PLATFORM.to_string())
+        .arg(sub_command)
+        .stdout(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    BufReader::new(igor_output.stdout.unwrap()).lines()
+}
+
+#[cfg(not(target_os = "windows"))]
+fn invoke(
+    macros: &gm_artifacts::GmMacros,
+    build_bff: &Path,
+    sub_command: &str,
+) -> Lines<BufReader<ChildStdout>> {
+    let igor_output = std::process::Command::new(gm_artifacts::MONO_LOCATION)
+        .arg(macros.igor_path.clone())
         .arg("-j=8")
         .arg(format!("-options={}", build_bff.display()))
         .arg("--")
@@ -63,13 +87,13 @@ fn run_initial(
     platform: &str,
     build_kind: &str,
 ) -> bool {
-    const RUN_INDICATOR: &str = "[Run]";
-    const FINAL_EMITS: [&str; 4] = [
-        "MainOptions.json",
-        "Attempting to set gamepadcount",
-        "hardware device",
-        "Collision Event time",
-    ];
+    // const RUN_INDICATOR: &str = "[Run]";
+    // const FINAL_EMITS: [&str; 4] = [
+    //     "MainOptions.json",
+    //     "Attempting to set gamepadcount",
+    //     "hardware device",
+    //     "Collision Event time",
+    // ];
 
     let progress_bar = ProgressBar::new(1000);
     progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
@@ -79,7 +103,7 @@ fn run_initial(
             .progress_chars("#> "),
     );
     progress_bar.println(format!(
-        "compiling {} on {} {}",
+        "compiling {} [{} {}]",
         project_name.to_title_case(),
         platform,
         build_kind
@@ -87,14 +111,13 @@ fn run_initial(
 
     for line in lines {
         if let Ok(l) = line {
-            if l.contains("Error") {
+            if l.contains("Error: ") {
                 progress_bar.finish_with_message(l.trim());
                 return false;
             }
 
             progress_bar.inc(10);
             let message = l.trim();
-            
 
             if message.is_empty() == false {
                 let max_size = message.len().min(30);
@@ -108,8 +131,6 @@ fn run_initial(
             }
         }
     }
-
-    println!("done with that shit");
 
     true
 }

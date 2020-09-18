@@ -213,6 +213,40 @@ impl GmMacros {
         }
     }
 
+    #[cfg(not(target_os = "windows"))]
+    pub fn new(build_data: &BuildData) -> Self {
+        let application_data = build_data.user_dir.join(".config");
+        let common_app_data = path!("/User/Shared");
+        let system_directory = common_app_data.join("GameMakerStudio2");
+
+        Self {
+            favorites: build_data.user_dir.join("Library/Favorites"),
+            fonts: build_data.user_dir.join("Library/Fonts"),
+            templates: build_data.user_dir.join("Templates"),
+            application_data: application_data.clone(),
+            local_application_data: build_data.user_dir.join(".local/share"),
+            internet_cache: build_data.user_dir.join("Library/Caches"),
+            common_application_data: common_app_data,
+            program_files: path!("/Applications"),
+            common_templates: path!("/usr/share/templates"),
+            temp_path: build_data
+                .user_dir
+                .join("/var/folders/v_/r1l809l94_vbd75s98fbd6rr0000gn"),
+            update_uri: "https://gms.yoyogames.com/update-mac.rss".to_owned(),
+            java_exe_path: path!("bin/java"),
+            adb_exe_path: path!("platform-tools/adb"),
+            keytool_exe_path: path!("bin/keytool"),
+            openssl_exe_path: path!("bin/openssl"),
+            user_skin_path: system_directory.join("Skins"),
+            user_override_directory: system_directory.join("User"),
+            system_directory: system_directory.clone(),
+            system_cache_directory: system_directory.join("Cache"),
+            local_directory: application_data.join("GameMakerStudio2"),
+            local_cache_directory: application_data.join("GameMakerStudio2/Cache"),
+            ide_cache_directory: application_data.join("GameMakerStudio2/Cache/GMS2IDE"),
+            ..Self::create_internal(build_data)
+        }
+    }
     fn create_internal(build_data: &BuildData) -> Self {
         let BuildData {
             application_path: app_path,

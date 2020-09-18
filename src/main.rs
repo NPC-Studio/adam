@@ -102,7 +102,7 @@ fn main() {
     runner::run_command(
         &build_location,
         macros,
-        true,
+        false,
         "Run",
         &igor::OutputKind::Vm.to_string(),
     );

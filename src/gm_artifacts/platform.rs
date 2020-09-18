@@ -7,7 +7,7 @@ mod macos {
     pub const TARGET_MASK: usize = 2;
     pub const APPLICATION_PATH: &str =
         "/Applications/GameMaker Studio 2.app/Contents/MonoBundle/GameMaker Studio 2.exe";
-    pub const RUNNER: &str = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";
+    pub const MONO_LOCATION: &str = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";
     pub const PLATFORM: super::Platform = super::Platform::Darwin;
 
     pub fn user_directory() -> std::path::PathBuf {

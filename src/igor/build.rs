@@ -49,8 +49,8 @@ pub enum Platform {
 impl std::fmt::Display for Platform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Platform::Windows => write!(f, "Windows"),
-            Platform::Darwin => write!(f, "Mac"),
+            Platform::Windows => write!(f, "windows"),
+            Platform::Darwin => write!(f, "mac"),
         }
     }
 }

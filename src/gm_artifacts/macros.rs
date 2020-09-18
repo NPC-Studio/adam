@@ -164,7 +164,7 @@ pub struct GmMacros {
     user_cache_directory: PathBuf,
     project_full_filename: PathBuf,
     project_dir: PathBuf,
-    project_name: String,
+    pub project_name: String,
     project_cache_directory_name: String,
     options_dir: PathBuf,
 }

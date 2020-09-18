@@ -1,6 +1,4 @@
-use console::style;
-use std::io::{BufRead, BufReader};
-use std::time;
+#![allow(clippy::bool_comparison)]
 
 mod input;
 mod igor {
@@ -33,10 +31,9 @@ mod gm_artifacts {
     mod build;
     pub use build::*;
 }
+mod runner;
 
 fn main() {
-    let start_time = time::Instant::now();
-
     let user_data = igor::UserData::new();
     let application_data = igor::ApplicationData::new();
 
@@ -102,35 +99,11 @@ fn main() {
     )
     .unwrap();
 
-    let igor_output = std::process::Command::new(format!("{}", macros.igor_path.display()))
-        .arg("-j=8")
-        .arg(format!("-options={}", build_location.display()))
-        .arg("--")
-        .arg(gm_artifacts::PLATFORM.to_string())
-        .arg("Run")
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .unwrap();
-
-    let reader = BufReader::new(igor_output.stdout.unwrap());
-
-    for line in reader.lines() {
-        if let Ok(l) = line {
-            if l.contains("WARN") {
-                println!("{}", style(&l).yellow());
-            } else if l.contains("INFO") {
-                println!("{}", style(&l).green());
-            } else if l.contains("ERROR") {
-                println!("{}", style(&l).red());
-            } else {
-                println!("{}", l);
-            }
-
-            if l == "Entering main loop." {
-                let loop_start = time::Instant::now();
-                let diff: time::Duration = loop_start - start_time;
-                println!("End to End compile time was {:?}", diff);
-            }
-        }
-    }
+    runner::run_command(
+        &build_location,
+        macros,
+        true,
+        "Run",
+        &igor::OutputKind::Vm.to_string(),
+    );
 }

@@ -1,12 +1,9 @@
 use std::{env, path::PathBuf};
 
-const OUTPUT_DIR: &str = "target";
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct ApplicationData {
     pub current_directory: PathBuf,
     pub project_name: String,
-    pub output_folder: PathBuf,
 }
 
 impl ApplicationData {
@@ -70,7 +67,6 @@ impl ApplicationData {
 
         if let Some(project_name) = project_name {
             Ok(Self {
-                output_folder: current_directory.join(OUTPUT_DIR),
                 current_directory,
                 project_name,
             })

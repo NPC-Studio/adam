@@ -14,7 +14,7 @@ impl From<Input> for RunCommand {
         match o {
             Input::Run(b) => RunCommand(RunKind::Run, b),
             Input::Release(b) => RunCommand(RunKind::Release, b),
-            Input::Clean => unimplemented!(),
+            Input::Clean(_, _) => unimplemented!(),
         }
     }
 }

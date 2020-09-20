@@ -16,12 +16,8 @@ pub struct ConfigFile {
     /// >3 enables all verbosity
     pub verbosity: Option<usize>,
 
-    /// the path to the visual studio .bat file needed to compile with the yyc.
-    /// by default, this will point to "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/vcvars32.bat"
-    /// on Windows.
-    /// Generally, this should be filled in within the Gms2 IDE, not here in the config file, since it is specific
-    /// to each machine.
-    pub visual_studio_path: Option<std::path::PathBuf>,
+    /// The output folder, relative to the current working directory. Defaults to `target`
+    pub output_folder: Option<std::path::PathBuf>,
 }
 
 impl From<ConfigFile> for RunOptions {
@@ -31,7 +27,7 @@ impl From<ConfigFile> for RunOptions {
             config: o.configuration,
             yyp: o.yyp,
             verbosity: o.verbosity.unwrap_or_default(),
-            visual_studio_path: o.visual_studio_path,
+            output_folder: o.output_folder,
         }
     }
 }

@@ -21,10 +21,10 @@ pub enum ClapOperation {
     Release(RunOptions),
 
     /// Cleans a project target directory.
-    Clean,
+    Clean(CleanOptions),
 }
 
-#[derive(Clap, Debug)]
+#[derive(Clap, Debug, PartialEq, Eq, Clone, Default)]
 pub struct RunOptions {
     /// Uses the YYC instead of the default VM.
     #[clap(long, short)]
@@ -38,11 +38,18 @@ pub struct RunOptions {
     #[clap(long)]
     pub yyp: Option<String>,
 
-    /// Verbosity level. Can use multiple times. >0 disables pretty compiles, >1 enables igor verbosity, >2 enables gmac verbosity
+    /// Verbosity level. Can use multiple times, like '-vv'. >0 disables pretty compiles, >1 enables igor verbosity, >2 enables gmac verbosity
     #[clap(short, long, parse(from_occurrences))]
     pub verbosity: usize,
 
-    /// The path to the visual studio .bat file needed to use the yyp.
-    #[clap(long)]
-    pub visual_studio_path: Option<std::path::PathBuf>,
+    /// The name of the output folder to build to. Defaults to `target`. Relative to the directory
+    #[clap(short, long)]
+    pub output_folder: Option<std::path::PathBuf>,
+}
+
+#[derive(Clap, Debug)]
+pub struct CleanOptions {
+    /// The name of the output folder to build to. Defaults to `target`. Relative to the directory
+    #[clap(short, long)]
+    pub output_folder: Option<std::path::PathBuf>,
 }

@@ -10,14 +10,14 @@ pub enum Input {
     Release(RunData),
 
     /// Cleans a project target directory.
-    Clean,
+    Clean(std::path::PathBuf, RunOptions),
 }
 
 impl Input {
     pub fn yyp_name(&self) -> &Option<String> {
         match self {
             Input::Run(b) | Input::Release(b) => &b.yyp_name,
-            Input::Clean => &None,
+            Input::Clean(_, o) => &o.yyp,
         }
     }
 }
@@ -28,7 +28,7 @@ pub struct RunData {
     pub config: String,
     pub yyp_name: Option<String>,
     pub verbosity: usize,
-    pub visual_studio_path: Option<std::path::PathBuf>,
+    pub output_folder: std::path::PathBuf,
 }
 
 impl RunData {
@@ -36,9 +36,9 @@ impl RunData {
         let RunOptions {
             config,
             verbosity,
-            visual_studio_path,
             yyc,
             yyp,
+            output_folder,
         } = b;
 
         Self {
@@ -46,7 +46,8 @@ impl RunData {
             config: config.unwrap_or_else(|| "Default".to_string()),
             yyp_name: yyp,
             verbosity,
-            visual_studio_path,
+            output_folder: output_folder
+                .unwrap_or_else(|| std::path::Path::new("target").to_owned()),
         }
     }
 }
@@ -57,36 +58,43 @@ pub fn get_input() -> Input {
         .into();
     let mut value: super::cli::InputOpts = super::cli::InputOpts::parse();
 
-    match &mut value.subcmd {
-        ClapOperation::Run(b) | ClapOperation::Release(b) => {
-            let RunOptions {
-                config,
-                verbosity,
-                yyc,
-                yyp,
-                visual_studio_path,
-            } = b;
+    let b = match &mut value.subcmd {
+        ClapOperation::Run(b) | ClapOperation::Release(b) => b.clone(),
+        ClapOperation::Clean(_) => Default::default(),
+    };
 
-            if let Some(cfg) = config.take() {
-                config_file.config = Some(cfg);
-            }
-            if let Some(cfg) = yyp.take() {
-                config_file.yyp = Some(cfg);
-            }
-            if let Some(vsp) = visual_studio_path.take() {
-                config_file.visual_studio_path = Some(vsp);
-            }
-            config_file.verbosity = *verbosity;
-            config_file.yyc = *yyc;
+    let RunOptions {
+        config,
+        verbosity,
+        yyc,
+        yyp,
+        output_folder,
+    } = b;
 
-            *b = config_file;
-        }
-        ClapOperation::Clean => {}
+    if let Some(cfg) = config {
+        config_file.config = Some(cfg);
     }
+    if let Some(cfg) = yyp {
+        config_file.yyp = Some(cfg);
+    }
+    if let Some(of) = output_folder {
+        config_file.output_folder = Some(of);
+    }
+    config_file.verbosity = verbosity;
+    config_file.yyc = yyc;
 
     match value.subcmd {
-        ClapOperation::Run(b) => Input::Run(RunData::new(b)),
-        ClapOperation::Release(b) => Input::Release(RunData::new(b)),
-        ClapOperation::Clean => Input::Clean,
+        ClapOperation::Run(_) => Input::Run(RunData::new(config_file)),
+        ClapOperation::Release(_) => Input::Release(RunData::new(config_file)),
+        ClapOperation::Clean(v) => {
+            if let Some(passed_in) = v.output_folder {
+                config_file.output_folder = Some(passed_in);
+            }
+
+            Input::Clean(
+                config_file.output_folder.clone().unwrap_or_else(|| "target".into()),
+                config_file,
+            )
+        }
     }
 }

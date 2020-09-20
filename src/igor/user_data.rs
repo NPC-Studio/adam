@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 pub struct UserData {
     pub user_dir: PathBuf,
     pub user_string: String,
-    pub visual_studio_path: Option<PathBuf>,
+    pub visual_studio_path: PathBuf,
 }
 
 impl UserData {
@@ -36,7 +36,10 @@ impl UserData {
                 let v = v.as_str().unwrap();
                 Path::new(v).to_owned()
             })
-            .filter(|p| p.exists());
+            .unwrap_or_else(|| {
+                Path::new("C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/vcvars32.bat")
+                    .to_owned()
+            });
 
         Ok(Self {
             user_dir: user_directory,

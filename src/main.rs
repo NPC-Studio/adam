@@ -54,7 +54,7 @@ fn main() {
             return;
         }
     };
-    let mut user_data = match igor::UserData::new() {
+    let user_data = match igor::UserData::new() {
         Ok(v) => v,
         Err(e) => {
             println!(
@@ -69,11 +69,16 @@ fn main() {
     // handle a clean, extract the build_data
     let run_data = match &options {
         Input::Run(b) | Input::Release(b) => b,
-        Input::Clean => {
-            match std::fs::remove_dir_all(application_data.output_folder) {
+        Input::Clean(v, _) => {
+            match std::fs::remove_dir_all(application_data.current_directory.join(v)) {
                 Ok(()) => {}
                 Err(e) => {
-                    println!("{}: {}", console::style("error").bright().red(), e);
+                    println!(
+                        "{} on clean {}: {}",
+                        console::style("error").bright().red(),
+                        application_data.current_directory.join(v).display(),
+                        e
+                    );
                 }
             }
             return;
@@ -81,34 +86,23 @@ fn main() {
     };
 
     // check if we have a valid yyc bat
-    if run_data.yyc {
-        if let Some(data) = run_data.visual_studio_path.clone() {
-            if data.exists() {
-                println!("{:?}", data);
-                user_data.visual_studio_path = Some(data);
-            }
-        }
-
-        if user_data.visual_studio_path.is_none() {
-            println!(
-            "{}: no valid path to visual studio .bat build file. to use \
-        yyc, we must have a visual studio .bat file.\n\
-        To specify path, do one of the following:\n\
-        \tAdd it in the Gms2 IDE\n\
-        \tSpecify it in a .adam config file with `visual_studio_path` as a key\n\
-        \tPass it in as a flag with --visual_studio_path\n\
-        The best option is to set it in the IDE directly, since this \
-        path is local and, therefore, not Git safe.\n\
+    if run_data.yyc && user_data.visual_studio_path.exists() == false {
+        println!(
+            "{}: no valid path to visual studio .bat build file. Supplied path in preferences was\n\
+        \"{}\", but it did not exist. \n\
+        To use yyc, we must have a visual studio .bat file.\n\
+        Please specify a path in the Gms2 IDE. \n\
         For more information, see https://help.yoyogames.com/hc/en-us/articles/227860547-GMS2-Required-SDKs",
-            console::style("error").bright().red(),
+            console::style("error").bright().red(), user_data.visual_studio_path.display(),
         );
 
-            return;
-        }
+        return;
     }
 
     let build_data = igor::BuildData {
-        output_folder: application_data.output_folder,
+        output_folder: application_data
+            .current_directory
+            .join(&run_data.output_folder),
         output_kind: if run_data.yyc {
             igor::OutputKind::Yyc
         } else {
@@ -142,7 +136,7 @@ fn main() {
 
     // write in the preferences
     let preferences = if run_data.yyc {
-        gm_artifacts::GmPreferences::new(user_data.visual_studio_path.unwrap())
+        gm_artifacts::GmPreferences::new(user_data.visual_studio_path)
     } else {
         gm_artifacts::GmPreferences::default()
     };

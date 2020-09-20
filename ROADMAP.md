@@ -14,10 +14,10 @@
 - [ ] Mac Checkup
   - [ ] Basic compile
   - [ ] Yyc
-- [-] Check Config is working
-  - [ ] visual_studio_path needs to be added
-  - [ ] rename `target` to `yyp`
-  - [ ] add `output_folder` option.
+- [x] Check Config is working
+  - [x] visual_studio_path needs to be added (committed and reverted -- cannot be implemented now)
+  - [x] rename `target` to `yyp`
+  - [x] add `output_folder_name` option.
 - [ ] Clean up intermediary files
 - [ ] Release
   - [ ] Configure better, more beautiful output

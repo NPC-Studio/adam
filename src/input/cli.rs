@@ -17,9 +17,6 @@ pub enum ClapOperation {
     /// Compiles and then runs a project.
     Run(RunOptions),
 
-    /// Compiles a project without running it.
-    Build(RunOptions),
-
     /// Creates a release executable, running `clean` first.
     Release(RunOptions),
 

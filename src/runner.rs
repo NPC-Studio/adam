@@ -1,4 +1,4 @@
-use crate::{gm_artifacts, input::Input};
+use crate::{gm_artifacts, input::Input, input::RunData};
 use heck::TitleCase;
 use indicatif::ProgressBar;
 use std::{
@@ -8,14 +8,41 @@ use std::{
     process::ChildStdout,
 };
 
+pub struct RunCommand(RunKind, RunData);
+impl From<Input> for RunCommand {
+    fn from(o: Input) -> Self {
+        match o {
+            Input::Run(b) => RunCommand(RunKind::Run, b),
+            Input::Release(b) => RunCommand(RunKind::Release, b),
+            Input::Clean => unimplemented!(),
+        }
+    }
+}
+
+impl std::fmt::Display for RunCommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let word = match self.0 {
+            RunKind::Run => "compile",
+            RunKind::Release => "release",
+        };
+
+        write!(f, "{} {}", if self.1.yyc { "yyc" } else { "vm" }, word)
+    }
+}
+#[derive(Debug, PartialEq, Eq)]
+pub enum RunKind {
+    Run,
+    Release,
+}
+
 pub fn run_command(
     build_bff: &Path,
     macros: gm_artifacts::GmMacros,
-    verbose: usize,
-    sub_command: Input,
+    sub_command: impl Into<RunCommand>,
 ) {
-    let mut reader = invoke(&macros, build_bff, sub_command);
-    if verbose > 0 {
+    let sub_command: RunCommand = sub_command.into();
+    let mut reader = invoke(&macros, build_bff, &sub_command);
+    if sub_command.1.verbosity > 0 {
         for line in reader {
             if let Ok(l) = line {
                 println!("{}", l.trim());
@@ -26,8 +53,7 @@ pub fn run_command(
             &mut reader,
             &macros.project_name,
             &macros.project_full_filename,
-            &gm_artifacts::PLATFORM.to_string(),
-            build_kind,
+            sub_command,
         );
 
         if let Some(success) = output {
@@ -50,17 +76,26 @@ pub fn run_command(
 fn invoke(
     macros: &gm_artifacts::GmMacros,
     build_bff: &Path,
-    sub_command: &str,
+    sub_command: &RunCommand,
 ) -> Lines<BufReader<ChildStdout>> {
-    let igor_output = std::process::Command::new(macros.igor_path.clone())
-        .arg("-j=8")
-        .arg(format!("-options={}", build_bff.display()))
-        .arg("--")
-        .arg(gm_artifacts::PLATFORM.to_string())
-        .arg(sub_command)
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .unwrap();
+    let mut igor = std::process::Command::new(macros.igor_path.clone());
+    igor.arg("-j=8")
+        .arg(format!("-options={}", build_bff.display()));
+
+    // add the verbosity
+    if sub_command.1.verbosity > 1 {
+        igor.arg("-v");
+    }
+
+    // add the platform
+    igor.arg("--").arg(gm_artifacts::PLATFORM.to_string());
+
+    match sub_command.0 {
+        RunKind::Run => igor.arg("Run"),
+        RunKind::Release => igor.arg("PackageZip"),
+    };
+
+    let igor_output = igor.stdout(std::process::Stdio::piped()).spawn().unwrap();
 
     BufReader::new(igor_output.stdout.unwrap()).lines()
 }
@@ -89,8 +124,7 @@ fn run_initial(
     lines: &mut Lines<BufReader<ChildStdout>>,
     project_name: &str,
     project_path: &Path,
-    platform: &str,
-    build_kind: &str,
+    run_kind: RunCommand,
 ) -> Option<Vec<String>> {
     const RUN_INDICATOR: &str = "[Run]";
     const FINAL_EMITS: [&str; 7] = [
@@ -155,9 +189,9 @@ fn run_initial(
                     progress_bar.finish_and_clear();
                     println!(
                         "{} {} {} in {}",
-                        console::style("Compiled").green(),
-                        platform,
-                        build_kind,
+                        console::style("Completed").green(),
+                        gm_artifacts::PLATFORM.to_string(),
+                        run_kind,
                         indicatif::HumanDuration(std::time::Instant::now() - start_time)
                     );
                     break;

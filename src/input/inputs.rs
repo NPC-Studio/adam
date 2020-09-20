@@ -6,9 +6,6 @@ pub enum Input {
     /// Compiles and then runs a project.
     Run(RunData),
 
-    /// Compiles a project without running it.
-    Build(RunData),
-
     /// Creates a release executable, running `clean` first.
     Release(RunData),
 
@@ -19,7 +16,7 @@ pub enum Input {
 impl Input {
     pub fn yyp_name(&self) -> &Option<String> {
         match self {
-            Input::Run(b) | Input::Build(b) | Input::Release(b) => &b.yyp_name,
+            Input::Run(b) | Input::Release(b) => &b.yyp_name,
             Input::Clean => &None,
         }
     }
@@ -53,7 +50,6 @@ pub fn get_input() -> Input {
 
     match value.subcmd {
         ClapOperation::Run(b) => Input::Run(RunData::new(b)),
-        ClapOperation::Build(b) => Input::Build(RunData::new(b)),
         ClapOperation::Release(b) => Input::Release(RunData::new(b)),
         ClapOperation::Clean => Input::Clean,
     }

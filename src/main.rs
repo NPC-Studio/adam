@@ -1,13 +1,11 @@
 #![allow(clippy::bool_comparison)]
 
-use input::Input;
-
 mod input {
     mod cli;
     mod config_file;
     mod inputs;
 
-    pub use inputs::{get_input, Input};
+    pub use inputs::{get_input, Input, RunData};
 }
 mod igor {
     mod application_data;
@@ -46,24 +44,15 @@ fn main() {
     let application_data = match igor::ApplicationData::new(options.yyp_name()) {
         Ok(v) => v,
         Err(e) => {
-            println!("{}: {}\naborting", console::style("error").bright().red(), e);
+            println!(
+                "{}: {}\naborting",
+                console::style("error").bright().red(),
+                e
+            );
             return;
         }
     };
     let user_data = igor::UserData::new();
-
-    let build_data = match &options {
-        Input::Run(b) | Input::Build(b) | Input::Release(b) => b,
-        Input::Clean => {
-            match std::fs::remove_dir_all(application_data.output_folder) {
-                Ok(()) => {}
-                Err(e) => {
-                    println!("{}: {}", console::style("error").bright().red(), e);
-                }
-            }
-            return;
-        }
-    };
 
     let build_data = igor::BuildData {
         output_folder: application_data.output_folder,
@@ -127,11 +116,5 @@ fn main() {
     )
     .unwrap();
 
-    runner::run_command(
-        &build_location,
-        macros,
-        false,
-        "Run",
-        &igor::OutputKind::Vm.to_string(),
-    );
+    runner::run_command(&build_location, macros, options);
 }

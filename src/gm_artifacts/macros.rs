@@ -162,7 +162,7 @@ pub struct GmMacros {
     carousel_slides_uri: String,
     user_directory: PathBuf,
     user_cache_directory: PathBuf,
-    project_full_filename: PathBuf,
+    pub project_full_filename: PathBuf,
     project_dir: PathBuf,
     pub project_name: String,
     project_cache_directory_name: String,

@@ -1,4 +1,4 @@
-use crate::gm_artifacts;
+use crate::{gm_artifacts, input::Input};
 use heck::TitleCase;
 use indicatif::ProgressBar;
 use std::{
@@ -11,31 +11,35 @@ use std::{
 pub fn run_command(
     build_bff: &Path,
     macros: gm_artifacts::GmMacros,
-    verbose: bool,
-    sub_command: &str,
-    build_kind: &str,
+    verbose: usize,
+    sub_command: Input,
 ) {
     let mut reader = invoke(&macros, build_bff, sub_command);
-    if verbose {
+    if verbose > 0 {
         for line in reader {
             if let Ok(l) = line {
                 println!("{}", l.trim());
             }
         }
     } else {
-        let success = run_initial(
+        let output = run_initial(
             &mut reader,
             &macros.project_name,
+            &macros.project_full_filename,
             &gm_artifacts::PLATFORM.to_string(),
             build_kind,
         );
 
-        if success {
+        if let Some(success) = output {
             // skip the ****
             reader.next();
 
             // skip the annoying ass "controller"
             reader.next();
+
+            for msg in success {
+                println!("{}", msg);
+            }
 
             run_game(&mut reader);
         }
@@ -48,7 +52,7 @@ fn invoke(
     build_bff: &Path,
     sub_command: &str,
 ) -> Lines<BufReader<ChildStdout>> {
-    let igor_output = std::process::Command::new(macros.igor_path)
+    let igor_output = std::process::Command::new(macros.igor_path.clone())
         .arg("-j=8")
         .arg(format!("-options={}", build_bff.display()))
         .arg("--")
@@ -84,16 +88,20 @@ fn invoke(
 fn run_initial(
     lines: &mut Lines<BufReader<ChildStdout>>,
     project_name: &str,
+    project_path: &Path,
     platform: &str,
     build_kind: &str,
-) -> bool {
-    // const RUN_INDICATOR: &str = "[Run]";
-    // const FINAL_EMITS: [&str; 4] = [
-    //     "MainOptions.json",
-    //     "Attempting to set gamepadcount",
-    //     "hardware device",
-    //     "Collision Event time",
-    // ];
+) -> Option<Vec<String>> {
+    const RUN_INDICATOR: &str = "[Run]";
+    const FINAL_EMITS: [&str; 7] = [
+        "MainOptions.json",
+        "Attempting to set gamepadcount",
+        "hardware device",
+        "Collision Event time",
+        "Entering main loop.",
+        "Total memory used",
+        "********",
+    ];
 
     let progress_bar = ProgressBar::new(1000);
     progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
@@ -102,43 +110,82 @@ fn run_initial(
             .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {msg}")
             .progress_chars("#> "),
     );
+    progress_bar.enable_steady_tick(100);
     progress_bar.println(format!(
-        "compiling {} [{} {}]",
+        "{} {} ({})",
+        console::style("Compiling").green(),
         project_name.to_title_case(),
-        platform,
-        build_kind
+        project_path.display()
     ));
+
+    let mut in_final_stage = false;
+    let mut startup_messages = vec![];
+
+    let start_time = std::time::Instant::now();
 
     for line in lines {
         if let Ok(l) = line {
             if l.contains("Error: ") {
                 progress_bar.finish_with_message(l.trim());
-                return false;
+                return None;
             }
 
             progress_bar.inc(10);
             let message = l.trim();
 
-            if message.is_empty() == false {
+            if message.is_empty() {
+                continue;
+            }
+
+            if in_final_stage == false {
                 let max_size = message.len().min(30);
 
                 progress_bar.set_message(&message[..max_size]);
-            }
 
-            if l == "Entering main loop." {
-                progress_bar.finish_with_message("success");
-                break;
+                if message.contains(RUN_INDICATOR) {
+                    in_final_stage = true;
+                }
+            } else {
+                // we're in the final stage...
+                if FINAL_EMITS.iter().any(|&v| message.contains(v)) == false {
+                    startup_messages.push(message.to_owned());
+                }
+
+                if l == "Entering main loop." {
+                    progress_bar.finish_and_clear();
+                    println!(
+                        "{} {} {} in {}",
+                        console::style("Compiled").green(),
+                        platform,
+                        build_kind,
+                        indicatif::HumanDuration(std::time::Instant::now() - start_time)
+                    );
+                    break;
+                }
             }
         }
     }
 
-    true
+    Some(startup_messages)
 }
 
 fn run_game(lines: &mut Lines<BufReader<ChildStdout>>) {
+    const SHUTDOWN: [&str; 3] = [
+        "Attempting to set gamepadcount to",
+        "Not shutting down steam as it is not initialised",
+        "Script_Free called",
+    ];
+
     for line in lines {
         if let Ok(l) = line {
-            println!("{}", l);
+            let message = l.trim();
+            if message.is_empty() {
+                continue;
+            }
+
+            if SHUTDOWN.iter().any(|v| l.contains(v)) == false {
+                println!("{}", message);
+            }
         }
     }
 }

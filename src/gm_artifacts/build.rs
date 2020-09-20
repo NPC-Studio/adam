@@ -39,6 +39,7 @@ impl GmBuild {
             .output_folder
             .join(build_data.output_kind.to_string());
         let cache = build.join("cache");
+        let tmp = build.join("tmp");
 
         Self {
             compile_output_file_name: build_data
@@ -55,8 +56,8 @@ impl GmBuild {
                 .project_directory
                 .join(&build_data.project_name)
                 .with_extension("yyp"),
-            temp_folder: cache.clone(),
-            temp_folder_unmapped: cache.clone(),
+            temp_folder: tmp.clone(),
+            temp_folder_unmapped: tmp,
             user_dir: build_data.user_dir.join(&build_data.user_string),
             runtime_location: build_data.runtime_location.clone(),
             target_options: cache.join("targetoptions.json"),

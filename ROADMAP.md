@@ -18,10 +18,11 @@
   - [x] visual_studio_path needs to be added (committed and reverted -- cannot be implemented now)
   - [x] rename `target` to `yyp`
   - [x] add `output_folder_name` option.
-- [ ] Clean up intermediary files
+- [x] Clean up intermediary files
 - [ ] Release
   - [ ] Configure better, more beautiful output
 - [ ] Fancy boy stuff (not necessary)
   - [ ] better handles for errors
   - [ ] parse fpaths in output
+- [ ] Show the Config on the compiling output
 - [ ] Installation Guide in the Readme

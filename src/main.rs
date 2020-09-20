@@ -115,14 +115,23 @@ fn main() {
         runtime_location: std::path::Path::new(gm_artifacts::RUNTIME_LOCATION).to_owned(),
         target_mask: gm_artifacts::TARGET_MASK,
         application_path: std::path::Path::new(gm_artifacts::APPLICATION_PATH).to_owned(),
-        config: "debug".to_string(),
+        config: run_data.config.clone(),
     };
 
-    // make our dir
+    // make our dirs:
     let cache_folder = build_data
         .output_folder
         .join(&format!("{}/cache", build_data.output_kind));
+    let tmp = build_data
+        .output_folder
+        .join(&format!("{}/tmp", build_data.output_kind));
     std::fs::create_dir_all(&cache_folder).unwrap();
+
+    // clear the tmp
+    if tmp.exists() {
+        std::fs::remove_dir_all(&tmp).unwrap();
+    }
+    std::fs::create_dir_all(&tmp).unwrap();
 
     let gm_build = gm_artifacts::GmBuild::new(&build_data);
     let build_location = cache_folder.join("build.bff");

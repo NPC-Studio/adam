@@ -92,7 +92,10 @@ pub fn get_input() -> Input {
             }
 
             Input::Clean(
-                config_file.output_folder.clone().unwrap_or_else(|| "target".into()),
+                config_file
+                    .output_folder
+                    .clone()
+                    .unwrap_or_else(|| "target".into()),
                 config_file,
             )
         }

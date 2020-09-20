@@ -1,14 +1,39 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+use super::cli::RunOptions;
+
+#[derive(Debug, PartialEq, Eq, Deserialize, Default)]
 pub struct ConfigFile {
     /// The configuration to use. If blank, will use "Default".
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub configuration: Option<String>,
 
     /// the target yyp. If blank, will use a Yyp if found in the directory.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub target: Option<String>,
+    pub yyp: Option<String>,
+
+    /// the verbosity to use in the compiler.
+    /// >1 disable the pretty compile widget
+    /// >2 adds verbose logging for the initial stages of compilation
+    /// >3 enables all verbosity
+    pub verbosity: Option<usize>,
+
+    /// the path to the visual studio .bat file needed to compile with the yyc.
+    /// by default, this will point to "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/vcvars32.bat"
+    /// on Windows.
+    /// Generally, this should be filled in within the Gms2 IDE, not here in the config file, since it is specific
+    /// to each machine.
+    pub visual_studio_path: Option<std::path::PathBuf>,
+}
+
+impl From<ConfigFile> for RunOptions {
+    fn from(o: ConfigFile) -> Self {
+        Self {
+            yyc: false,
+            config: o.configuration,
+            yyp: o.yyp,
+            verbosity: o.verbosity.unwrap_or_default(),
+            visual_studio_path: o.visual_studio_path,
+        }
+    }
 }
 
 impl ConfigFile {

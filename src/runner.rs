@@ -217,6 +217,11 @@ fn run_game(lines: &mut Lines<BufReader<ChildStdout>>) {
                 continue;
             }
 
+            if message == "Igor complete." {
+                println!("adam complete");
+                break;
+            }
+
             if SHUTDOWN.iter().any(|v| l.contains(v)) == false {
                 println!("{}", message);
             }

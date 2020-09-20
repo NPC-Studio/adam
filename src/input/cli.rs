@@ -34,11 +34,15 @@ pub struct RunOptions {
     #[clap(short, long)]
     pub config: Option<String>,
 
-    /// Specifies a the target Yyp to build
-    #[clap(short, long)]
-    pub target: Option<String>,
+    /// Specifies the target Yyp to build, if there are multiple.
+    #[clap(long)]
+    pub yyp: Option<String>,
 
     /// Verbosity level. Can use multiple times. >0 disables pretty compiles, >1 enables igor verbosity, >2 enables gmac verbosity
     #[clap(short, long, parse(from_occurrences))]
     pub verbosity: usize,
+
+    /// The path to the visual studio .bat file needed to use the yyp.
+    #[clap(long)]
+    pub visual_studio_path: Option<std::path::PathBuf>,
 }

@@ -1,5 +1,7 @@
 #![allow(clippy::bool_comparison)]
 
+use input::Input;
+
 mod input {
     mod cli;
     mod config_file;
@@ -52,11 +54,66 @@ fn main() {
             return;
         }
     };
-    let user_data = igor::UserData::new();
+    let mut user_data = match igor::UserData::new() {
+        Ok(v) => v,
+        Err(e) => {
+            println!(
+                "{}: {}\naborting",
+                console::style("error").bright().red(),
+                e
+            );
+            return;
+        }
+    };
+
+    // handle a clean, extract the build_data
+    let run_data = match &options {
+        Input::Run(b) | Input::Release(b) => b,
+        Input::Clean => {
+            match std::fs::remove_dir_all(application_data.output_folder) {
+                Ok(()) => {}
+                Err(e) => {
+                    println!("{}: {}", console::style("error").bright().red(), e);
+                }
+            }
+            return;
+        }
+    };
+
+    // check if we have a valid yyc bat
+    if run_data.yyc {
+        if let Some(data) = run_data.visual_studio_path.clone() {
+            if data.exists() {
+                println!("{:?}", data);
+                user_data.visual_studio_path = Some(data);
+            }
+        }
+
+        if user_data.visual_studio_path.is_none() {
+            println!(
+            "{}: no valid path to visual studio .bat build file. to use \
+        yyc, we must have a visual studio .bat file.\n\
+        To specify path, do one of the following:\n\
+        \tAdd it in the Gms2 IDE\n\
+        \tSpecify it in a .adam config file with `visual_studio_path` as a key\n\
+        \tPass it in as a flag with --visual_studio_path\n\
+        The best option is to set it in the IDE directly, since this \
+        path is local and, therefore, not Git safe.\n\
+        For more information, see https://help.yoyogames.com/hc/en-us/articles/227860547-GMS2-Required-SDKs",
+            console::style("error").bright().red(),
+        );
+
+            return;
+        }
+    }
 
     let build_data = igor::BuildData {
         output_folder: application_data.output_folder,
-        output_kind: igor::OutputKind::Vm,
+        output_kind: if run_data.yyc {
+            igor::OutputKind::Yyc
+        } else {
+            igor::OutputKind::Vm
+        },
         project_name: application_data.project_name,
         project_directory: application_data.current_directory,
         user_dir: user_data.user_dir,
@@ -84,9 +141,14 @@ fn main() {
     .unwrap();
 
     // write in the preferences
+    let preferences = if run_data.yyc {
+        gm_artifacts::GmPreferences::new(user_data.visual_studio_path.unwrap())
+    } else {
+        gm_artifacts::GmPreferences::default()
+    };
     std::fs::write(
         &gm_build.preferences,
-        serde_json::to_string_pretty(&gm_artifacts::GmPreferences::default()).unwrap(),
+        serde_json::to_string_pretty(&preferences).unwrap(),
     )
     .unwrap();
 

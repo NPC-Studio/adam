@@ -5,12 +5,12 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GmBuild {
-    pub target_file: String,
+    pub target_file: PathBuf,
     pub asset_compiler: String,
     pub debug: String,
     #[serde(rename = "compile_output_file_name")]
     pub compile_output_file_name: PathBuf,
-    pub user_shaders: String,
+    pub use_shaders: String,
     pub steam_options: PathBuf,
     pub config: String,
     pub output_folder: PathBuf,
@@ -42,6 +42,11 @@ impl GmBuild {
         let tmp = build.join("tmp");
 
         Self {
+            target_file: build_data
+                .target_file
+                .clone()
+                .map(|v| build.parent().unwrap().join(v))
+                .unwrap_or_default(),
             compile_output_file_name: build_data
                 .output_folder
                 .join(build_data.output_kind.to_string())
@@ -58,7 +63,7 @@ impl GmBuild {
                 .with_extension("yyp"),
             temp_folder: tmp.clone(),
             temp_folder_unmapped: tmp,
-            user_dir: build_data.user_dir.join(&build_data.user_string),
+            user_dir: super::gms2_data().join(&build_data.user_string),
             runtime_location: build_data.runtime_location.clone(),
             target_options: cache.join("targetoptions.json"),
             target_mask: build_data.target_mask.to_string(),
@@ -90,10 +95,10 @@ impl Default for GmBuild {
             application_path: PathBuf::new(),
             output_folder: PathBuf::new(),
 
-            target_file: String::new(),
+            target_file: PathBuf::new(),
             asset_compiler: String::new(),
             debug: "False".to_string(),
-            user_shaders: "True".to_string(),
+            use_shaders: "True".to_string(),
             config: "Default".to_string(),
             verbose: "False".to_string(),
             steam_ide: "False".to_string(),

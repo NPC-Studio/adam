@@ -209,6 +209,15 @@ impl GmMacros {
                 .user_dir
                 .join("AppData/Roaming/GameMakerStudio2/Cache/GMS2IDE"),
 
+            user_directory: build_data.user_dir.join(format!(
+                "AppData/Roaming/GameMakerStudio2/{}",
+                build_data.user_string
+            )),
+            user_cache_directory: build_data.user_dir.join(format!(
+                "AppData/Roaming/GameMakerStudio2/{}/Cache",
+                build_data.user_string
+            )),
+
             ..Self::create_internal(build_data)
         }
     }
@@ -244,6 +253,17 @@ impl GmMacros {
             local_directory: application_data.join("GameMakerStudio2"),
             local_cache_directory: application_data.join("GameMakerStudio2/Cache"),
             ide_cache_directory: application_data.join("GameMakerStudio2/Cache/GMS2IDE"),
+
+            user_directory: build_data.user_dir.join(format!(
+                "AppData/Roaming/GameMakerStudio2/{}",
+                build_data.user_string
+            )),
+            user_cache_directory: build_data.user_dir.join(format!(
+                "AppData/Roaming/GameMakerStudio2/{}/Cache",
+                build_data.user_string
+            )),
+
+
             ..Self::create_internal(build_data)
         }
     }
@@ -259,6 +279,7 @@ impl GmMacros {
             target_mask: _,
             user_string: _,
             config: _,
+            target_file: _,
         } = build_data;
 
         let build_dir = out.join(output_kind.to_string());
@@ -290,8 +311,6 @@ impl GmMacros {
             asset_compiler_cache_directory: build_dir.clone(),
             my_projects_directory: build_dir.join("GameMakerStudio2"),
             base_project: runtime.join("BaseProject/BaseProject.yyp"),
-            user_directory: build_dir.clone(),
-            user_cache_directory: build_dir,
             project_full_filename: project_directory.join(project_name).with_extension("yyp"),
             project_dir: project_directory.clone(),
             project_name: project_name.to_owned(),

@@ -68,7 +68,12 @@ fn main() {
 
     // handle a clean, extract the build_data
     let run_data = match &options {
-        Input::Run(b) | Input::Release(b) => b,
+        Input::Run(b) => b,
+        Input::Release(b) => {
+            let _ =
+                std::fs::remove_dir_all(application_data.current_directory.join(&b.output_folder));
+            b
+        }
         Input::Clean(v, _) => {
             match std::fs::remove_dir_all(application_data.current_directory.join(v)) {
                 Ok(()) => {}
@@ -108,7 +113,6 @@ fn main() {
         } else {
             igor::OutputKind::Vm
         },
-        project_name: application_data.project_name,
         project_directory: application_data.current_directory,
         user_dir: user_data.user_dir,
         user_string: user_data.user_string,
@@ -116,6 +120,12 @@ fn main() {
         target_mask: gm_artifacts::TARGET_MASK,
         application_path: std::path::Path::new(gm_artifacts::APPLICATION_PATH).to_owned(),
         config: run_data.config.clone(),
+        target_file: if matches!(options, Input::Release(_)) {
+            Some(format!("{}.zip", &application_data.project_name).into())
+        } else {
+            None
+        },
+        project_name: application_data.project_name,
     };
 
     // make our dirs:

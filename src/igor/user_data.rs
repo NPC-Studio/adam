@@ -9,10 +9,10 @@ pub struct UserData {
 
 impl UserData {
     pub fn new() -> anyhow::Result<Self> {
-        let user_directory = crate::gm_artifacts::user_directory();
+        let gms2_data = crate::gm_artifacts::gms2_data();
 
         let um_json: serde_json::Value =
-            serde_json::from_str(&std::fs::read_to_string(&user_directory.join("um.json"))?)?;
+            serde_json::from_str(&std::fs::read_to_string(&gms2_data.join("um.json"))?)?;
 
         let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
 
@@ -27,7 +27,7 @@ impl UserData {
             .to_owned();
 
         let local_settings: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(
-            user_directory.join(&format!("{}_{}/local_settings.json", user_name, user_id)),
+            gms2_data.join(&format!("{}_{}/local_settings.json", user_name, user_id)),
         )?)?;
 
         let supposed_path = local_settings
@@ -42,7 +42,7 @@ impl UserData {
             });
 
         Ok(Self {
-            user_dir: user_directory,
+            user_dir: crate::gm_artifacts::user_data(),
             user_string: format!("{}_{}", user_name, user_id),
             visual_studio_path: supposed_path,
         })

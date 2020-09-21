@@ -13,6 +13,7 @@ pub struct BuildData {
     pub target_mask: usize,
     pub application_path: PathBuf,
     pub config: String,
+    pub target_file: Option<PathBuf>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

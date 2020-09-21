@@ -42,14 +42,14 @@ pub struct RunOptions {
     #[clap(short, long, parse(from_occurrences))]
     pub verbosity: usize,
 
-    /// The name of the output folder to build to. Defaults to `target`. Relative to the directory
+    /// The relative path to the output folder. Defaults to `target`.
     #[clap(short, long)]
     pub output_folder: Option<std::path::PathBuf>,
 }
 
 #[derive(Clap, Debug)]
 pub struct CleanOptions {
-    /// The name of the output folder to build to. Defaults to `target`. Relative to the directory
+    /// The relative path to the output folder. Defaults to `target`.
     #[clap(short, long)]
     pub output_folder: Option<std::path::PathBuf>,
 }

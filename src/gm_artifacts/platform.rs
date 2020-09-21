@@ -7,14 +7,19 @@ mod macos {
     pub const TARGET_MASK: usize = 2;
     pub const APPLICATION_PATH: &str =
         "/Applications/GameMaker Studio 2.app/Contents/MonoBundle/GameMaker Studio 2.exe";
-    pub const MONO_LOCATION: &str = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";
+    pub const MONO_LOCATION: &str =
+        "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";
     pub const PLATFORM: super::Platform = super::Platform::Darwin;
 
-    pub fn user_directory() -> std::path::PathBuf {
+    pub fn gms2_data() -> std::path::PathBuf {
         directories::UserDirs::new()
             .unwrap()
             .home_dir()
             .join(".config/GameMakerStudio2")
+    }
+
+    pub fn user_data() -> std::path::PathBuf {
+        directories::UserDirs::new().unwrap().home_dir().to_owned()
     }
 }
 #[cfg(target_os = "macos")]
@@ -29,11 +34,15 @@ mod windows {
 
     pub const PLATFORM: super::Platform = super::Platform::Windows;
 
-    pub fn user_directory() -> std::path::PathBuf {
+    pub fn gms2_data() -> std::path::PathBuf {
         directories::UserDirs::new()
             .unwrap()
             .home_dir()
             .join("AppData/Roaming/GameMakerStudio2")
+    }
+
+    pub fn user_data() -> std::path::PathBuf {
+        directories::UserDirs::new().unwrap().home_dir().to_owned()
     }
 }
 #[cfg(target_os = "windows")]

@@ -13,7 +13,7 @@ pub struct GmPreferences {
 impl GmPreferences {
     pub fn new(visual_studio_path: PathBuf) -> Self {
         Self {
-            default_packaging_choice: Some(2),
+            default_packaging_choice: Some(1),
             visual_studio_path,
         }
     }
@@ -22,7 +22,7 @@ impl GmPreferences {
 impl Default for GmPreferences {
     fn default() -> Self {
         Self {
-            default_packaging_choice: Some(2),
+            default_packaging_choice: Some(1),
             visual_studio_path: Path::new(
                 "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/vcvars32.bat",
             )

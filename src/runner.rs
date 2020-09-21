@@ -124,7 +124,7 @@ fn run_initial(
     lines: &mut Lines<BufReader<ChildStdout>>,
     project_name: &str,
     project_path: &Path,
-    run_kind: RunCommand,
+    run_command: RunCommand,
 ) -> Option<Vec<String>> {
     const RUN_INDICATOR: &str = "[Run]";
     const FINAL_EMITS: [&str; 7] = [
@@ -147,7 +147,7 @@ fn run_initial(
     progress_bar.enable_steady_tick(100);
     progress_bar.println(format!(
         "{} {} ({})",
-        console::style("Compiling").green(),
+        console::style("Compiling").green().bright(),
         project_name.to_title_case(),
         project_path.display()
     ));
@@ -188,10 +188,11 @@ fn run_initial(
                 if l == "Entering main loop." {
                     progress_bar.finish_and_clear();
                     println!(
-                        "{} {} {} in {}",
-                        console::style("Completed").green(),
+                        "{} {} {}:{} in {}",
+                        console::style("Completed").green().bright(),
                         gm_artifacts::PLATFORM.to_string(),
-                        run_kind,
+                        run_command,
+                        console::style(&run_command.1.config).yellow().bright(),
                         indicatif::HumanDuration(std::time::Instant::now() - start_time)
                     );
                     break;

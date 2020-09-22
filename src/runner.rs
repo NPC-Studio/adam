@@ -8,6 +8,16 @@ use std::{
     process::Child,
 };
 
+const FINAL_EMITS: [&str; 7] = [
+    "MainOptions.json",
+    "gamepadcount",
+    "hardware device",
+    "Collision Event time",
+    "Entering main loop.",
+    "Total memory used",
+    "********",
+];
+
 pub struct RunCommand(RunKind, RunData);
 impl From<Input> for RunCommand {
     fn from(o: Input) -> Self {
@@ -57,6 +67,7 @@ pub fn run_command(
             &macros.project_name,
             &macros.project_full_filename,
             sub_command,
+            false,
         );
 
         if let Some(success) = output {
@@ -77,9 +88,47 @@ pub fn run_command(
     }
 }
 
-pub fn rerun_old(
-    exe_path: ??
-)
+#[cfg(target_os = "windows")]
+pub fn rerun_old(gm_build: gm_artifacts::GmBuild, yyc: bool, config: String) {
+    let mut child =
+        std::process::Command::new(gm_build.runtime_location.join("windows/Runner.exe"))
+            .arg("-game")
+            .arg(gm_build.compile_output_file_name)
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+
+    let output = run_initial(
+        &mut child,
+        &gm_build.project_name,
+        &gm_build.project_path,
+        RunCommand(
+            RunKind::Build,
+            RunData {
+                yyc,
+                config,
+                ..Default::default()
+            },
+        ),
+        true,
+    );
+
+    if let Some(success) = output {
+        let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
+
+        // skip the ****
+        reader.next();
+
+        // skip the annoying ass "controller"
+        reader.next();
+
+        for msg in success {
+            println!("{}", msg);
+        }
+
+        run_game(&mut reader);
+    }
+}
 
 #[cfg(target_os = "windows")]
 fn invoke(macros: &gm_artifacts::GmMacros, build_bff: &Path, sub_command: &RunCommand) -> Child {
@@ -126,18 +175,9 @@ fn run_initial(
     project_name: &str,
     project_path: &Path,
     run_command: RunCommand,
+    in_final_stage: bool,
 ) -> Option<Vec<String>> {
     const RUN_INDICATOR: &str = "[Run]";
-    const FINAL_EMITS: [&str; 7] = [
-        "MainOptions.json",
-        "Attempting to set gamepadcount",
-        "hardware device",
-        "Collision Event time",
-        "Entering main loop.",
-        "Total memory used",
-        "********",
-    ];
-
     let progress_bar = ProgressBar::new(1000);
     progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
     progress_bar.set_style(
@@ -153,7 +193,7 @@ fn run_initial(
         project_path.display()
     ));
 
-    let mut in_final_stage = false;
+    let mut in_final_stage = in_final_stage;
     let mut startup_messages = vec![];
 
     let start_time = std::time::Instant::now();
@@ -180,6 +220,7 @@ fn run_initial(
                 progress_bar.set_message(&message[..max_size]);
 
                 if message.contains(RUN_INDICATOR) {
+                    // messy messy
                     if run_command.0 == RunKind::Build {
                         child.kill().unwrap();
                         break;

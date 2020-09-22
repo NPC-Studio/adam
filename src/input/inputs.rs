@@ -24,7 +24,7 @@ impl Input {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Default)]
 pub struct RunData {
     pub yyc: bool,
     pub config: String,

@@ -125,7 +125,7 @@ pub struct GmMacros {
     asset_compiler_path: PathBuf,
     pub igor_path: PathBuf,
     lib_compatibility_path: PathBuf,
-    runner_path: PathBuf,
+    pub runner_path: PathBuf,
     html5_runner_path: PathBuf,
     webserver_path: PathBuf,
     licenses_path: PathBuf,
@@ -262,7 +262,6 @@ impl GmMacros {
                 "AppData/Roaming/GameMakerStudio2/{}/Cache",
                 build_data.user_string
             )),
-
 
             ..Self::create_internal(build_data)
         }

@@ -119,6 +119,7 @@ fn main() {
         target_file: None,
         project_name: application_data.project_name,
     };
+    let gm_build = gm_artifacts::GmBuild::new(&build_data);
 
     // make our dirs:
     let cache_folder = build_data
@@ -127,13 +128,16 @@ fn main() {
     std::fs::create_dir_all(&cache_folder).unwrap();
 
     // check if we need to make a new build at all, or can go straight to the runner
-    if last_build_is_good = manifest::check_manifest(
+    if manifest::check_manifest(
         &build_data.project_directory,
         &cache_folder,
         &build_data.output_folder,
     ) {
-        
+        runner::rerun_old(gm_build, run_data.yyc, run_data.config.clone());
+        return;
     }
+
+    let build_location = cache_folder.join("build.bff");
 
     // make and clear our tmps
     let tmp = build_data
@@ -144,9 +148,6 @@ fn main() {
         std::fs::remove_dir_all(&tmp).unwrap();
     }
     std::fs::create_dir_all(&tmp).unwrap();
-
-    let gm_build = gm_artifacts::GmBuild::new(&build_data);
-    let build_location = cache_folder.join("build.bff");
 
     // write in the build.bff
     std::fs::write(
@@ -184,9 +185,8 @@ fn main() {
     )
     .unwrap();
 
-    // and the macros...
+    // and we write the macros finally
     let macros = gm_artifacts::GmMacros::new(&build_data);
-
     std::fs::write(
         &gm_build.macros,
         serde_json::to_string_pretty(&macros).unwrap(),

@@ -3,9 +3,27 @@ use indicatif::ProgressBar;
 use std::path::Path;
 use walkdir::{DirEntry, WalkDir};
 
-pub type Manifest = std::collections::HashMap<String, i64>;
+#[derive(Debug, PartialEq, Eq, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct Manifest {
+    config: String,
+    files: std::collections::HashMap<String, i64>,
+}
 
-pub fn check_manifest(yyp_dir: &Path, manifest_dir: &Path, target_directory: &Path) -> bool {
+impl Manifest {
+    pub fn new(config: String) -> Self {
+        Manifest {
+            config,
+            files: Default::default(),
+        }
+    }
+}
+
+pub fn check_manifest(
+    config: String,
+    yyp_dir: &Path,
+    manifest_dir: &Path,
+    target_directory: &Path,
+) -> bool {
     let manifest_path = manifest_dir.join(".manifest.toml");
 
     let old_manifest: Manifest = std::fs::read_to_string(&manifest_path)
@@ -13,7 +31,7 @@ pub fn check_manifest(yyp_dir: &Path, manifest_dir: &Path, target_directory: &Pa
         .and_then(|s| toml::from_str(&s).ok())
         .unwrap_or_default();
 
-    let mut new_manifest: Manifest = Manifest::default();
+    let mut new_manifest: Manifest = Manifest::new(config);
 
     let progress_bar = ProgressBar::new(3000);
     progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
@@ -33,7 +51,7 @@ pub fn check_manifest(yyp_dir: &Path, manifest_dir: &Path, target_directory: &Pa
                 let last_accesstime = FileTime::from_last_modification_time(&metadata).seconds();
 
                 let pathname = entry.path().to_string_lossy().to_string();
-                new_manifest.insert(pathname.clone(), last_accesstime);
+                new_manifest.files.insert(pathname.clone(), last_accesstime);
             }
         }
 

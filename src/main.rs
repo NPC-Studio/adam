@@ -129,6 +129,7 @@ fn main() {
 
     // check if we need to make a new build at all, or can go straight to the runner
     if manifest::check_manifest(
+        build_data.config.clone(),
         &build_data.project_directory,
         &cache_folder,
         &build_data.output_folder,

@@ -19,10 +19,10 @@
   - [x] rename `target` to `yyp`
   - [x] add `output_folder_name` option.
 - [x] Clean up intermediary files
-- [ ] Release
-  - [ ] Configure better, more beautiful output
+- [ ] Build without Run
+- [ ] Run immediately
 - [ ] Fancy boy stuff (not necessary)
   - [ ] better handles for errors
   - [ ] parse fpaths in output
-- [ ] Show the Config on the compiling output
+- [x] Show the Config on the compiling output
 - [ ] Installation Guide in the Readme

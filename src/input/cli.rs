@@ -14,12 +14,14 @@ pub struct InputOpts {
 
 #[derive(Clap, Debug)]
 pub enum ClapOperation {
-    /// Compiles and then runs a project.
+    /// Builds a project *without* running it.
+    Build(RunOptions),
+
+    /// Compiles, if necessary, and then runs a project.
     Run(RunOptions),
 
-    /// Creates a release executable, running `clean` first.
-    Release(RunOptions),
-
+    // /// Creates a release executable, running `clean` first.
+    // Release(RunOptions),
     /// Cleans a project target directory.
     Clean(CleanOptions),
 }

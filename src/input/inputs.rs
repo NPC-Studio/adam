@@ -6,9 +6,11 @@ pub enum Input {
     /// Compiles and then runs a project.
     Run(RunData),
 
-    /// Creates a release executable, running `clean` first.
-    Release(RunData),
+    // Builds the project without running it
+    Build(RunData),
 
+    // /// Creates a release executable, running `clean` first.
+    // Release(RunData),
     /// Cleans a project target directory.
     Clean(std::path::PathBuf, RunOptions),
 }
@@ -16,7 +18,7 @@ pub enum Input {
 impl Input {
     pub fn yyp_name(&self) -> &Option<String> {
         match self {
-            Input::Run(b) | Input::Release(b) => &b.yyp_name,
+            Input::Run(b) | Input::Build(b) => &b.yyp_name,
             Input::Clean(_, o) => &o.yyp,
         }
     }
@@ -59,7 +61,7 @@ pub fn get_input() -> Input {
     let mut value: super::cli::InputOpts = super::cli::InputOpts::parse();
 
     let b = match &mut value.subcmd {
-        ClapOperation::Run(b) | ClapOperation::Release(b) => b.clone(),
+        ClapOperation::Run(b) | ClapOperation::Build(b) => b.clone(),
         ClapOperation::Clean(_) => Default::default(),
     };
 
@@ -85,7 +87,7 @@ pub fn get_input() -> Input {
 
     match value.subcmd {
         ClapOperation::Run(_) => Input::Run(RunData::new(config_file)),
-        ClapOperation::Release(_) => Input::Release(RunData::new(config_file)),
+        ClapOperation::Build(_) => Input::Build(RunData::new(config_file)),
         ClapOperation::Clean(v) => {
             if let Some(passed_in) = v.output_folder {
                 config_file.output_folder = Some(passed_in);

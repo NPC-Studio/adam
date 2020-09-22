@@ -1,4 +1,4 @@
-cargo build;
-cd ../../GMS2/Testbench/;
-./../../Rust/adam/target/debug/adam.exe run
+cargo build --release;
+cd ../../GMS2/SwordAndField/;
+./../../Rust/adam/target/release/adam.exe build
 cd ../../Rust/adam;

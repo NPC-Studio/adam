@@ -39,6 +39,7 @@ mod gm_artifacts {
     mod build;
     pub use build::*;
 }
+mod manifest;
 mod runner;
 
 fn main() {
@@ -68,12 +69,7 @@ fn main() {
 
     // handle a clean, extract the build_data
     let run_data = match &options {
-        Input::Run(b) => b,
-        Input::Release(b) => {
-            let _ =
-                std::fs::remove_dir_all(application_data.current_directory.join(&b.output_folder));
-            b
-        }
+        Input::Run(b) | Input::Build(b) => b,
         Input::Clean(v, _) => {
             match std::fs::remove_dir_all(application_data.current_directory.join(v)) {
                 Ok(()) => {}
@@ -120,11 +116,7 @@ fn main() {
         target_mask: gm_artifacts::TARGET_MASK,
         application_path: std::path::Path::new(gm_artifacts::APPLICATION_PATH).to_owned(),
         config: run_data.config.clone(),
-        target_file: if matches!(options, Input::Release(_)) {
-            Some(format!("{}.zip", &application_data.project_name).into())
-        } else {
-            None
-        },
+        target_file: None,
         project_name: application_data.project_name,
     };
 
@@ -132,11 +124,21 @@ fn main() {
     let cache_folder = build_data
         .output_folder
         .join(&format!("{}/cache", build_data.output_kind));
+    std::fs::create_dir_all(&cache_folder).unwrap();
+
+    // check if we need to make a new build at all, or can go straight to the runner
+    if last_build_is_good = manifest::check_manifest(
+        &build_data.project_directory,
+        &cache_folder,
+        &build_data.output_folder,
+    ) {
+        
+    }
+
+    // make and clear our tmps
     let tmp = build_data
         .output_folder
         .join(&format!("{}/tmp", build_data.output_kind));
-    std::fs::create_dir_all(&cache_folder).unwrap();
-
     // clear the tmp
     if tmp.exists() {
         std::fs::remove_dir_all(&tmp).unwrap();

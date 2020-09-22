@@ -5,7 +5,7 @@ use std::{
     io::Lines,
     io::{BufRead, BufReader},
     path::Path,
-    process::ChildStdout,
+    process::Child,
 };
 
 pub struct RunCommand(RunKind, RunData);
@@ -13,7 +13,7 @@ impl From<Input> for RunCommand {
     fn from(o: Input) -> Self {
         match o {
             Input::Run(b) => RunCommand(RunKind::Run, b),
-            Input::Release(b) => RunCommand(RunKind::Release, b),
+            Input::Build(b) => RunCommand(RunKind::Build, b),
             Input::Clean(_, _) => unimplemented!(),
         }
     }
@@ -22,8 +22,8 @@ impl From<Input> for RunCommand {
 impl std::fmt::Display for RunCommand {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let word = match self.0 {
-            RunKind::Run => "compile",
-            RunKind::Release => "release",
+            RunKind::Run | RunKind::Build => "compile",
+            // RunKind::Release => "release",
         };
 
         write!(f, "{} {}", if self.1.yyc { "yyc" } else { "vm" }, word)
@@ -32,7 +32,8 @@ impl std::fmt::Display for RunCommand {
 #[derive(Debug, PartialEq, Eq)]
 pub enum RunKind {
     Run,
-    Release,
+    Build,
+    // Release,
 }
 
 pub fn run_command(
@@ -41,8 +42,10 @@ pub fn run_command(
     sub_command: impl Into<RunCommand>,
 ) {
     let sub_command: RunCommand = sub_command.into();
-    let mut reader = invoke(&macros, build_bff, &sub_command);
+    let mut child = invoke(&macros, build_bff, &sub_command);
+
     if sub_command.1.verbosity > 0 {
+        let reader = BufReader::new(child.stdout.unwrap()).lines();
         for line in reader {
             if let Ok(l) = line {
                 println!("{}", l.trim());
@@ -50,13 +53,15 @@ pub fn run_command(
         }
     } else {
         let output = run_initial(
-            &mut reader,
+            &mut child,
             &macros.project_name,
             &macros.project_full_filename,
             sub_command,
         );
 
         if let Some(success) = output {
+            let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
+
             // skip the ****
             reader.next();
 
@@ -72,12 +77,12 @@ pub fn run_command(
     }
 }
 
+pub fn rerun_old(
+    exe_path: ??
+)
+
 #[cfg(target_os = "windows")]
-fn invoke(
-    macros: &gm_artifacts::GmMacros,
-    build_bff: &Path,
-    sub_command: &RunCommand,
-) -> Lines<BufReader<ChildStdout>> {
+fn invoke(macros: &gm_artifacts::GmMacros, build_bff: &Path, sub_command: &RunCommand) -> Child {
     let mut igor = std::process::Command::new(macros.igor_path.clone());
     igor.arg("-j=8")
         .arg(format!("-options={}", build_bff.display()));
@@ -88,16 +93,12 @@ fn invoke(
     }
 
     // add the platform
-    igor.arg("--").arg(gm_artifacts::PLATFORM.to_string());
-
-    match sub_command.0 {
-        RunKind::Run => igor.arg("Run"),
-        RunKind::Release => igor.arg("PackageZip"),
-    };
-
-    let igor_output = igor.stdout(std::process::Stdio::piped()).spawn().unwrap();
-
-    BufReader::new(igor_output.stdout.unwrap()).lines()
+    igor.arg("--")
+        .arg(gm_artifacts::PLATFORM.to_string())
+        .arg("Run")
+        .stdout(std::process::Stdio::piped())
+        .spawn()
+        .unwrap()
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -121,7 +122,7 @@ fn invoke(
 }
 
 fn run_initial(
-    lines: &mut Lines<BufReader<ChildStdout>>,
+    child: &mut Child,
     project_name: &str,
     project_path: &Path,
     run_command: RunCommand,
@@ -157,6 +158,8 @@ fn run_initial(
 
     let start_time = std::time::Instant::now();
 
+    let lines = BufReader::new(child.stdout.as_mut().unwrap()).lines();
+
     for line in lines {
         if let Ok(l) = line {
             if l.contains("Error: ") {
@@ -177,6 +180,10 @@ fn run_initial(
                 progress_bar.set_message(&message[..max_size]);
 
                 if message.contains(RUN_INDICATOR) {
+                    if run_command.0 == RunKind::Build {
+                        child.kill().unwrap();
+                        break;
+                    }
                     in_final_stage = true;
                 }
             } else {
@@ -187,24 +194,26 @@ fn run_initial(
 
                 if l == "Entering main loop." {
                     progress_bar.finish_and_clear();
-                    println!(
-                        "{} {} {}:{} in {}",
-                        console::style("Completed").green().bright(),
-                        gm_artifacts::PLATFORM.to_string(),
-                        run_command,
-                        console::style(&run_command.1.config).yellow().bright(),
-                        indicatif::HumanDuration(std::time::Instant::now() - start_time)
-                    );
                     break;
                 }
             }
         }
     }
 
+    progress_bar.finish_and_clear();
+    println!(
+        "{} {} {}:{} in {}",
+        console::style("Completed").green().bright(),
+        gm_artifacts::PLATFORM.to_string(),
+        run_command,
+        console::style(&run_command.1.config).yellow().bright(),
+        indicatif::HumanDuration(std::time::Instant::now() - start_time)
+    );
+
     Some(startup_messages)
 }
 
-fn run_game(lines: &mut Lines<BufReader<ChildStdout>>) {
+fn run_game(lines: &mut Lines<impl BufRead>) {
     const SHUTDOWN: [&str; 3] = [
         "Attempting to set gamepadcount to",
         "Not shutting down steam as it is not initialised",

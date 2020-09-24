@@ -18,6 +18,9 @@ pub struct ConfigFile {
 
     /// The output folder, relative to the current working directory. Defaults to `target`
     pub output_folder: Option<std::path::PathBuf>,
+
+    /// Igores the cache on all compiles.
+    pub ignore_cache: Option<bool>,
 }
 
 impl From<ConfigFile> for RunOptions {
@@ -28,7 +31,7 @@ impl From<ConfigFile> for RunOptions {
             yyp: o.yyp,
             verbosity: o.verbosity.unwrap_or_default(),
             output_folder: o.output_folder,
-            ignore_cache: false,
+            ignore_cache: o.ignore_cache.unwrap_or_default(),
         }
     }
 }

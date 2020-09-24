@@ -134,7 +134,7 @@ fn run_initial(
     run_command: RunCommand,
     in_final_stage: bool,
 ) -> Option<Vec<String>> {
-    const RUN_INDICATOR: &str = "[Run]";
+    const RUN_INDICATORS: [&str; 2] = ["[Run]", "Run_Start"];
     let progress_bar = ProgressBar::new(1000);
     progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
     progress_bar.set_style(
@@ -176,7 +176,7 @@ fn run_initial(
 
                 progress_bar.set_message(&message[..max_size]);
 
-                if message.contains(RUN_INDICATOR) {
+                if RUN_INDICATORS.iter().any(|v| message.contains(v)) {
                     // messy messy
                     if run_command.0 == RunKind::Build {
                         child.kill().unwrap();

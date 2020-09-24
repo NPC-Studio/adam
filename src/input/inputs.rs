@@ -31,6 +31,7 @@ pub struct RunData {
     pub yyp_name: Option<String>,
     pub verbosity: usize,
     pub output_folder: std::path::PathBuf,
+    pub ignore_cache: bool,
 }
 
 impl RunData {
@@ -41,6 +42,7 @@ impl RunData {
             yyc,
             yyp,
             output_folder,
+            ignore_cache,
         } = b;
 
         Self {
@@ -50,6 +52,7 @@ impl RunData {
             verbosity,
             output_folder: output_folder
                 .unwrap_or_else(|| std::path::Path::new("target").to_owned()),
+            ignore_cache,
         }
     }
 }
@@ -71,6 +74,7 @@ pub fn get_input() -> Input {
         yyc,
         yyp,
         output_folder,
+        ignore_cache,
     } = b;
 
     if let Some(cfg) = config {
@@ -84,6 +88,7 @@ pub fn get_input() -> Input {
     }
     config_file.verbosity = verbosity;
     config_file.yyc = yyc;
+    config_file.ignore_cache = ignore_cache;
 
     match value.subcmd {
         ClapOperation::Run(_) => Input::Run(RunData::new(config_file)),

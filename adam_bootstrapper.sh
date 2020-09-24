@@ -1,3 +1,3 @@
 cargo build;
-cd ../../GMS2/Testbench/;
-./../../Rust/adam/target/debug/adam;
+cd ../../GMS2/SwordAndField/;
+./../../Rust/adam/target/debug/adam run --ignore-cache;

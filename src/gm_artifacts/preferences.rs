@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(target_os = "windows")]
+// #[cfg(target_os = "windows")]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, Clone, Hash)]
 pub struct GmPreferences {
     #[serde(skip_serializing_if = "Option::is_none")]

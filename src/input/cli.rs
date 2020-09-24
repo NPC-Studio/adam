@@ -22,7 +22,6 @@ pub enum ClapOperation {
 
     // /// Creates a release executable, running `clean` first.
     // Release(RunOptions),
-    
     /// Cleans a project target directory.
     Clean(CleanOptions),
 }
@@ -48,6 +47,9 @@ pub struct RunOptions {
     /// The relative path to the output folder. Defaults to `target`.
     #[clap(short, long)]
     pub output_folder: Option<std::path::PathBuf>,
+
+    #[clap(short, long)]
+    pub ignore_cache: bool,
 }
 
 #[derive(Clap, Debug)]

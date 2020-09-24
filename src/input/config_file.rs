@@ -28,6 +28,7 @@ impl From<ConfigFile> for RunOptions {
             yyp: o.yyp,
             verbosity: o.verbosity.unwrap_or_default(),
             output_folder: o.output_folder,
+            ignore_cache: false,
         }
     }
 }

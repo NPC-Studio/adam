@@ -1,3 +1,4 @@
+use super::{invoke, invoke_rerun};
 use crate::{gm_artifacts, input::Input, input::RunData};
 use heck::TitleCase;
 use indicatif::ProgressBar;
@@ -18,7 +19,7 @@ const FINAL_EMITS: [&str; 7] = [
     "********",
 ];
 
-pub struct RunCommand(RunKind, RunData);
+pub struct RunCommand(pub(super) RunKind, pub(super) RunData);
 impl From<Input> for RunCommand {
     fn from(o: Input) -> Self {
         match o {
@@ -88,15 +89,8 @@ pub fn run_command(
     }
 }
 
-#[cfg(target_os = "windows")]
 pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunData) {
-    let mut child =
-        std::process::Command::new(gm_build.runtime_location.join("windows/Runner.exe"))
-            .arg("-game")
-            .arg(gm_build.compile_output_file_name)
-            .stdout(std::process::Stdio::piped())
-            .spawn()
-            .unwrap();
+    let mut child = invoke_rerun(&gm_build);
 
     if run_data.verbosity > 0 {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
@@ -131,46 +125,6 @@ pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunData) {
 
         run_game(&mut reader);
     }
-}
-
-#[cfg(target_os = "windows")]
-fn invoke(macros: &gm_artifacts::GmMacros, build_bff: &Path, sub_command: &RunCommand) -> Child {
-    let mut igor = std::process::Command::new(macros.igor_path.clone());
-    igor.arg("-j=8")
-        .arg(format!("-options={}", build_bff.display()));
-
-    // add the verbosity
-    if sub_command.1.verbosity > 1 {
-        igor.arg("-v");
-    }
-
-    // add the platform
-    igor.arg("--")
-        .arg(gm_artifacts::PLATFORM.to_string())
-        .arg("Run")
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .unwrap()
-}
-
-#[cfg(not(target_os = "windows"))]
-fn invoke(
-    macros: &gm_artifacts::GmMacros,
-    build_bff: &Path,
-    sub_command: &str,
-) -> Lines<BufReader<ChildStdout>> {
-    let igor_output = std::process::Command::new(gm_artifacts::MONO_LOCATION)
-        .arg(macros.igor_path.clone())
-        .arg("-j=8")
-        .arg(format!("-options={}", build_bff.display()))
-        .arg("--")
-        .arg(gm_artifacts::PLATFORM.to_string())
-        .arg(sub_command)
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .unwrap();
-
-    BufReader::new(igor_output.stdout.unwrap()).lines()
 }
 
 fn run_initial(
@@ -324,7 +278,7 @@ impl ColorStyler {
 }
 // // gml_Script_target_window_gui_Camera_gml_GlobalScript_CameraClass:77
 // pub fn script_styler(input: &mut String) {
-    
+
 // }
 
 /*

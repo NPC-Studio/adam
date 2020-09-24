@@ -40,7 +40,21 @@ mod gm_artifacts {
     pub use build::*;
 }
 mod manifest;
-mod runner;
+
+mod runner {
+    mod run;
+    pub use run::{rerun_old, run_command};
+
+    #[cfg(not(target_os = "windows"))]
+    mod invoke_nix;
+    #[cfg(not(target_os = "windows"))]
+    pub(super) use invoke_nix::{invoke, invoke_rerun};
+
+    #[cfg(target_os = "windows")]
+    mod invoke_win;
+    #[cfg(target_os = "windows")]
+    pub(super) use invoke_nix::{invoke, invoke_rerun};
+}
 
 fn main() {
     let options = input::get_input();
@@ -128,12 +142,14 @@ fn main() {
     std::fs::create_dir_all(&cache_folder).unwrap();
 
     // check if we need to make a new build at all, or can go straight to the runner
-    if manifest::check_manifest(
-        build_data.config.clone(),
-        &build_data.project_directory,
-        &cache_folder,
-        &build_data.output_folder,
-    ) {
+    if run_data.ignore_cache == false
+        && manifest::check_manifest(
+            build_data.config.clone(),
+            &build_data.project_directory,
+            &cache_folder,
+            &build_data.output_folder,
+        )
+    {
         runner::rerun_old(
             gm_build,
             match options {

@@ -322,10 +322,10 @@ impl ColorStyler {
         }
     }
 }
-// gml_Script_target_window_gui_Camera_gml_GlobalScript_CameraClass:77
-pub fn script_styler(input: &mut String) {
+// // gml_Script_target_window_gui_Camera_gml_GlobalScript_CameraClass:77
+// pub fn script_styler(input: &mut String) {
     
-}
+// }
 
 /*
 gml_Object_Game_Create_0:46

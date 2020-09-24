@@ -22,6 +22,7 @@ pub enum ClapOperation {
 
     // /// Creates a release executable, running `clean` first.
     // Release(RunOptions),
+    
     /// Cleans a project target directory.
     Clean(CleanOptions),
 }

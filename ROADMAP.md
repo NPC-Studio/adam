@@ -19,10 +19,11 @@
   - [x] rename `target` to `yyp`
   - [x] add `output_folder_name` option.
 - [x] Clean up intermediary files
-- [ ] Build without Run
-- [ ] Run immediately
-- [ ] Fancy boy stuff (not necessary)
-  - [ ] better handles for errors
-  - [ ] parse fpaths in output
+- [x] Build without Run
+- [x] Run immediately
+- [-] Fancy boy stuff (not necessary)
+  - [x] better handles for errors
+  - [ ] parse fpaths in output to be cleaner
 - [x] Show the Config on the compiling output
+- [ ] Make sure the yyc cache and the vm cache are coherent and separate.
 - [ ] Installation Guide in the Readme

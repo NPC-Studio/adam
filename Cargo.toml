@@ -14,11 +14,10 @@ toml = "0.5"
 yy-typings = "0.3.12"
 clap = "3.0.0-beta.1"
 directories = "3.0"
+anyhow = "1.0"
 
 console = "0.12"
 indicatif = "0.15"
 heck = "0.3.1"
 walkdir = "2.3"
 filetime = "0.2"
-
-anyhow = "1.0"

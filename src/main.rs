@@ -134,7 +134,14 @@ fn main() {
         &cache_folder,
         &build_data.output_folder,
     ) {
-        runner::rerun_old(gm_build, run_data.yyc, run_data.config.clone());
+        runner::rerun_old(
+            gm_build,
+            match options {
+                Input::Run(bd) => bd,
+                Input::Build(bd) => bd,
+                Input::Clean(_, _) => unimplemented!(),
+            },
+        );
         return;
     }
 

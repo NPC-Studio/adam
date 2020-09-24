@@ -89,7 +89,7 @@ pub fn run_command(
 }
 
 #[cfg(target_os = "windows")]
-pub fn rerun_old(gm_build: gm_artifacts::GmBuild, yyc: bool, config: String) {
+pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunData) {
     let mut child =
         std::process::Command::new(gm_build.runtime_location.join("windows/Runner.exe"))
             .arg("-game")
@@ -98,18 +98,21 @@ pub fn rerun_old(gm_build: gm_artifacts::GmBuild, yyc: bool, config: String) {
             .spawn()
             .unwrap();
 
+    if run_data.verbosity > 0 {
+        let reader = BufReader::new(child.stdout.unwrap()).lines();
+        for line in reader {
+            if let Ok(l) = line {
+                println!("{}", l.trim());
+            }
+        }
+        return;
+    }
+
     let output = run_initial(
         &mut child,
         &gm_build.project_name,
         &gm_build.project_path,
-        RunCommand(
-            RunKind::Build,
-            RunData {
-                yyc,
-                config,
-                ..Default::default()
-            },
-        ),
+        RunCommand(RunKind::Build, run_data),
         true,
     );
 
@@ -261,11 +264,36 @@ fn run_game(lines: &mut Lines<impl BufRead>) {
         "Script_Free called",
     ];
 
+    let stylers = vec![
+        ColorStyler {
+            matchers: vec!["error", "ERROR"],
+            style: console::Style::new().red().bright(),
+        },
+        ColorStyler {
+            matchers: vec!["warning", "WARNING"],
+            style: console::Style::new().yellow().bright(),
+        },
+        ColorStyler {
+            matchers: vec!["info", "INFO", "debug", "DEBUG"],
+            style: console::Style::new().green().bright(),
+        },
+        ColorStyler {
+            matchers: vec!["trace", "TRACE"],
+            style: console::Style::new().dim(),
+        },
+    ];
+
     for line in lines {
         if let Ok(l) = line {
             let message = l.trim();
             if message.is_empty() {
                 continue;
+            }
+
+            let mut message = message.to_string();
+
+            for styler in stylers.iter() {
+                styler.style(&mut message);
             }
 
             if message == "Igor complete." {
@@ -279,3 +307,34 @@ fn run_game(lines: &mut Lines<impl BufRead>) {
         }
     }
 }
+
+pub struct ColorStyler {
+    pub matchers: Vec<&'static str>,
+    pub style: console::Style,
+}
+
+impl ColorStyler {
+    pub fn style(&self, input: &mut String) {
+        for m in self.matchers.iter() {
+            if input.contains(m) {
+                *input = input.replace(m, &self.style.apply_to(m).to_string());
+            }
+        }
+    }
+}
+// gml_Script_target_window_gui_Camera_gml_GlobalScript_CameraClass:77
+pub fn script_styler(input: &mut String) {
+    
+}
+
+/*
+gml_Object_Game_Create_0:46
+gml_Script_deserialize_Configuration_gml_GlobalScript_Configuration:35
+gml_Object_Game_Create_0:256
+gml_Script_Camera:370
+gml_Script_Camera:373
+gml_Script_set_view_size_Camera_gml_GlobalScript_CameraClass:110
+gml_Script_target_mistria_gui_Camera_gml_GlobalScript_CameraClass:45
+gml_Script_target_window_gui_Camera_gml_GlobalScript_CameraClass:77
+gml_GlobalScript_Boombox_3740_play_track_Boombox_gml_GlobalScript_Boombox:141
+*/

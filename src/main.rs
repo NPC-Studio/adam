@@ -53,7 +53,7 @@ mod runner {
     #[cfg(target_os = "windows")]
     mod invoke_win;
     #[cfg(target_os = "windows")]
-    pub(super) use invoke_nix::{invoke, invoke_rerun};
+    pub(super) use invoke_win::{invoke, invoke_rerun};
 }
 
 fn main() {

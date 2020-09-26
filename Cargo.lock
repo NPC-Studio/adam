@@ -11,6 +11,8 @@ dependencies = [
  "filetime",
  "heck",
  "indicatif",
+ "once_cell",
+ "regex",
  "serde",
  "serde_json",
  "toml",
@@ -301,6 +303,12 @@ name = "number_prefix"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17b02fc0ff9a9e4b35b3342880f48e896ebf69f2967921fe8646bf5b7125956a"
+
+[[package]]
+name = "once_cell"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "260e51e7efe62b592207e9e13a68e43692a7a279171d6ba57abd208bf23645ad"
 
 [[package]]
 name = "os_str_bytes"

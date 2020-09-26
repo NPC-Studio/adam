@@ -44,7 +44,6 @@ impl std::fmt::Display for RunCommand {
 pub enum RunKind {
     Run,
     Build,
-    // Release,
 }
 
 pub fn run_command(
@@ -281,14 +280,3 @@ impl ColorStyler {
 
 // }
 
-/*
-gml_Object_Game_Create_0:46
-gml_Script_deserialize_Configuration_gml_GlobalScript_Configuration:35
-gml_Object_Game_Create_0:256
-gml_Script_Camera:370
-gml_Script_Camera:373
-gml_Script_set_view_size_Camera_gml_GlobalScript_CameraClass:110
-gml_Script_target_mistria_gui_Camera_gml_GlobalScript_CameraClass:45
-gml_Script_target_window_gui_Camera_gml_GlobalScript_CameraClass:77
-gml_GlobalScript_Boombox_3740_play_track_Boombox_gml_GlobalScript_Boombox:141
-*/

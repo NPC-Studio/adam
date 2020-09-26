@@ -1,23 +1,13 @@
-use super::{invoke, invoke_rerun};
+use super::{
+    compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke, invoke_rerun,
+    printer::Printer,
+};
 use crate::{gm_artifacts, input::Input, input::RunData};
-use heck::TitleCase;
-use indicatif::ProgressBar;
 use std::{
     io::Lines,
     io::{BufRead, BufReader},
     path::Path,
-    process::Child,
 };
-
-const FINAL_EMITS: [&str; 7] = [
-    "MainOptions.json",
-    "gamepadcount",
-    "hardware device",
-    "Collision Event time",
-    "Entering main loop.",
-    "Total memory used",
-    "********",
-];
 
 pub struct RunCommand(pub(super) RunKind, pub(super) RunData);
 impl From<Input> for RunCommand {
@@ -62,34 +52,55 @@ pub fn run_command(
             }
         }
     } else {
-        let output = run_initial(
+        let compiler_handler = match sub_command.0 {
+            RunKind::Run => CompilerHandler::new_run(),
+            RunKind::Build => CompilerHandler::new_build(),
+        };
+        // startup the printer in a separate thread...
+        let project_dir = macros.project_dir.clone();
+        let printer_handler =
+            std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));
+
+        let output = compiler_handler.compile(
             &mut child,
             &macros.project_name,
             &macros.project_full_filename,
             sub_command,
-            false,
         );
 
-        if let Some(success) = output {
-            let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
+        let mut printer = printer_handler.join().unwrap();
 
-            // skip the ****
-            reader.next();
-
-            // skip the annoying ass "controller"
-            reader.next();
-
-            for msg in success {
-                println!("{}", msg);
+        match output {
+            CompilerOutput::Errors(e) => {
+                for error in e {
+                    printer.print_line(error);
+                }
             }
+            CompilerOutput::SuccessAndRun(msgs) => {
+                let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
 
-            run_game(&mut reader);
+                // skip the ****
+                reader.next();
+
+                // skip the annoying ass "controller"
+                reader.next();
+
+                for msg in msgs {
+                    printer.print_line(msg);
+                }
+
+                run_game(&mut reader, &mut printer);
+            }
+            CompilerOutput::SuccessAndBuild => {}
         }
     }
 }
 
 pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunData) {
     let mut child = invoke_rerun(&gm_build);
+    // startup the printer in a separate thread...
+    let project_dir = gm_build.project_dir.clone();
+    let printer_handler = std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));
 
     if run_data.verbosity > 0 {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
@@ -101,182 +112,55 @@ pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunData) {
         return;
     }
 
-    let output = run_initial(
+    let compile_handler = CompilerHandler::new_rerun();
+    let output = compile_handler.compile(
         &mut child,
         &gm_build.project_name,
         &gm_build.project_path,
         RunCommand(RunKind::Build, run_data),
-        true,
     );
 
-    if let Some(success) = output {
-        let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
+    let mut printer = printer_handler.join().unwrap();
 
-        // skip the ****
-        reader.next();
-
-        // skip the annoying ass "controller"
-        reader.next();
-
-        for msg in success {
-            println!("{}", msg);
+    match output {
+        CompilerOutput::Errors(e) => {
+            for error in e {
+                printer.print_line(error);
+            }
         }
+        CompilerOutput::SuccessAndRun(msgs) => {
+            let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
 
-        run_game(&mut reader);
+            // skip the ****
+            reader.next();
+
+            // skip the annoying ass "controller"
+            reader.next();
+
+            // startup the printer...
+            let mut printer = Printer::new(&gm_build.project_dir.join("scripts"));
+
+            for msg in msgs {
+                printer.print_line(msg);
+            }
+
+            run_game(&mut reader, &mut printer);
+        }
+        CompilerOutput::SuccessAndBuild => unimplemented!(),
     }
 }
 
-fn run_initial(
-    child: &mut Child,
-    project_name: &str,
-    project_path: &Path,
-    run_command: RunCommand,
-    in_final_stage: bool,
-) -> Option<Vec<String>> {
-    const RUN_INDICATORS: [&str; 2] = ["[Run]", "Run_Start"];
-    let progress_bar = ProgressBar::new(1000);
-    progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
-    progress_bar.set_style(
-        indicatif::ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {msg}")
-            .progress_chars("#> "),
-    );
-    progress_bar.enable_steady_tick(100);
-    progress_bar.println(format!(
-        "{} {} ({})",
-        console::style("Compiling").green().bright(),
-        project_name.to_title_case(),
-        project_path.display()
-    ));
-
-    let mut in_final_stage = in_final_stage;
-    let mut startup_messages = vec![];
-
-    let start_time = std::time::Instant::now();
-
-    let lines = BufReader::new(child.stdout.as_mut().unwrap()).lines();
-
+fn run_game(lines: &mut Lines<impl BufRead>, printer: &mut Printer) {
     for line in lines {
         if let Ok(l) = line {
-            if l.contains("Error: ") {
-                progress_bar.finish_with_message(l.trim());
-                return None;
-            }
-
-            progress_bar.inc(10);
-            let message = l.trim();
-
-            if message.is_empty() {
-                continue;
-            }
-
-            if in_final_stage == false {
-                let max_size = message.len().min(30);
-
-                progress_bar.set_message(&message[..max_size]);
-
-                if RUN_INDICATORS.iter().any(|v| message.contains(v)) {
-                    // messy messy
-                    if run_command.0 == RunKind::Build {
-                        child.kill().unwrap();
-                        break;
-                    }
-                    in_final_stage = true;
-                }
-            } else {
-                // we're in the final stage...
-                if FINAL_EMITS.iter().any(|&v| message.contains(v)) == false {
-                    startup_messages.push(message.to_owned());
-                }
-
-                if l == "Entering main loop." {
-                    progress_bar.finish_and_clear();
-                    break;
-                }
-            }
-        }
-    }
-
-    progress_bar.finish_and_clear();
-    println!(
-        "{} {} {}:{} in {}",
-        console::style("Completed").green().bright(),
-        gm_artifacts::PLATFORM.to_string(),
-        run_command,
-        console::style(&run_command.1.config).yellow().bright(),
-        indicatif::HumanDuration(std::time::Instant::now() - start_time)
-    );
-
-    Some(startup_messages)
-}
-
-fn run_game(lines: &mut Lines<impl BufRead>) {
-    const SHUTDOWN: [&str; 3] = [
-        "Attempting to set gamepadcount to",
-        "Not shutting down steam as it is not initialised",
-        "Script_Free called",
-    ];
-
-    let stylers = vec![
-        ColorStyler {
-            matchers: vec!["error", "ERROR"],
-            style: console::Style::new().red().bright(),
-        },
-        ColorStyler {
-            matchers: vec!["warning", "WARNING"],
-            style: console::Style::new().yellow().bright(),
-        },
-        ColorStyler {
-            matchers: vec!["info", "INFO", "debug", "DEBUG"],
-            style: console::Style::new().green().bright(),
-        },
-        ColorStyler {
-            matchers: vec!["trace", "TRACE"],
-            style: console::Style::new().dim(),
-        },
-    ];
-
-    for line in lines {
-        if let Ok(l) = line {
-            let message = l.trim();
-            if message.is_empty() {
-                continue;
-            }
-
-            let mut message = message.to_string();
-
-            for styler in stylers.iter() {
-                styler.style(&mut message);
-            }
+            let message = l.to_string();
 
             if message == "Igor complete." {
                 println!("adam complete");
                 break;
             }
 
-            if SHUTDOWN.iter().any(|v| l.contains(v)) == false {
-                println!("{}", message);
-            }
+            printer.print_line(message);
         }
     }
 }
-
-pub struct ColorStyler {
-    pub matchers: Vec<&'static str>,
-    pub style: console::Style,
-}
-
-impl ColorStyler {
-    pub fn style(&self, input: &mut String) {
-        for m in self.matchers.iter() {
-            if input.contains(m) {
-                *input = input.replace(m, &self.style.apply_to(m).to_string());
-            }
-        }
-    }
-}
-// // gml_Script_target_window_gui_Camera_gml_GlobalScript_CameraClass:77
-// pub fn script_styler(input: &mut String) {
-
-// }
-

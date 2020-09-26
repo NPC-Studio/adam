@@ -56,6 +56,9 @@ mod runner {
     pub(super) use invoke_win::{invoke, invoke_rerun};
 
     mod gm_uri_parse;
+    mod printer;
+    mod ac_styler;
+    mod compiler_handler;
 }
 
 fn main() {

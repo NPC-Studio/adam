@@ -30,8 +30,7 @@ MUST SET THIS UP BEFORE WE RELEASE
 If you're a Windows **scoop** user, then you can install `adam` through scoop:
 
 ```ps1
-MUST SET THIS UP BEFORE WE RELEASE
-scoop bucket add sanbox-irl-gms2 https://github.com/sanbox-irl/scoop-adam.git
+scoop bucket add scoop-adam https://github.com/sanbox-irl/scoop-adam
 scoop install adam
 ```
 

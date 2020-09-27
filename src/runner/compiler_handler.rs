@@ -23,8 +23,14 @@ impl CompilerHandler {
         Self(CompilerState::Initialize, true)
     }
 
+    #[cfg(target_os = "windows")]
     pub fn new_rerun() -> Self {
         Self(CompilerState::PreRunToMainLoop(vec![]), false)
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn new_rerun() -> Self {
+        Self(CompilerState::ChunkBuilder, false)
     }
 
     pub fn compile(

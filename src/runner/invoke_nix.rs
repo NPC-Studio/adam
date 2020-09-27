@@ -28,10 +28,20 @@ pub fn invoke(
 }
 
 pub fn invoke_rerun(gm_build: &gm_artifacts::GmBuild) -> Child {
-    std::process::Command::new(gm_build.runtime_location.join("mac/YoYo Runner.app"))
-        .arg("-game")
-        .arg(gm_build.output_folder.join("GameAssetsMac.zip"))
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .unwrap()
+    std::process::Command::new(
+        gm_build
+            .runtime_location
+            .join("mac/YoYo Runner.app/Contents/MacOS/Mac_Runner"),
+    )
+    .arg("-game")
+    .arg(gm_build.output_folder.join("GameAssetsMac.zip"))
+    .arg("-debugoutput")
+    .arg(gm_build.output_folder.join("debug.log"))
+    .arg("-output")
+    .arg(gm_build.output_folder.join("debug.log"))
+    .arg("-runTest")
+    .stdout(std::process::Stdio::piped())
+    .stderr(std::process::Stdio::null())
+    .spawn()
+    .unwrap()
 }

@@ -2,7 +2,7 @@ use super::{
     compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke, invoke_rerun,
     printer::Printer,
 };
-use crate::{gm_artifacts, input::Input, input::RunData};
+use crate::{gm_artifacts, input::Input, input::RunData, manifest};
 use std::{
     io::Lines,
     io::{BufRead, BufReader},
@@ -75,6 +75,8 @@ pub fn run_command(
                 for error in e {
                     printer.print_line(error);
                 }
+                let cache_folder = build_bff.parent().unwrap();
+                manifest::invalidate_manifest(cache_folder);
             }
             CompilerOutput::SuccessAndRun(msgs) => {
                 let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
@@ -127,6 +129,8 @@ pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunData) {
             for error in e {
                 printer.print_line(error);
             }
+            let cache_folder = gm_build.output_folder;
+            manifest::invalidate_manifest(&cache_folder);
         }
         CompilerOutput::SuccessAndRun(msgs) => {
             let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();

@@ -165,19 +165,3 @@ pub enum CompilerOutput {
     SuccessAndBuild,
     SuccessAndRun(Vec<String>),
 }
-/*
-[Run] Run game
-Options: C:\Users\jjspi\Documents\Projects\Gms2\Testbench\target\vm\cache\MainOptions.json
-Attempting to set gamepadcount to 12
-DirectX11: Using hardware device
-Collision Event time(microsecs)=1
-hello from the create event
-Total memory used = 7577829(0x0073a0e5) bytes
-**********************************.
-Entering main loop.
-**********************************.
-heartbeat
-Attempting to set gamepadcount to 0
-Not shutting down steam as it is not initialised
-Script_Free called
-*/

@@ -84,3 +84,15 @@ fn is_hidden(entry: &DirEntry) -> bool {
         .map(|s| s.starts_with('.'))
         .unwrap_or(false)
 }
+
+pub fn invalidate_manifest(manifest_dir: &Path) {
+    let manifest_path = manifest_dir.join(".manifest.toml");
+    match std::fs::remove_file(manifest_path) {
+        Ok(()) => {}
+        Err(e) => println!(
+            "{}: we couldn't clear the manifest because {}. please run `adam clean`.",
+            console::style("adam error").red().bright(),
+            console::style(e).white()
+        ),
+    }
+}

@@ -1,11 +1,12 @@
-use super::ac_styler::*;
 use super::gm_uri_parse::*;
+use aho_corasick::AhoCorasickBuilder;
 use std::path::Path;
 
 #[derive(Debug)]
 pub struct Printer {
-    ac_stylers: Vec<AcStyler>,
+    str_to_style: std::collections::HashMap<String, console::Style>,
     gm_uri_parser: GmUriParser,
+    aho_corasick: aho_corasick::AhoCorasick,
 }
 
 impl Printer {
@@ -16,37 +17,42 @@ impl Printer {
     ];
 
     pub fn new(scripts_directory: &Path) -> Self {
+        let str_to_style = maplit::hashmap! {
+            "error".to_string() => console::Style::new().red().bright(),
+            "warn".to_string() => console::Style::new().yellow().bright(),
+            "info".to_string() => console::Style::new().green().bright(),
+            "trace".to_string() => console::Style::new().dim().cyan()
+        };
+
+        let aho_corasick = AhoCorasickBuilder::new()
+            .ascii_case_insensitive(true)
+            .build(str_to_style.keys());
+
         Self {
-            ac_stylers: vec![
-                AcStyler {
-                    matchers: vec!["error", "ERROR"],
-                    style: console::Style::new().red().bright(),
-                },
-                AcStyler {
-                    matchers: vec!["warn", "WARN"],
-                    style: console::Style::new().yellow().bright(),
-                },
-                AcStyler {
-                    matchers: vec!["info", "INFO", "debug", "DEBUG"],
-                    style: console::Style::new().green().bright(),
-                },
-                AcStyler {
-                    matchers: vec!["trace", "TRACE"],
-                    style: console::Style::new().dim().cyan(),
-                },
-            ],
+            str_to_style,
             gm_uri_parser: GmUriParser::new(scripts_directory),
+            aho_corasick,
         }
     }
 
-    pub fn print_line(&mut self, mut msg: String) {
-        for styler in self.ac_stylers.iter() {
-            styler.style(&mut msg);
+    pub fn print_line(&mut self, msg: String) {
+        if Self::SHUTDOWN.iter().any(|v| msg.contains(v)) {
+            return;
         }
-        self.gm_uri_parser.parse(&mut msg);
 
-        if Self::SHUTDOWN.iter().any(|v| msg.contains(v)) == false {
-            println!("{}", msg);
-        }
+        let mut output = String::new();
+        self.aho_corasick
+            .replace_all_with(&msg, &mut output, |_, txt, buff| {
+                if let Some(style) = self.str_to_style.get(&txt.to_ascii_lowercase()) {
+                    buff.push_str(&style.apply_to(txt).to_string())
+                } else {
+                    buff.push_str(txt);
+                }
+
+                true
+            });
+        self.gm_uri_parser.parse(&mut output);
+
+        println!("{}", output);
     }
 }

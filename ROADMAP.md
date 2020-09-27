@@ -23,7 +23,7 @@
 - [x] Run immediately
 - [-] Fancy boy stuff (not necessary)
   - [x] better handles for errors
-  - [ ] parse fpaths in output to be cleaner
+  - [x] parse fpaths in output to be cleaner
 - [x] Show the Config on the compiling output
-- [ ] Make sure the yyc cache and the vm cache are coherent and separate.
+- [x] Make sure the yyc cache and the vm cache are coherent and separate.
 - [ ] Installation Guide in the Readme

@@ -19,8 +19,8 @@ pub struct ConfigFile {
     /// The output folder, relative to the current working directory. Defaults to `target`
     pub output_folder: Option<std::path::PathBuf>,
 
-    /// Igores the cache on all compiles.
-    pub ignore_cache: Option<bool>,
+    /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
+    pub ignore_cache: Option<usize>,
 }
 
 impl From<ConfigFile> for RunOptions {

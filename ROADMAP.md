@@ -26,4 +26,8 @@
   - [x] parse fpaths in output to be cleaner
 - [x] Show the Config on the compiling output
 - [x] Make sure the yyc cache and the vm cache are coherent and separate.
-- [ ] Installation Guide in the Readme
+- [-] Installation Guide in the Readme
+  - [ ] Make Configuration Guide
+  - [ ] Homebrew publish
+  - [ ] Chocolatey publish
+  - [ ] Scoop publish

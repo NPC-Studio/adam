@@ -31,7 +31,7 @@ pub struct RunData {
     pub yyp_name: Option<String>,
     pub verbosity: usize,
     pub output_folder: std::path::PathBuf,
-    pub ignore_cache: bool,
+    pub ignore_cache: usize,
 }
 
 impl RunData {

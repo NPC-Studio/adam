@@ -146,7 +146,7 @@ fn main() {
     std::fs::create_dir_all(&cache_folder).unwrap();
 
     // check if we need to make a new build at all, or can go straight to the runner
-    if run_data.ignore_cache == false
+    if run_data.ignore_cache == 0
         && manifest::check_manifest(
             build_data.config.clone(),
             &build_data.project_directory,

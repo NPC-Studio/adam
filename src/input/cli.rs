@@ -48,8 +48,9 @@ pub struct RunOptions {
     #[clap(short, long)]
     pub output_folder: Option<std::path::PathBuf>,
 
-    #[clap(short, long)]
-    pub ignore_cache: bool,
+    /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
+    #[clap(short, long, parse(from_occurrences))]
+    pub ignore_cache: usize,
 }
 
 #[derive(Clap, Debug)]

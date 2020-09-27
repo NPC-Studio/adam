@@ -4,22 +4,24 @@ use super::cli::RunOptions;
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Default)]
 pub struct ConfigFile {
-    /// The configuration to use. If blank, will use "Default".
+    /// the Gms2 configuration to use. If blank, will use "Default".
     pub configuration: Option<String>,
 
-    /// the target yyp. If blank, will use a Yyp if found in the directory.
+    /// the target yyp project name. If blank, will use a Yyp if found in the directory.
     pub yyp: Option<String>,
 
     /// the verbosity to use in the compiler.
-    /// >1 disable the pretty compile widget
-    /// >2 adds verbose logging for the initial stages of compilation
-    /// >3 enables all verbosity
+    /// >0 disable the pretty compile widget
+    /// >1 adds verbose logging for the initial stages of compilation
+    /// >2 enables all verbosity
     pub verbosity: Option<usize>,
 
     /// The output folder, relative to the current working directory. Defaults to `target`
     pub output_folder: Option<std::path::PathBuf>,
 
-    /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
+    /// Ignore cache.
+    /// >0 disables the quick run when no files have been changed.
+    /// >1 disables caching entirely.
     pub ignore_cache: Option<usize>,
 }
 

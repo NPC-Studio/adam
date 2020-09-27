@@ -1,5 +1,10 @@
 # ROADMAP
 
+## v0.2.0
+
+- [ ] User defined color overrides within configuration and CLI.
+- [ ] Release mode for creating builds.
+
 ## v0.1.0
 
 - [x] Commandline Interface
@@ -21,13 +26,12 @@
 - [x] Clean up intermediary files
 - [x] Build without Run
 - [x] Run immediately
-- [-] Fancy boy stuff (not necessary)
+- [x] Fancy boy stuff (not necessary)
   - [x] better handles for errors
   - [x] parse fpaths in output to be cleaner
 - [x] Show the Config on the compiling output
 - [x] Make sure the yyc cache and the vm cache are coherent and separate.
 - [-] Installation Guide in the Readme
-  - [ ] Make Configuration Guide
+  - [x] Make Configuration Guide
   - [ ] Homebrew publish
-  - [ ] Chocolatey publish
   - [ ] Scoop publish

@@ -20,14 +20,14 @@ pub struct GmUriParser {
 impl GmUriParser {
     pub fn new<P: AsRef<Path>>(scripts_directory: P) -> Self {
         let global_script_regex =
-            Regex::new(r#"gml_\w*g?m?l?_?*GlobalScript_(\w*):(\d*)"#).unwrap();
-        let object_regex = Regex::new(r#"gml_Object_([a-zA-Z0-9]*)_(\w*):(\d*)"#).unwrap();
-        let script_regex = Regex::new(r#"gml_Script_([a-zA-Z0-9]*):(\d*)"#).unwrap();
+            Regex::new(r#"gml_\w*_?GlobalScript_(\w*):(\d*)"#).unwrap();
+        let object_regex = Regex::new(r#"gml_Object_(\w*):(\d*)"#).unwrap();
+        let script_regex = Regex::new(r#"gml_Script_(\w*):(\d*)"#).unwrap();
 
         let e_global_script_regex =
-            Regex::new(r#"gml_\w*g?m?l?_?GlobalScript_(\w*)\((\d*)\)"#).unwrap();
-        let e_object_regex = Regex::new(r#"gml_Object_([a-zA-Z0-9]*)_(\w*)\((\d*)\)"#).unwrap();
-        let e_script_regex = Regex::new(r#"gml_Script_([a-zA-Z0-9]*):(\d*)"#).unwrap();
+            Regex::new(r#"gml_\w*_?GlobalScript_(\w*)\((\d*)\)"#).unwrap();
+        let e_object_regex = Regex::new(r#"gml_Object_(\w*)\((\d*)\)"#).unwrap();
+        let e_script_regex = Regex::new(r#"gml_Script_(\w*)\((\d*)\)"#).unwrap();
 
         let mut files = HashMap::new();
 
@@ -126,20 +126,52 @@ impl GmUriParser {
             let entire_match = cap_iter.next().unwrap().unwrap();
 
             if let Some(object_name) = cap_iter.next().unwrap() {
-                if let Some(event_names) = cap_iter.next().unwrap() {
-                    if let Some(line) = cap_iter.next().unwrap() {
-                        let mut output = String::with_capacity(input.len());
-                        output.push_str(&input[..entire_match.start()]);
-                        output.push_str(&format!(
-                            "objects/{}/{}.gml:{}:0",
-                            object_name.as_str(),
-                            event_names.as_str(),
-                            line.as_str(),
-                        ));
-                        output.push_str(&input[entire_match.end()..]);
+                let split = object_name.as_str().split('_').collect::<Vec<_>>();
+                // for safety
+                if split.len() < 2 {
+                    return None;
+                }
 
-                        return Some(output);
-                    }
+                let o_name = {
+                    let mut name =
+                        split
+                            .iter()
+                            .take(split.len() - 2)
+                            .fold(String::new(), |mut accum, v| {
+                                accum.push_str(v);
+                                accum.push('_');
+                                accum
+                            });
+                    name.pop();
+                    name
+                };
+
+                let event_name = {
+                    let mut name =
+                        split
+                            .iter()
+                            .skip(split.len() - 2)
+                            .fold(String::new(), |mut accum, v| {
+                                accum.push_str(v);
+                                accum.push('_');
+                                accum
+                            });
+                    name.pop();
+                    name
+                };
+
+                if let Some(line) = cap_iter.next().unwrap() {
+                    let mut output = String::with_capacity(input.len());
+                    output.push_str(&input[..entire_match.start()]);
+                    output.push_str(&format!(
+                        "objects/{}/{}.gml:{}:0",
+                        o_name,
+                        event_name,
+                        line.as_str(),
+                    ));
+                    output.push_str(&input[entire_match.end()..]);
+
+                    return Some(output);
                 }
             }
         }
@@ -154,20 +186,52 @@ impl GmUriParser {
             let entire_match = cap_iter.next().unwrap().unwrap();
 
             if let Some(object_name) = cap_iter.next().unwrap() {
-                if let Some(event_names) = cap_iter.next().unwrap() {
-                    if let Some(line) = cap_iter.next().unwrap() {
-                        let mut output = String::with_capacity(input.len());
-                        output.push_str(&input[..entire_match.start()]);
-                        output.push_str(&format!(
-                            "objects/{}/{}.gml:{}:0",
-                            object_name.as_str(),
-                            event_names.as_str(),
-                            line.as_str(),
-                        ));
-                        output.push_str(&input[entire_match.end()..]);
+                let split = object_name.as_str().split('_').collect::<Vec<_>>();
+                // for safety
+                if split.len() < 2 {
+                    return None;
+                }
 
-                        return Some(output);
-                    }
+                let o_name = {
+                    let mut name =
+                        split
+                            .iter()
+                            .take(split.len() - 2)
+                            .fold(String::new(), |mut accum, v| {
+                                accum.push_str(v);
+                                accum.push('_');
+                                accum
+                            });
+                    name.pop();
+                    name
+                };
+
+                let event_name = {
+                    let mut name =
+                        split
+                            .iter()
+                            .skip(split.len() - 2)
+                            .fold(String::new(), |mut accum, v| {
+                                accum.push_str(v);
+                                accum.push('_');
+                                accum
+                            });
+                    name.pop();
+                    name
+                };
+
+                if let Some(line) = cap_iter.next().unwrap() {
+                    let mut output = String::with_capacity(input.len());
+                    output.push_str(&input[..entire_match.start()]);
+                    output.push_str(&format!(
+                        "objects/{}/{}.gml:{}:0",
+                        o_name,
+                        event_name,
+                        line.as_str(),
+                    ));
+                    output.push_str(&input[entire_match.end()..]);
+
+                    return Some(output);
                 }
             }
         }
@@ -278,7 +342,7 @@ impl GmUriParser {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn parse_script() {
+    fn parse_global_script() {
         let parser = super::GmUriParser::new("./");
 
         let output = parser.parse_global_script(
@@ -295,6 +359,10 @@ mod tests {
             parser.parse_global_script("[9/26/2020 12:52:54 AM] TRACE gml_Script_anon___add_track_stop_to_chain_Boombox_gml_GlobalScript_Boombox_2441___add_track_stop_to_chain_Boombox_gml_GlobalScript_Boombox:103 -- Set music state to FadeOut").unwrap(),
             "[9/26/2020 12:52:54 AM] TRACE scripts/Boombox/Boombox.gml:103:0 -- Set music state to FadeOut"
         );
+        assert_eq!(
+            parser.parse_global_script("[9/26/2020 12:52:54 AM] TRACE gml_Script_anon___add_track_stop_to_chain_Boombox_gml_GlobalScript_Boombox_2441___add_track_stop_to_chain_Boombox_gml_GlobalScript_run_my_game:103 -- Set music state to FadeOut").unwrap(),
+            "[9/26/2020 12:52:54 AM] TRACE scripts/run_my_game/run_my_game.gml:103:0 -- Set music state to FadeOut"
+        );
     }
 
     #[test]
@@ -310,6 +378,11 @@ mod tests {
         assert_eq!(
             output, "[9/26/2020 11:26:04 AM] WARN objects/Game/Create_0.gml:1032:0 -- Gabe is doing some graphic stuff here that he doesn't know where else to put..."
         );
+
+        let output = parser.parse_object("[9/26/2020 11:26:04 AM] WARN gml_Object_obj_player_Create_0:1032 -- Gabe is doing some graphic stuff here that he doesn't know where else to put...").unwrap();
+        assert_eq!(
+            output, "[9/26/2020 11:26:04 AM] WARN objects/obj_player/Create_0.gml:1032:0 -- Gabe is doing some graphic stuff here that he doesn't know where else to put..."
+        );
     }
 
     #[test]
@@ -320,6 +393,11 @@ mod tests {
         let output = parser.parse_script("[9/26/2020 11:26:04 AM] TRACE gml_Script_Camera:370 --   attempted to load save.json").unwrap();
         assert_eq!(
             output, "[9/26/2020 11:26:04 AM] TRACE scripts/CameraClass/CameraClass.gml:370:0 --   attempted to load save.json"
+        );
+
+        let output = parser.parse_script("[9/26/2020 11:26:04 AM] TRACE gml_Script_buffer_to_json_map:370 -- underscore test").unwrap();
+        assert_eq!(
+            output, "[9/26/2020 11:26:04 AM] TRACE scripts/buffer_to_json_map/buffer_to_json_map.gml:370:0 -- underscore test"
         );
     }
 

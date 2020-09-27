@@ -105,17 +105,31 @@ fn main() {
     };
 
     // check if we have a valid yyc bat
-    if run_data.yyc && user_data.visual_studio_path.exists() == false {
-        println!(
-            "{}: no valid path to visual studio .bat build file. Supplied path in preferences was\n\
-        \"{}\", but it did not exist. \n\
-        To use yyc, we must have a visual studio .bat file.\n\
-        Please specify a path in the Gms2 IDE. \n\
-        For more information, see https://help.yoyogames.com/hc/en-us/articles/227860547-GMS2-Required-SDKs",
-            console::style("error").bright().red(), user_data.visual_studio_path.display(),
-        );
+    if run_data.yyc {
+        if cfg!(not(target_os = "windows")) {
+            println!(
+                "{}: {}\nPlease log a feature request at https://github.com/NPC-Studio/adam/issues",
+                console::style("adam error",).bright().red(),
+                console::style("adam does not support macOS YYC compilation, yet.").bold(),
+            );
+            return;
+        }
 
-        return;
+        if user_data.visual_studio_path.exists() == false {
+            println!(
+                "{}: {}.\n\
+            Supplied path in preferences was \"{}\" but it did not exist.\n\
+            To use yyc, we must have a visual studio .bat file.\n\
+        Please specify a path in the Gms2 IDE. \n\
+        For more information, see \
+        https://help.yoyogames.com/hc/en-us/articles/227860547-GMS2-Required-SDKs",
+                console::style("error").bright().red(),
+                console::style("no valid path to visual studio .bat build file").bold(),
+                user_data.visual_studio_path.display(),
+            );
+
+            return;
+        }
     }
 
     let build_data = igor::BuildData {

@@ -5,8 +5,7 @@ mod macos {
     pub const RUNTIME_LOCATION: &str =
         "/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-2.3.0.401";
     pub const TARGET_MASK: usize = 2;
-    pub const APPLICATION_PATH: &str =
-        "/Applications/GameMaker Studio 2.app/Contents/MonoBundle/GameMaker Studio 2.exe";
+    pub const APPLICATION_PATH: &str = "/Applications/GameMaker Studio 2.app";
     pub const MONO_LOCATION: &str =
         "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";
     pub const PLATFORM: super::Platform = super::Platform::Darwin;

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Clap;
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
@@ -51,6 +53,10 @@ pub struct RunOptions {
     /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
     #[clap(short, long, parse(from_occurrences))]
     pub ignore_cache: usize,
+
+    /// The path to your Gms2 installation. Defaults to C drive on Windows and Applications on macOS. If you use Steam, you will need to pass in that fullpath to the .exe, or the .app on macOS.
+    #[clap(short, long)]
+    pub gms2_install_location: Option<PathBuf>,
 }
 
 #[derive(Clap, Debug)]

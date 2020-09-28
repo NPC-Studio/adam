@@ -146,7 +146,7 @@ fn main() {
         user_string: user_data.user_string,
         runtime_location: std::path::Path::new(gm_artifacts::RUNTIME_LOCATION).to_owned(),
         target_mask: gm_artifacts::TARGET_MASK,
-        application_path: std::path::Path::new(gm_artifacts::APPLICATION_PATH).to_owned(),
+        application_path: std::path::Path::new(&run_data.gms2_install_location).to_owned(),
         config: run_data.config.clone(),
         target_file: None,
         project_name: application_data.project_name,

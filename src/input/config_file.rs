@@ -23,6 +23,13 @@ pub struct ConfigFile {
     /// >0 disables the quick run when no files have been changed.
     /// >1 disables caching entirely.
     pub ignore_cache: Option<usize>,
+
+    /// An absolute path to the Gms2 install location on the system.
+    ///
+    /// On Windows, this defaults to `C:\Program Files\GameMaker Studio 2\GameMakerStudio.exe`.
+    /// On macOS, this default to `/Applications/GameMaker Studio 2.app`. (For macOS, you can point to just
+    /// the .app -- internally, we will search inside the app bundle for the executable)
+    pub gms2_install_location: Option<std::path::PathBuf>,
 }
 
 impl From<ConfigFile> for RunOptions {
@@ -33,6 +40,7 @@ impl From<ConfigFile> for RunOptions {
             yyp: o.yyp,
             verbosity: o.verbosity.unwrap_or_default(),
             output_folder: o.output_folder,
+            gms2_install_location: o.gms2_install_location,
             ignore_cache: o.ignore_cache.unwrap_or_default(),
         }
     }

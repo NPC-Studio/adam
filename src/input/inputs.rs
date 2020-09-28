@@ -32,6 +32,7 @@ pub struct RunData {
     pub verbosity: usize,
     pub output_folder: std::path::PathBuf,
     pub ignore_cache: usize,
+    pub gms2_install_location: std::path::PathBuf,
 }
 
 impl RunData {
@@ -43,7 +44,24 @@ impl RunData {
             yyp,
             output_folder,
             ignore_cache,
+            gms2_install_location,
         } = b;
+
+        let gms2_install_location = if cfg!(target_os = "windows") {
+            gms2_install_location.unwrap_or_else(|| {
+                std::path::Path::new(crate::gm_artifacts::APPLICATION_PATH).to_owned()
+            })
+        } else {
+            let mut location = gms2_install_location.unwrap_or_else(|| {
+                std::path::Path::new(crate::gm_artifacts::APPLICATION_PATH).to_owned()
+            });
+
+            if location.extension() == Some(std::ffi::OsStr::new("app")) {
+                location = location.join("Contents/MonoBundle/GameMaker Studio 2.exe");
+            }
+
+            location
+        };
 
         Self {
             yyc,
@@ -53,6 +71,7 @@ impl RunData {
             output_folder: output_folder
                 .unwrap_or_else(|| std::path::Path::new("target").to_owned()),
             ignore_cache,
+            gms2_install_location,
         }
     }
 }
@@ -75,6 +94,7 @@ pub fn get_input() -> Input {
         yyp,
         output_folder,
         ignore_cache,
+        gms2_install_location,
     } = b;
 
     if let Some(cfg) = config {
@@ -85,6 +105,9 @@ pub fn get_input() -> Input {
     }
     if let Some(of) = output_folder {
         config_file.output_folder = Some(of);
+    }
+    if let Some(gms2) = gms2_install_location {
+        config_file.gms2_install_location = Some(gms2);
     }
     config_file.verbosity = verbosity;
     config_file.yyc = yyc;

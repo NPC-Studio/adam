@@ -67,8 +67,8 @@ fn main() {
         Err(e) => {
             println!(
                 "{}: {}\naborting",
-                console::style("error").bright().red(),
-                e
+                console::style("adam error").bright().red(),
+                console::style(format!("reading application data {}", e)).bold()
             );
             return;
         }
@@ -78,8 +78,8 @@ fn main() {
         Err(e) => {
             println!(
                 "{}: {}\naborting",
-                console::style("error").bright().red(),
-                e
+                console::style("adam error").bright().red(),
+                console::style(format!("reading user data {}", e)).bold()
             );
             return;
         }

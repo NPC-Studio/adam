@@ -1,6 +1,6 @@
 # adam
 
-![logo](assets/2048x2048/adam_logo_pa_black_transparent.png)
+![logo](assets/adam-200x200.png)
 
 > I am thy creature: I ought to be thy Adam, but I am rather the fallen angel, whom thou drivest from joy for no misdeed.
 > -- Frankenstein's Monster in *Frankenstein* by Mary Shelly

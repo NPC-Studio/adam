@@ -24,7 +24,8 @@ Additionally, `adam` has the commands `build`, which builds a project without ru
 If you're a **macOS Homebrew** user, then you can install `adam` through homebrew:
 
 ```sh
-MUST SET THIS UP BEFORE WE RELEASE
+brew tap sanbox-irl/homebrew-adam
+brew install adam
 ```
 
 If you're a Windows **scoop** user, then you can install `adam` through scoop:

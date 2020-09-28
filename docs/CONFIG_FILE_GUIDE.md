@@ -40,7 +40,7 @@ Each option is written below. If a configuration file does not parse correctly, 
 
 The Gms2 configuration to use. This is the configuration normally assigned in the IDE using this dropdown:
 
-![dropdown](./dropdown.png)
+![dropdown](../assets/dropdown.png)
 
 ```toml
 configuration = "Test"

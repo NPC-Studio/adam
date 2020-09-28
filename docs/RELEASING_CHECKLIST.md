@@ -13,3 +13,4 @@
   - [ ] Build the release, either with some github action or the old fashioned way.
   - [ ] When the builds have been prepared, add your CHANGELOG text to the release page.
   - [ ] Update scoop
+  - [ ] Update homebrew

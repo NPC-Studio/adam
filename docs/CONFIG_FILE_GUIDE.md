@@ -2,7 +2,7 @@
 
 Setting up an adam configuration file is simple, and allows users to have simple `adam run` commands without passing in any complicated information.
 
-Users have two format options: `JSON` and `TOML`. `TOML` is recommended for its simplicity, but `JSON` is fine as well. By default, a configuration file can be named `.adam`, `.adam.json`/`.adam.toml`, or `adam.json`/`adam.toml`. If you include the file ending, make sure you're using the correct format (ie -- use JSON with the `.json` ending). All adam configuration files should be placed in the root folder of a project, alongside the Yyp.
+Users have two format options: `JSON` and `TOML`. `TOML` is recommended for its simplicity, but `JSON` is fine as well. A configuration file must be named `.adam`, `.adam.json`/`.adam.toml`, or `adam.json`/`adam.toml`. If you include the file ending, make sure you're using the correct format (ie -- use JSON with the `.json` ending). All adam configuration files should be placed in the root folder of a project, alongside the Yyp. In the future, the CLI will allow users to pass in a config file by name.
 
 Every option available in the CLI, except `--yyc`, is available in the configuration files. For how the CLI and the configuration files interact, see the section **How the CLI and Config Files interact** below. Each option available to users will be written below.
 
@@ -123,6 +123,28 @@ ignore_cache: 1
 ```json
 {
     "ignore_cache": 1
+}
+```
+
+### gms2_install_location
+
+> Type: String
+>
+> Default Windows: C:/Program Files/GameMaker Studio 2/GameMakerStudio.exe
+> Default Mac: /Applications/GameMaker Studio 2.app
+
+Uses a non-standard Gms2 install location. If you have installed Gms2 with Steam, this is required.
+
+**Windows**: please make sure to either escape backslashes, or just use forward slashes.
+**Mac**: please provide a path just to the `.app` file. Do not index within the `.app` file -- adam will handle that.
+
+```toml
+gms2_install_location: "C:/Program Files/Steam/common/GameMaker Studio 2/GameMakerStudio.exe"
+```
+
+```json
+{
+    "gms2_install_location": "C:/Program Files/Steam/common/GameMaker Studio 2/GameMakerStudio.exe"
 }
 ```
 

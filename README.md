@@ -19,6 +19,12 @@ This will compile your project, run it, and give you stdout (`"show_debug_messag
 
 Additionally, `adam` has the commands `build`, which builds a project without running it (but will report compile errors), and `clean`, which cleans the output directory.
 
+## LIMITATIONS
+
+To use `adam`, you must be using Gms2.3 in the non-beta (stable) channel, and your runtime must be exactly `2.3.0.401`. In the future, these limitations will be eased going *forward* (we will never support earlier than `2.3.0.401`, however).
+
+Additionally, if your install path for the Gms2 executable is not in the standard location, see the `--gms2-exe-path` flag below.
+
 ## INSTALLATION
 
 [Windows 10 and macOS Catalina binaries are always available in our releases page.](https://github.com/NPC-Studio/adam/releases) If you do not use a package manager, and are not a Rust programmer, this is the best way to get `adam`. After downloading your binary, you will probably want to add the package to your PATH so you can easily use it throughout your projects.
@@ -53,33 +59,34 @@ You will likely need to customize an `adam` command for most usages. To see CLI 
 
 ```txt
 $ adam run --help
-adam.exe-run
+adam-run
 Compiles, if necessary, and then runs a project
 
 USAGE:
-    adam.exe run [FLAGS] [OPTIONS]
+    adam run [FLAGS] [OPTIONS]
 
 FLAGS:
-    -h, --help            Prints this help message
+    -h, --help            Prints help information
     -i, --ignore-cache    Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables
                           all caching
-    -v, --verbosity       Verbosity level. Can use multiple times, like '-vv'. >0 disables pretty
-                          compiles, >1 enables igor verbosity, >2 enables gmac verbosity
+    -v, --verbosity       Verbosity level. Can use multiple times, like '-vv'. >0 disables pretty compiles, >1 enables
+                          igor verbosity, >2 enables gmac verbosity
     -V, --version         Prints version information
     -y, --yyc             Uses the YYC instead of the default VM
 
 OPTIONS:
     -c, --config <config>
             Specifies a configuration. If not passed, we use `Default` for our Config
-    -o, --output-folder <output-folder>
-            The relative path to the output folder. Defaults to `target`
-        --yyp <yyp>
-            Specifies the target Yyp to build. Required if multiple yyps are present.
+    -g, --gms2-install-location <gms2-install-location>
+            The path to your Gms2 installation. Defaults to C drive on Windows and Applications on macOS. If you use
+            Steam, you will need to pass in that fullpath to the .exe, or the .app on macOS
+    -o, --output-folder <output-folder>                    The relative path to the output folder. Defaults to `target`
+        --yyp <yyp>                                        Specifies the target Yyp to build, if there are multiple
 ```
 
 Of special note, please see `--yyc`, which will allow users to compile using the Yyc, and `-c`, which allows users to pass in a configuration. The Gms2 IDE is currently bugged, and will reset your configuration after every IDE restart; `adam` does not have this bug.
 
-However, passing in numerous values every compile can become tiresome. To support this, users can create a config file in either `JSON` or `TOML`, where these options can be specified. To create an adam configuration file, please follow [this guide](CONFIG_FILE_GUIDE.md).
+However, passing in numerous values every compile can become tiresome. To support this, users can create a config file in either `JSON` or `TOML`, where these options can be specified. To create an adam configuration file, please follow [this guide](docs/CONFIG_FILE_GUIDE.md).
 
 ## LICENSE
 

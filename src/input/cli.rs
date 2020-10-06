@@ -12,6 +12,10 @@ pub struct InputOpts {
     /// The path to a non-standard named configuration file. Possible names are .adam, .adam.json, and adam.toml
     #[clap(short, long)]
     pub config: Option<String>,
+
+    /// Prints version information
+    #[clap(short, long)]
+    pub version: bool,
 }
 
 #[derive(Clap, Debug)]

@@ -117,7 +117,7 @@ output_folder = "output"
 Ignore cache. >0 disables the quick run when no files have been changed. >1 disables caching entirely.
 
 ```toml
-ignore_cache: 1
+ignore_cache = 1
 ```
 
 ```json
@@ -139,7 +139,7 @@ Uses a non-standard Gms2 install location. If you have installed Gms2 with Steam
 **Mac**: please provide a path just to the `.app` file. Do not index within the `.app` file -- adam will handle that.
 
 ```toml
-gms2_install_location: "C:/Program Files/Steam/common/GameMaker Studio 2/GameMakerStudio.exe"
+gms2_install_location = "C:/Program Files/Steam/common/GameMaker Studio 2/GameMakerStudio.exe"
 ```
 
 ```json

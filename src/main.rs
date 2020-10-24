@@ -149,7 +149,7 @@ fn main() {
         application_path: std::path::Path::new(&run_data.gms2_install_location).to_owned(),
         config: run_data.config.clone(),
         target_file: None,
-        project_name: application_data.project_name,
+        project_filename: application_data.project_name,
     };
     let gm_build = gm_artifacts::GmBuild::new(&build_data);
 

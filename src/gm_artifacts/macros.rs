@@ -274,7 +274,7 @@ impl GmMacros {
             project_directory,
             output_folder: out,
             output_kind,
-            project_name,
+            project_filename: project_name,
             target_mask: _,
             user_string: _,
             config: _,

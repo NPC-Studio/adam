@@ -20,27 +20,20 @@ impl ApplicationData {
 
                 if let Some(ext) = file.extension() {
                     if ext == "yyp" {
-                        let st = std::fs::read_to_string(file).unwrap();
-
-                        let yyp: yy_typings::Yyp = serde_json::from_str(
-                            &yy_typings::utils::TrailingCommaUtility::clear_trailing_comma_once(
-                                &st,
-                            ),
-                        )?;
-
+                        let stem = file.file_stem().unwrap().to_string_lossy().to_string();
                         if too_many_projects.is_empty() {
                             if let Some(dest) = destination_yyp {
-                                if yyp.name == *dest {
-                                    project_name = Some(yyp.name);
+                                if stem == *dest {
+                                    project_name = Some(stem);
                                 }
                             } else if let Some(project_name) = project_name.take() {
                                 too_many_projects.push(project_name);
-                                too_many_projects.push(yyp.name.clone());
+                                too_many_projects.push(stem);
                             } else {
-                                project_name = Some(yyp.name);
+                                project_name = Some(stem);
                             }
                         } else {
-                            too_many_projects.push(yyp.name.clone());
+                            too_many_projects.push(stem);
                         }
                     }
                 }

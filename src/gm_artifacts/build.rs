@@ -50,16 +50,16 @@ impl GmBuild {
             compile_output_file_name: build_data
                 .output_folder
                 .join(build_data.output_kind.to_string())
-                .join(&build_data.project_name)
+                .join(&build_data.project_filename)
                 .with_extension("win"),
             steam_options: cache.join("steam_options.yy"),
-            project_name: build_data.project_name.clone(),
+            project_name: build_data.project_filename.clone(),
             macros: cache.join("macros.json"),
             project_dir: build_data.project_directory.clone(),
             preferences: cache.join("preferences.json"),
             project_path: build_data
                 .project_directory
-                .join(&build_data.project_name)
+                .join(&build_data.project_filename)
                 .with_extension("yyp"),
             temp_folder: tmp.clone(),
             temp_folder_unmapped: tmp,

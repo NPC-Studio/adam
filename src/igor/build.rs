@@ -5,7 +5,7 @@ use std::path::PathBuf;
 pub struct BuildData {
     pub output_folder: PathBuf,
     pub output_kind: OutputKind,
-    pub project_name: String,
+    pub project_filename: String,
     pub project_directory: PathBuf,
     pub user_dir: PathBuf,
     pub user_string: String,

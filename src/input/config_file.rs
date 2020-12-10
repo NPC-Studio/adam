@@ -30,6 +30,14 @@ pub struct ConfigFile {
     /// On macOS, this default to `/Applications/GameMaker Studio 2.app`. (For macOS, you can point to just
     /// the .app -- internally, we will search inside the app bundle for the executable)
     pub gms2_install_location: Option<std::path::PathBuf>,
+
+    /// Option to switch to using the Gms2 Beta. By default, this will use the `C:/Program Files/GameMaker Studio 2 Beta/GameMakerStudio-Beta.exe`
+    /// filepath, but can be overriden with `gms2_install_location` for beta Steam builds.
+    #[serde(default)]
+    pub beta: bool,
+
+    /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.536` on stable and beta.
+    pub runtime: Option<String>,
 }
 
 impl From<ConfigFile> for RunOptions {
@@ -42,6 +50,8 @@ impl From<ConfigFile> for RunOptions {
             output_folder: o.output_folder,
             gms2_install_location: o.gms2_install_location,
             ignore_cache: o.ignore_cache.unwrap_or_default(),
+            beta: o.beta,
+            runtime: o.runtime,
         }
     }
 }

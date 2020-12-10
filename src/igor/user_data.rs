@@ -1,4 +1,7 @@
+use anyhow::Context;
 use std::path::{Path, PathBuf};
+
+use crate::gm_artifacts::Platform;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct UserData {
@@ -8,11 +11,12 @@ pub struct UserData {
 }
 
 impl UserData {
-    pub fn new() -> anyhow::Result<Self> {
-        let gms2_data = crate::gm_artifacts::gms2_data();
-
-        let um_json: serde_json::Value =
-            serde_json::from_str(&std::fs::read_to_string(&gms2_data.join("um.json"))?)?;
+    pub fn new(platform: &Platform) -> anyhow::Result<Self> {
+        let gms2_data = platform.gms2_data.clone();
+        let um_json: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(&gms2_data.join("um.json"))
+                .with_context(|| format!("could not find {}", gms2_data.join("um.json").display()))?,
+        )?;
 
         let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
 
@@ -42,7 +46,7 @@ impl UserData {
             });
 
         Ok(Self {
-            user_dir: crate::gm_artifacts::user_data(),
+            user_dir: platform.user_data.clone(),
             user_string: format!("{}_{}", user_name, user_id),
             visual_studio_path: supposed_path,
         })

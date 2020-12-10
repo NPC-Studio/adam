@@ -42,16 +42,16 @@ impl std::fmt::Display for OutputKind {
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Platform {
+pub enum PlatformKind {
     Windows,
     Darwin,
 }
 
-impl std::fmt::Display for Platform {
+impl std::fmt::Display for PlatformKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Platform::Windows => write!(f, "windows"),
-            Platform::Darwin => write!(f, "mac"),
+            PlatformKind::Windows => write!(f, "windows"),
+            PlatformKind::Darwin => write!(f, "mac"),
         }
     }
 }

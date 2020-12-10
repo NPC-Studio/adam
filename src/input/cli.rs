@@ -38,6 +38,12 @@ pub struct RunOptions {
     #[clap(long, short)]
     pub yyc: bool,
 
+    /// Option to switch to using the Gms2 Beta. By default, this will use the
+    /// `C:/Program Files/GameMaker Studio 2 Beta/GameMakerStudio-Beta.exe` filepath,
+    /// but can be overriden with `gms2_install_location` for beta Steam builds.
+    #[clap(long, short)]
+    pub beta: bool,
+
     /// Specifies a configuration. If not passed, we use `Default` for our Config.
     #[clap(short, long)]
     pub config: Option<String>,
@@ -61,6 +67,10 @@ pub struct RunOptions {
     /// The path to your Gms2 installation. Defaults to C drive on Windows and Applications on macOS. If you use Steam, you will need to pass in that fullpath to the .exe, or the .app on macOS.
     #[clap(short, long)]
     pub gms2_install_location: Option<PathBuf>,
+
+    /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.536` on stable and beta.
+    #[clap(short, long)]
+    pub runtime: Option<String>,
 }
 
 #[derive(Clap, Debug)]

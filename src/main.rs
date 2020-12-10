@@ -1,13 +1,13 @@
 #![allow(clippy::bool_comparison)]
 
-use input::Input;
+use gm_artifacts::PlatformBuilder;
 
 mod input {
     mod cli;
     mod config_file;
-    mod inputs;
-
-    pub use inputs::{get_input, Input, RunData};
+    mod get_input;
+    pub use cli::RunOptions;
+    pub use get_input::{parse_inputs, Operation, RunKind};
 }
 mod igor {
     mod application_data;
@@ -53,7 +53,7 @@ mod runner {
     #[cfg(target_os = "windows")]
     mod invoke_win;
     #[cfg(target_os = "windows")]
-    pub(super) use invoke_win::{invoke, invoke_rerun};
+    pub(super) use invoke_win::{invoke_rerun, invoke};
 
     mod compiler_handler;
     mod gm_uri_parse;
@@ -61,8 +61,25 @@ mod runner {
 }
 
 fn main() {
-    let options = input::get_input();
-    let application_data = match igor::ApplicationData::new(options.yyp_name()) {
+    let (options, operation) = input::parse_inputs();
+
+    // build our platform handle here
+    let platform = {
+        let mut builder = PlatformBuilder::new();
+        if options.beta {
+            builder.set_beta();
+        }
+        if let Some(install) = &options.gms2_install_location {
+            builder.set_app_override(Some(install.to_owned()));
+        }
+        if let Some(runtime) = &options.runtime {
+            builder.set_runtime_name(runtime.to_owned());
+        }
+
+        builder.generate()
+    };
+
+    let application_data = match igor::ApplicationData::new(&options.yyp) {
         Ok(v) => v,
         Err(e) => {
             println!(
@@ -73,7 +90,7 @@ fn main() {
             return;
         }
     };
-    let user_data = match igor::UserData::new() {
+    let user_data = match igor::UserData::new(&platform) {
         Ok(v) => v,
         Err(e) => {
             println!(
@@ -86,18 +103,19 @@ fn main() {
     };
 
     // handle a clean, extract the build_data
-    let run_data = match &options {
-        Input::Run(b) | Input::Build(b) => b,
-        Input::Clean(v, _) => {
-            match std::fs::remove_dir_all(application_data.current_directory.join(v)) {
+    let run_kind = match operation {
+        input::Operation::Run(inner) => inner,
+        input::Operation::Clean => {
+            match std::fs::remove_dir_all(
+                application_data.current_directory.join(
+                    options
+                        .output_folder
+                        .unwrap_or_else(|| std::path::Path::new("target").to_owned()),
+                ),
+            ) {
                 Ok(()) => {}
                 Err(e) => {
-                    println!(
-                        "{} on clean {}: {}",
-                        console::style("error").bright().red(),
-                        application_data.current_directory.join(v).display(),
-                        e
-                    );
+                    println!("{} on clean: {}", console::style("error").bright().red(), e);
                 }
             }
             return;
@@ -105,7 +123,7 @@ fn main() {
     };
 
     // check if we have a valid yyc bat
-    if run_data.yyc {
+    if options.yyc {
         if cfg!(not(target_os = "windows")) {
             println!(
                 "{}: {}\nPlease log a feature request at https://github.com/NPC-Studio/adam/issues",
@@ -133,10 +151,14 @@ fn main() {
     }
 
     let build_data = igor::BuildData {
-        output_folder: application_data
-            .current_directory
-            .join(&run_data.output_folder),
-        output_kind: if run_data.yyc {
+        output_folder: application_data.current_directory.join(
+            &options
+                .output_folder
+                .as_deref()
+                .unwrap_or_else(|| std::path::Path::new("target"))
+                .to_owned(),
+        ),
+        output_kind: if options.yyc {
             igor::OutputKind::Yyc
         } else {
             igor::OutputKind::Vm
@@ -144,14 +166,14 @@ fn main() {
         project_directory: application_data.current_directory,
         user_dir: user_data.user_dir,
         user_string: user_data.user_string,
-        runtime_location: std::path::Path::new(gm_artifacts::RUNTIME_LOCATION).to_owned(),
-        target_mask: gm_artifacts::TARGET_MASK,
-        application_path: std::path::Path::new(&run_data.gms2_install_location).to_owned(),
-        config: run_data.config.clone(),
+        runtime_location: platform.runtime_location.clone(),
+        target_mask: platform.target_mask,
+        application_path: platform.application_path.clone(),
+        config: options.config.as_deref().unwrap_or("Default").to_owned(),
         target_file: None,
         project_filename: application_data.project_name,
     };
-    let gm_build = gm_artifacts::GmBuild::new(&build_data);
+    let gm_build = gm_artifacts::GmBuild::new(&build_data, &platform);
 
     // make our dirs:
     let cache_folder = build_data
@@ -160,7 +182,7 @@ fn main() {
     std::fs::create_dir_all(&cache_folder).unwrap();
 
     // check if we need to make a new build at all, or can go straight to the runner
-    if run_data.ignore_cache == 0
+    if options.ignore_cache == 0
         && manifest::check_manifest(
             build_data.config.clone(),
             &build_data.project_directory,
@@ -168,14 +190,7 @@ fn main() {
             &build_data.output_folder,
         )
     {
-        runner::rerun_old(
-            gm_build,
-            match options {
-                Input::Run(bd) => bd,
-                Input::Build(bd) => bd,
-                Input::Clean(_, _) => unimplemented!(),
-            },
-        );
+        runner::rerun_old(gm_build, options);
         return;
     }
 
@@ -199,7 +214,7 @@ fn main() {
     .unwrap();
 
     // write in the preferences
-    let preferences = if run_data.yyc {
+    let preferences = if options.yyc {
         gm_artifacts::GmPreferences::new(user_data.visual_studio_path)
     } else {
         gm_artifacts::GmPreferences::default()
@@ -235,5 +250,5 @@ fn main() {
     )
     .unwrap();
 
-    runner::run_command(&build_location, macros, options);
+    runner::run_command(&build_location, macros, options, run_kind);
 }

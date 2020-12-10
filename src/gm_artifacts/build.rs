@@ -2,6 +2,8 @@ use crate::igor::BuildData;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+use super::Platform;
+
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GmBuild {
@@ -34,7 +36,7 @@ pub struct GmBuild {
 }
 
 impl GmBuild {
-    pub fn new(build_data: &BuildData) -> Self {
+    pub fn new(build_data: &BuildData, platform: &Platform) -> Self {
         let build = build_data
             .output_folder
             .join(build_data.output_kind.to_string());
@@ -63,7 +65,7 @@ impl GmBuild {
                 .with_extension("yyp"),
             temp_folder: tmp.clone(),
             temp_folder_unmapped: tmp,
-            user_dir: super::gms2_data().join(&build_data.user_string),
+            user_dir: platform.gms2_data.join(&build_data.user_string),
             runtime_location: build_data.runtime_location.clone(),
             target_options: cache.join("targetoptions.json"),
             target_mask: build_data.target_mask.to_string(),

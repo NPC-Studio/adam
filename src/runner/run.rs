@@ -2,23 +2,18 @@ use super::{
     compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke, invoke_rerun,
     printer::Printer,
 };
-use crate::{gm_artifacts, input::Input, input::RunData, manifest};
+use crate::{
+    gm_artifacts,
+    input::{RunKind, RunOptions},
+    manifest,
+};
 use std::{
     io::Lines,
     io::{BufRead, BufReader},
     path::Path,
 };
 
-pub struct RunCommand(pub(super) RunKind, pub(super) RunData);
-impl From<Input> for RunCommand {
-    fn from(o: Input) -> Self {
-        match o {
-            Input::Run(b) => RunCommand(RunKind::Run, b),
-            Input::Build(b) => RunCommand(RunKind::Build, b),
-            Input::Clean(_, _) => unimplemented!(),
-        }
-    }
-}
+pub struct RunCommand(pub(super) RunKind, pub(super) RunOptions);
 
 impl std::fmt::Display for RunCommand {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -30,18 +25,14 @@ impl std::fmt::Display for RunCommand {
         write!(f, "{} {}", if self.1.yyc { "yyc" } else { "vm" }, word)
     }
 }
-#[derive(Debug, PartialEq, Eq)]
-pub enum RunKind {
-    Run,
-    Build,
-}
 
 pub fn run_command(
     build_bff: &Path,
     macros: gm_artifacts::GmMacros,
-    sub_command: impl Into<RunCommand>,
+    sub_command: RunOptions,
+    run_kind: RunKind,
 ) {
-    let sub_command: RunCommand = sub_command.into();
+    let sub_command = RunCommand(run_kind, sub_command);
     let mut child = invoke(&macros, build_bff, &sub_command);
 
     if sub_command.1.verbosity > 0 {
@@ -98,7 +89,7 @@ pub fn run_command(
     }
 }
 
-pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunData) {
+pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunOptions) {
     let mut child = invoke_rerun(&gm_build);
     // startup the printer in a separate thread...
     let project_dir = gm_build.project_dir.clone();

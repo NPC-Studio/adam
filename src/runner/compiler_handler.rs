@@ -112,9 +112,13 @@ impl CompilerHandler {
                             println!(
                                 "{} {} {}:{} in {}",
                                 console::style("Completed").green().bright(),
-                                gm_artifacts::PLATFORM.to_string(),
+                                gm_artifacts::PLATFORM_KIND.to_string(),
                                 run_command,
-                                console::style(&run_command.1.config).yellow().bright(),
+                                console::style(
+                                    &run_command.1.config.as_deref().unwrap_or("Default")
+                                )
+                                .yellow()
+                                .bright(),
                                 indicatif::HumanDuration(std::time::Instant::now() - start_time)
                             );
 
@@ -147,9 +151,11 @@ impl CompilerHandler {
                         println!(
                             "{} {} {}:{} in {}",
                             console::style("Completed").green().bright(),
-                            gm_artifacts::PLATFORM.to_string(),
+                            gm_artifacts::PLATFORM_KIND.to_string(),
                             run_command,
-                            console::style(&run_command.1.config).yellow().bright(),
+                            console::style(&run_command.1.config.as_deref().unwrap_or("Default"))
+                                .yellow()
+                                .bright(),
                             indicatif::HumanDuration(std::time::Instant::now() - start_time)
                         );
 

@@ -42,6 +42,7 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
         gms2_install_location,
         beta,
         runtime,
+        x64_windows,
     } = b;
 
     if let Some(cfg) = config {
@@ -61,6 +62,7 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     }
 
     config_file.beta = beta;
+    config_file.x64_windows = x64_windows;
     config_file.verbosity = verbosity;
     config_file.yyc = yyc;
     config_file.ignore_cache = ignore_cache;

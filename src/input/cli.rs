@@ -44,6 +44,15 @@ pub struct RunOptions {
     #[clap(long, short)]
     pub beta: bool,
 
+    /// Whether or not to use the x64 variant on windows.
+    /// On non-Windows platforms, this option is meaningless. We do a best effort to detect x64 usage by reading
+    /// your options.yy, but we don't currently parse configs deeply, which means that a special config set up
+    /// to use x64 won't be discovered. For such a circumstance, use this flag to build correctly.
+    ///
+    /// In general, it's easiest if you don't use override x64 with certain configs in Gms2.
+    #[clap(long, short)]
+    pub x64_windows: bool,
+
     /// Specifies a configuration. If not passed, we use `Default` for our Config.
     #[clap(short, long)]
     pub config: Option<String>,

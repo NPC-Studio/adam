@@ -25,26 +25,33 @@ pub fn invoke(
         .unwrap()
 }
 
-pub fn invoke_rerun(gm_build: &gm_artifacts::GmBuild, macros: &gm_artifacts::GmMacros) -> Child {
+pub fn invoke_rerun(
+    mut use_x64_override: bool,
+    gm_build: &gm_artifacts::GmBuild,
+    macros: &gm_artifacts::GmMacros,
+) -> Child {
     // figure out if we're x64 or not
-    let options = std::fs::read_to_string(
-        gm_build
-            .project_dir
-            .join("options/windows/options_windows.yy"),
-    )
-    .unwrap();
-
-    let options = crate::trailing_comma_util::TRAILING_COMMA_UTIL.clear_trailing_comma(&options);
-    let options: serde_json::Value = serde_json::from_str(&options).unwrap();
-    let options_map = options.as_object().unwrap();
-
-    let us_x64 = options_map
-        .get("option_windows_use_x64")
-        .unwrap()
-        .as_bool()
+    if use_x64_override == false {
+        let options = std::fs::read_to_string(
+            gm_build
+                .project_dir
+                .join("options/windows/options_windows.yy"),
+        )
         .unwrap();
 
-    if us_x64 {
+        let options =
+            crate::trailing_comma_util::TRAILING_COMMA_UTIL.clear_trailing_comma(&options);
+        let options: serde_json::Value = serde_json::from_str(&options).unwrap();
+        let options_map = options.as_object().unwrap();
+
+        use_x64_override = options_map
+            .get("option_windows_use_x64")
+            .unwrap()
+            .as_bool()
+            .unwrap();
+    }
+
+    if use_x64_override {
         std::process::Command::new(gm_build.runtime_location.join(&macros.x64_runner_path))
             .arg("-game")
             .arg(gm_build.compile_output_file_name.clone())

@@ -38,6 +38,15 @@ pub struct ConfigFile {
 
     /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.409` on stable and beta.
     pub runtime: Option<String>,
+
+    /// Whether or not to use the x64 variant on windows.
+    /// On non-Windows platforms, this option is meaningless. We do a best effort to detect x64 usage by reading
+    /// your options.yy, but we don't currently parse configs deeply, which means that a special config set up
+    /// to use x64 won't be discovered. For such a circumstance, use this flag to build correctly.
+    ///
+    /// In general, it's easiest if you don't use override x64 with certain configs in Gms2.
+    #[serde(default)]
+    pub x64_windows: bool,
 }
 
 impl From<ConfigFile> for RunOptions {
@@ -52,6 +61,7 @@ impl From<ConfigFile> for RunOptions {
             ignore_cache: o.ignore_cache.unwrap_or_default(),
             beta: o.beta,
             runtime: o.runtime,
+            x64_windows: o.x64_windows,
         }
     }
 }

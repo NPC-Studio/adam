@@ -24,11 +24,11 @@ pub fn check_manifest(
     manifest_dir: &Path,
     target_directory: &Path,
 ) -> bool {
-    let manifest_path = manifest_dir.join(".manifest.toml");
+    let manifest_path = manifest_dir.join(".manifest.json");
 
     let old_manifest: Manifest = std::fs::read_to_string(&manifest_path)
         .ok()
-        .and_then(|s| toml::from_str(&s).ok())
+        .and_then(|s| serde_json::from_str(&s).ok())
         .unwrap_or_default();
 
     let mut new_manifest: Manifest = Manifest::new(config);
@@ -63,7 +63,7 @@ pub fn check_manifest(
     if new_manifest != old_manifest {
         if let Err(e) = std::fs::write(
             &manifest_path,
-            toml::to_string_pretty(&new_manifest).unwrap(),
+            serde_json::to_string(&new_manifest).unwrap(),
         ) {
             println!(
                 "{}: couldn't save manifest, {}",
@@ -86,7 +86,7 @@ fn is_hidden(entry: &DirEntry) -> bool {
 }
 
 pub fn invalidate_manifest(manifest_dir: &Path) {
-    let manifest_path = manifest_dir.join(".manifest.toml");
+    let manifest_path = manifest_dir.join(".manifest.json");
     match std::fs::remove_file(manifest_path) {
         Ok(()) => {}
         Err(e) => println!(

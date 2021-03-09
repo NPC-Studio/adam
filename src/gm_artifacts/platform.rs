@@ -28,7 +28,7 @@ impl PlatformBuilder {
     #[cfg(target_os = "windows")]
     pub fn new() -> Self {
         Self {
-            runtime: "2.3.1.406".to_string(),
+            runtime: "2.3.1.409".to_string(),
             short_name: "GameMakerStudio".to_string(),
             long_name: "GameMaker Studio 2".to_string(),
             appdata_name: "GameMakerStudio2".to_string(),

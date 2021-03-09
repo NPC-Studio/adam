@@ -89,8 +89,12 @@ pub fn run_command(
     }
 }
 
-pub fn rerun_old(gm_build: gm_artifacts::GmBuild, run_data: RunOptions) {
-    let mut child = invoke_rerun(&gm_build);
+pub fn rerun_old(
+    gm_build: gm_artifacts::GmBuild,
+    macros: &gm_artifacts::GmMacros,
+    run_data: RunOptions,
+) {
+    let mut child = invoke_rerun(&gm_build, macros);
     // startup the printer in a separate thread...
     let project_dir = gm_build.project_dir.clone();
     let printer_handler = std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));

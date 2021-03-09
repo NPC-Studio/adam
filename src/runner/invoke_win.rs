@@ -7,7 +7,6 @@ pub fn invoke(
     build_bff: &Path,
     sub_command: &RunCommand,
 ) -> Child {
-    println!("igor is {}", macros.igor_path.display());
     let mut igor = std::process::Command::new(macros.igor_path.clone());
     igor.arg("-j=8")
         .arg(format!("-options={}", build_bff.display()));
@@ -26,13 +25,38 @@ pub fn invoke(
         .unwrap()
 }
 
-pub fn invoke_rerun(gm_build: &gm_artifacts::GmBuild) -> Child {
-    println!("invoke {}", gm_build.runtime_location.join("windows/Runner.exe").display());
+pub fn invoke_rerun(gm_build: &gm_artifacts::GmBuild, macros: &gm_artifacts::GmMacros) -> Child {
+    // figure out if we're x64 or not
+    let options = std::fs::read_to_string(
+        gm_build
+            .project_dir
+            .join("options/windows/options_windows.yy"),
+    )
+    .unwrap();
 
-    std::process::Command::new(gm_build.runtime_location.join("windows/Runner.exe"))
-        .arg("-game")
-        .arg(gm_build.compile_output_file_name.clone())
-        .stdout(std::process::Stdio::piped())
-        .spawn()
+    let options = crate::trailing_comma_util::TRAILING_COMMA_UTIL.clear_trailing_comma(&options);
+    let options: serde_json::Value = serde_json::from_str(&options).unwrap();
+    let options_map = options.as_object().unwrap();
+
+    let us_x64 = options_map
+        .get("option_windows_use_x64")
         .unwrap()
+        .as_bool()
+        .unwrap();
+
+    if us_x64 {
+        std::process::Command::new(gm_build.runtime_location.join(&macros.x64_runner_path))
+            .arg("-game")
+            .arg(gm_build.compile_output_file_name.clone())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap()
+    } else {
+        std::process::Command::new(gm_build.runtime_location.join(&macros.runner_path))
+            .arg("-game")
+            .arg(gm_build.compile_output_file_name.clone())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap()
+    }
 }

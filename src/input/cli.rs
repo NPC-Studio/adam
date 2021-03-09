@@ -68,7 +68,7 @@ pub struct RunOptions {
     #[clap(short, long)]
     pub gms2_install_location: Option<PathBuf>,
 
-    /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.536` on stable and beta.
+    /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.409` on stable and beta.
     #[clap(short, long)]
     pub runtime: Option<String>,
 }

@@ -53,12 +53,14 @@ mod runner {
     #[cfg(target_os = "windows")]
     mod invoke_win;
     #[cfg(target_os = "windows")]
-    pub(super) use invoke_win::{invoke_rerun, invoke};
+    pub(super) use invoke_win::{invoke, invoke_rerun};
 
     mod compiler_handler;
     mod gm_uri_parse;
     mod printer;
 }
+
+mod trailing_comma_util;
 
 fn main() {
     let (options, operation) = input::parse_inputs();
@@ -173,6 +175,7 @@ fn main() {
         target_file: None,
         project_filename: application_data.project_name,
     };
+
     let gm_build = gm_artifacts::GmBuild::new(&build_data, &platform);
 
     // make our dirs:
@@ -180,6 +183,8 @@ fn main() {
         .output_folder
         .join(&format!("{}/cache", build_data.output_kind));
     std::fs::create_dir_all(&cache_folder).unwrap();
+
+    let macros = gm_artifacts::GmMacros::new(&build_data);
 
     // check if we need to make a new build at all, or can go straight to the runner
     if options.ignore_cache == 0
@@ -190,7 +195,7 @@ fn main() {
             &build_data.output_folder,
         )
     {
-        runner::rerun_old(gm_build, options);
+        runner::rerun_old(gm_build, &macros, options);
         return;
     }
 
@@ -243,7 +248,6 @@ fn main() {
     .unwrap();
 
     // and we write the macros finally
-    let macros = gm_artifacts::GmMacros::new(&build_data);
     std::fs::write(
         &gm_build.macros,
         serde_json::to_string_pretty(&macros).unwrap(),

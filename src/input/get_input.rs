@@ -60,12 +60,24 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     if let Some(runtime) = runtime {
         config_file.runtime = Some(runtime);
     }
+    if x64_windows {
+        config_file.x64_windows = true;
+    }
+    if beta {
+        config_file.beta = true;
+    }
+    if verbosity != 0 {
+        config_file.verbosity = verbosity;
+    }
 
-    config_file.beta = beta;
-    config_file.x64_windows = x64_windows;
-    config_file.verbosity = verbosity;
-    config_file.yyc = yyc;
-    config_file.ignore_cache = ignore_cache;
+    // if we say to use the yyc, we use the yyc
+    if yyc {
+        config_file.yyc = true;
+    }
+
+    if ignore_cache != 0 {
+        config_file.ignore_cache = ignore_cache;
+    }
 
     (config_file, operation)
 }

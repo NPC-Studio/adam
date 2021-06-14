@@ -60,6 +60,7 @@ mod runner {
     mod printer;
 }
 
+#[cfg(target_os = "windows")]
 mod trailing_comma_util;
 
 fn main() {
@@ -188,6 +189,7 @@ fn main() {
 
     // check if we need to make a new build at all, or can go straight to the runner
     if options.ignore_cache == 0
+        && cfg!(target_os = "windows")
         && manifest::check_manifest(
             build_data.config.clone(),
             &build_data.project_directory,

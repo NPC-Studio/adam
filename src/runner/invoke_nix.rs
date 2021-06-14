@@ -20,7 +20,7 @@ pub fn invoke(
 
     // add the platform
     igor.arg("--")
-        .arg(gm_artifacts::PLATFORM.to_string())
+        .arg(gm_artifacts::PLATFORM_KIND.to_string())
         .arg("Run")
         .stdout(std::process::Stdio::piped())
         .spawn()

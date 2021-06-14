@@ -14,27 +14,25 @@ impl ApplicationData {
         let mut project_name = None;
         let mut too_many_projects = vec![];
 
-        for file in current_directory.read_dir()? {
-            if let Ok(file) = file {
-                let file = file.path();
+        for file in current_directory.read_dir()?.flatten() {
+            let file = file.path();
 
-                if let Some(ext) = file.extension() {
-                    if ext == "yyp" {
-                        let stem = file.file_stem().unwrap().to_string_lossy().to_string();
-                        if too_many_projects.is_empty() {
-                            if let Some(dest) = destination_yyp {
-                                if stem == *dest {
-                                    project_name = Some(stem);
-                                }
-                            } else if let Some(project_name) = project_name.take() {
-                                too_many_projects.push(project_name);
-                                too_many_projects.push(stem);
-                            } else {
+            if let Some(ext) = file.extension() {
+                if ext == "yyp" {
+                    let stem = file.file_stem().unwrap().to_string_lossy().to_string();
+                    if too_many_projects.is_empty() {
+                        if let Some(dest) = destination_yyp {
+                            if stem == *dest {
                                 project_name = Some(stem);
                             }
-                        } else {
+                        } else if let Some(project_name) = project_name.take() {
+                            too_many_projects.push(project_name);
                             too_many_projects.push(stem);
+                        } else {
+                            project_name = Some(stem);
                         }
+                    } else {
+                        too_many_projects.push(stem);
                     }
                 }
             }

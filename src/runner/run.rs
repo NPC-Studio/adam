@@ -37,10 +37,8 @@ pub fn run_command(
 
     if sub_command.1.verbosity > 0 {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
-        for line in reader {
-            if let Ok(l) = line {
-                println!("{}", l.trim());
-            }
+        for line in reader.flatten() {
+            println!("{}", line.trim());
         }
     } else {
         let compiler_handler = match sub_command.0 {
@@ -94,17 +92,23 @@ pub fn rerun_old(
     macros: &gm_artifacts::GmMacros,
     run_data: RunOptions,
 ) {
+    #[cfg(target_os = "windows")]
     let mut child = invoke_rerun(run_data.x64_windows, &gm_build, macros);
+
+    #[cfg(not(target_os = "windows"))]
+    let mut child = invoke_rerun(&gm_build);
+    #[cfg(not(target_os = "windows"))]
+    // very good code!
+    let _ = macros;
+
     // startup the printer in a separate thread...
     let project_dir = gm_build.project_dir.clone();
     let printer_handler = std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));
 
     if run_data.verbosity > 0 {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
-        for line in reader {
-            if let Ok(l) = line {
-                println!("{}", l.trim());
-            }
+        for line in reader.flatten() {
+            println!("{}", line.trim());
         }
         return;
     }
@@ -150,16 +154,14 @@ pub fn rerun_old(
 }
 
 fn run_game(lines: &mut Lines<impl BufRead>, printer: &mut Printer) {
-    for line in lines {
-        if let Ok(l) = line {
-            let message = l.to_string();
+    for line in lines.flatten() {
+        let message = line.to_string();
 
-            if message == "Igor complete." {
-                println!("adam complete");
-                break;
-            }
-
-            printer.print_line(message);
+        if message == "Igor complete." {
+            println!("adam complete");
+            break;
         }
+
+        printer.print_line(message);
     }
 }

@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
-use clap::Clap;
+use clap::Parser;
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(version = clap::crate_version!(), author = clap::crate_authors!())]
 pub struct InputOpts {
     #[clap(subcommand)]
@@ -18,7 +18,7 @@ pub struct InputOpts {
     pub version: bool,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub enum ClapOperation {
     /// Builds a project *without* running it.
     Build(RunOptions),
@@ -32,7 +32,7 @@ pub enum ClapOperation {
     Clean(CleanOptions),
 }
 
-#[derive(Clap, Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Parser, Debug, PartialEq, Eq, Clone, Default)]
 pub struct RunOptions {
     /// Uses the YYC instead of the default VM.
     #[clap(long, short)]
@@ -82,7 +82,7 @@ pub struct RunOptions {
     pub runtime: Option<String>,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct CleanOptions {
     /// The relative path to the output folder. Defaults to `target`.
     #[clap(short, long)]

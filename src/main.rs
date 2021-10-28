@@ -1,4 +1,6 @@
 #![allow(clippy::bool_comparison)]
+#![deny(rust_2018_idioms)]
+#![deny(rust_2021_compatibility)]
 
 use gm_artifacts::PlatformBuilder;
 

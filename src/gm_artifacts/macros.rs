@@ -210,15 +210,6 @@ impl GmMacros {
                 .user_dir
                 .join("AppData/Roaming/GameMakerStudio2/Cache/GMS2IDE"),
 
-            user_directory: build_data.user_dir.join(format!(
-                "AppData/Roaming/GameMakerStudio2/{}",
-                build_data.user_string
-            )),
-            user_cache_directory: build_data.user_dir.join(format!(
-                "AppData/Roaming/GameMakerStudio2/{}/Cache",
-                build_data.user_string
-            )),
-
             ..Self::create_internal(build_data)
         }
     }
@@ -254,9 +245,6 @@ impl GmMacros {
             local_directory: application_data.join("GameMakerStudio2"),
             local_cache_directory: application_data.join("GameMakerStudio2/Cache"),
             ide_cache_directory: application_data.join("GameMakerStudio2/Cache/GMS2IDE"),
-
-            user_directory: build_data.user_dir.join("adam-dummy"),
-            user_cache_directory: build_data.user_dir.join("adam-dummy"),
 
             ..Self::create_internal(build_data)
         }
@@ -311,6 +299,9 @@ impl GmMacros {
             project_name: project_name.to_owned(),
             project_cache_directory_name: "cache".to_owned(),
             options_dir: project_directory.join("options"),
+
+            user_directory: build_data.user_dir.join("adam-dummy"),
+            user_cache_directory: build_data.user_dir.join("adam-dummy"),
 
             ..Self::default()
         }

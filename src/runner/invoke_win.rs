@@ -2,7 +2,7 @@ use super::run::RunCommand;
 use crate::gm_artifacts;
 use std::{path::Path, process::Child};
 
-pub fn invoke(
+pub fn invoke_run(
     macros: &gm_artifacts::GmMacros,
     build_bff: &Path,
     sub_command: &RunCommand,

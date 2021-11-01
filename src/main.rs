@@ -55,7 +55,7 @@ mod runner {
     #[cfg(target_os = "windows")]
     mod invoke_win;
     #[cfg(target_os = "windows")]
-    pub(super) use invoke_win::{invoke, invoke_rerun};
+    pub(super) use invoke_win::{invoke_rerun, invoke_run};
 
     mod compiler_handler;
     mod gm_uri_parse;

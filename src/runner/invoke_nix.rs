@@ -3,7 +3,7 @@ use std::{path::Path, process::Child};
 
 use super::run::RunCommand;
 
-pub fn invoke(
+pub fn invoke_run(
     macros: &gm_artifacts::GmMacros,
     build_bff: &Path,
     sub_command: &RunCommand,

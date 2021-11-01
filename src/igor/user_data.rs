@@ -5,7 +5,7 @@ use crate::gm_artifacts::Platform;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct UserData {
-    pub user_dir: PathBuf,
+    // pub user_dir: PathBuf,
     pub user_string: String,
     pub visual_studio_path: PathBuf,
 }
@@ -46,7 +46,6 @@ impl UserData {
             });
 
         Ok(Self {
-            user_dir: platform.user_data.clone(),
             user_string: format!("{}_{}", user_name, user_id),
             visual_studio_path: supposed_path,
         })

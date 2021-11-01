@@ -1,5 +1,5 @@
 use super::{
-    compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke, invoke_rerun,
+    compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_run, invoke_rerun,
     printer::Printer,
 };
 use crate::{
@@ -33,7 +33,7 @@ pub fn run_command(
     run_kind: RunKind,
 ) {
     let sub_command = RunCommand(run_kind, sub_command);
-    let mut child = invoke(&macros, build_bff, &sub_command);
+    let mut child = invoke_run(&macros, build_bff, &sub_command);
 
     if sub_command.1.verbosity > 0 {
         let reader = BufReader::new(child.stdout.unwrap()).lines();

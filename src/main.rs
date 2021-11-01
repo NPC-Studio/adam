@@ -50,7 +50,7 @@ mod runner {
     #[cfg(not(target_os = "windows"))]
     mod invoke_nix;
     #[cfg(not(target_os = "windows"))]
-    pub(super) use invoke_nix::{invoke, invoke_rerun};
+    pub(super) use invoke_nix::{invoke_rerun, invoke_run};
 
     #[cfg(target_os = "windows")]
     mod invoke_win;
@@ -88,9 +88,9 @@ fn main() {
         Ok(v) => v,
         Err(e) => {
             println!(
-                "{}: {}\naborting",
+                "{}: {}",
                 console::style("adam error").bright().red(),
-                console::style(format!("reading application data {}", e)).bold()
+                console::style(e).bold()
             );
             return;
         }
@@ -101,7 +101,7 @@ fn main() {
             println!(
                 "{}: {}\naborting",
                 console::style("adam error").bright().red(),
-                console::style(format!("reading user data {}", e)).bold()
+                console::style(e).bold()
             );
             return;
         }
@@ -169,7 +169,7 @@ fn main() {
             igor::OutputKind::Vm
         },
         project_directory: application_data.current_directory,
-        user_dir: user_data.user_dir,
+        user_dir: platform.user_data.clone(),
         user_string: user_data.user_string,
         runtime_location: platform.runtime_location.clone(),
         target_mask: platform.target_mask,

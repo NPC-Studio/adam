@@ -22,6 +22,7 @@ pub struct PlatformBuilder {
     long_name: String,
     appdata_name: String,
     app_override: Option<PathBuf>,
+    runtime_location_override: Option<PathBuf>,
 }
 
 impl PlatformBuilder {
@@ -33,6 +34,7 @@ impl PlatformBuilder {
             long_name: "GameMaker Studio 2".to_string(),
             appdata_name: "GameMakerStudio2".to_string(),
             app_override: None,
+            runtime_location_override: None,
         }
     }
 
@@ -44,6 +46,7 @@ impl PlatformBuilder {
             long_name: "GameMaker Studio 2".to_string(),
             appdata_name: "GameMakerStudio2".to_string(),
             app_override: None,
+            runtime_location_override: None,
         }
     }
 
@@ -61,14 +64,20 @@ impl PlatformBuilder {
         self.app_override = app_override;
     }
 
+    pub fn set_runtime_override(&mut self, runtime_override: Option<PathBuf>) {
+        self.runtime_location_override = runtime_override;
+    }
+
     #[cfg(target_os = "windows")]
     pub fn generate(self) -> Platform {
         Platform {
-            runtime_location: Path::new(&format!(
-                "C:/ProgramData/{}/Cache/runtimes/runtime-{}/",
-                self.appdata_name, self.runtime
-            ))
-            .to_owned(),
+            runtime_location: self.runtime_location_override.unwrap_or_else(|| {
+                Path::new(&format!(
+                    "C:/ProgramData/{}/Cache/runtimes/runtime-{}/",
+                    self.appdata_name, self.runtime
+                ))
+                .to_owned()
+            }),
             target_mask: 64,
             application_path: match self.app_override {
                 Some(v) => v,
@@ -86,17 +95,18 @@ impl PlatformBuilder {
         }
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
     pub fn generate(self) -> Platform {
-        let dirs = directories::UserDirs::new().unwrap();
-        let user_data = dirs.home_dir();
+        let user_data = directories::UserDirs::new().unwrap().home_dir().to_owned();
 
         Platform {
-            runtime_location: Path::new(&format!(
-                "/Users/Shared/{}/Cache/runtimes/runtime-{}",
-                self.appdata_name, self.runtime
-            ))
-            .to_owned(),
+            runtime_location: self.runtime_location_override.unwrap_or_else(|| {
+                Path::new(&format!(
+                    "/Users/Shared/{}/Cache/runtimes/runtime-{}",
+                    self.appdata_name, self.runtime
+                ))
+                .to_owned()
+            }),
             target_mask: 64,
             application_path: match self.app_override {
                 Some(v) => v,
@@ -108,54 +118,15 @@ impl PlatformBuilder {
                 self.appdata_name
             ))
             .to_owned(),
-            user_data: user_data.to_owned(),
+            user_data,
         }
     }
 }
 
 #[cfg(target_os = "macos")]
 mod macos {
-    // pub const RUNTIME_LOCATION: &str =
-    //     "/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-2.3.0.401";
-    // pub const TARGET_MASK: usize = 2;
-    // pub const APPLICATION_PATH: &str = "/Applications/GameMaker Studio 2.app";
     pub const MONO_LOCATION: &str =
         "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";
-    // pub const PLATFORM: super::Platform = super::Platform::Darwin;
-
-    // pub fn gms2_data() -> std::path::PathBuf {
-    //     directories::UserDirs::new()
-    //         .unwrap()
-    //         .home_dir()
-    //         .join(".config/GameMakerStudio2")
-    // }
-
-    // pub fn user_data() -> std::path::PathBuf {
-    //     directories::UserDirs::new().unwrap().home_dir().to_owned()
-    // }
 }
 #[cfg(target_os = "macos")]
 pub use macos::*;
-
-// #[cfg(target_os = "windows")]
-// mod windows {
-//     pub const RUNTIME_LOCATION: &str =
-//         "C:\\ProgramData\\GameMakerStudio2\\Cache\\runtimes\\runtime-2.3.0.401";
-//     pub const TARGET_MASK: usize = 64;
-//     pub const APPLICATION_PATH: &str = "C:/Program Files/GameMaker Studio 2/GameMakerStudio.exe";
-
-//     pub const PLATFORM: super::PlatformKind = super::PlatformKind::Windows;
-
-//     pub fn gms2_data() -> std::path::PathBuf {
-//         directories::UserDirs::new()
-//             .unwrap()
-//             .home_dir()
-//             .join("AppData/Roaming/GameMakerStudio2")
-//     }
-
-//     pub fn user_data() -> std::path::PathBuf {
-//         directories::UserDirs::new().unwrap().home_dir().to_owned()
-//     }
-// }
-// #[cfg(target_os = "windows")]
-// pub use windows::*;

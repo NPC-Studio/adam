@@ -3,36 +3,44 @@ use std::path::{Path, PathBuf};
 
 use crate::gm_artifacts::Platform;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
-pub struct UserData {
-    pub user_string: String,
-    pub visual_studio_path: PathBuf,
-}
+/// Loads in the license folder path and the visual studio path.
+pub fn load_user_data(
+    platform: &Platform,
+    license_folder: &mut Option<PathBuf>,
+    visual_studio_path: &mut Option<PathBuf>,
+) -> anyhow::Result<()> {
+    // we gucci
+    if license_folder.is_some() && visual_studio_path.is_some() {
+        return Ok(());
+    }
 
-impl UserData {
-    pub fn new(platform: &Platform) -> anyhow::Result<Self> {
-        let gms2_data = platform.gms2_data.clone();
-        let um_json: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(&gms2_data.join("um.json")).with_context(|| {
-                format!("could not find {}", gms2_data.join("um.json").display())
-            })?,
-        )?;
+    let gms2_data = platform.gms2_data.clone();
+    let um_json: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(&gms2_data.join("um.json"))
+            .with_context(|| format!("could not find {}", gms2_data.join("um.json").display()))?,
+    )?;
 
-        let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
+    let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
+    let user_name = um_json
+        .get("username")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .split('@')
+        .next()
+        .unwrap()
+        .to_owned();
 
-        let user_name = um_json
-            .get("username")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .split('@')
-            .next()
-            .unwrap()
-            .to_owned();
+    if license_folder.is_none() {
+        *license_folder = Some(
+            platform
+                .gms2_data
+                .join(format!("{}_{}", user_name, user_id)),
+        );
+    }
 
-        // check if we can find the local settings and therefore find hte path...
-
-        let visual_studio_path = std::fs::read_to_string(
+    if visual_studio_path.is_none() {
+        let new_path = std::fs::read_to_string(
             gms2_data.join(&format!("{}_{}/local_settings.json", user_name, user_id)),
         )
         .ok()
@@ -51,9 +59,8 @@ impl UserData {
                 .to_owned()
         });
 
-        Ok(Self {
-            user_string: format!("{}_{}", user_name, user_id),
-            visual_studio_path,
-        })
+        *visual_studio_path = Some(new_path);
     }
+
+    Ok(())
 }

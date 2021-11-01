@@ -7,8 +7,10 @@ pub struct BuildData {
     pub output_kind: OutputKind,
     pub project_filename: String,
     pub project_directory: PathBuf,
+    /// This is the home directory for the user. Ie, on Mac Os, this will be `~`.
     pub user_dir: PathBuf,
-    pub user_string: String,
+    /// This is the folder of the license directory.
+    pub license_folder: PathBuf,
     pub runtime_location: PathBuf,
     pub target_mask: usize,
     pub application_path: PathBuf,

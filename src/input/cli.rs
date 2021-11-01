@@ -82,8 +82,24 @@ pub struct RunOptions {
     pub runtime: Option<String>,
 
     /// This sets a complete path to the runtime location.
-    #[clap(short, long)]
+    #[clap(long)]
     pub runtime_location_override: Option<PathBuf>,
+
+    /// Use this visual studio path, instead of the visual studio path within the `user_folder`
+    /// at `~/.config`.
+    ///
+    /// If this field and `user_license_folder` are both set, then we will not look in your
+    /// `user_folder` at all.
+    #[clap(long)]
+    pub visual_studio_path: Option<PathBuf>,
+
+    /// Use this folder for the user_license, instead of the path within the `user_folder`
+    /// at `~/.config`.
+    ///
+    /// If this field and `visual_studio_path` are both set, then we will not look in your
+    /// `user_folder` at all.
+    #[clap(long)]
+    pub user_license_folder: Option<PathBuf>,
 }
 
 #[derive(Parser, Debug)]

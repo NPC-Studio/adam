@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::Deserialize;
 
 use super::cli::RunOptions;
@@ -17,7 +19,7 @@ pub struct ConfigFile {
     pub verbosity: Option<usize>,
 
     /// The output folder, relative to the current working directory. Defaults to `target`
-    pub output_folder: Option<std::path::PathBuf>,
+    pub output_folder: Option<PathBuf>,
 
     /// Ignore cache.
     /// >0 disables the quick run when no files have been changed.
@@ -29,7 +31,7 @@ pub struct ConfigFile {
     /// On Windows, this defaults to `C:\Program Files\GameMaker Studio 2\GameMakerStudio.exe`.
     /// On macOS, this default to `/Applications/GameMaker Studio 2.app`. (For macOS, you can point to just
     /// the .app -- internally, we will search inside the app bundle for the executable)
-    pub gms2_install_location: Option<std::path::PathBuf>,
+    pub gms2_install_location: Option<PathBuf>,
 
     /// Option to switch to using the Gms2 Beta. By default, this will use the `C:/Program Files/GameMaker Studio 2 Beta/GameMakerStudio-Beta.exe`
     /// filepath, but can be overriden with `gms2_install_location` for beta Steam builds.
@@ -50,7 +52,23 @@ pub struct ConfigFile {
 
     /// This sets a complete path to the runtime location.
     #[serde(default)]
-    pub runtime_location_override: Option<std::path::PathBuf>,
+    pub runtime_location_override: Option<PathBuf>,
+
+    /// Use this visual studio path, instead of the visual studio path within the `user_folder`
+    /// at `~/.config`.
+    ///
+    /// If this field and `user_license_folder` are both set, then we will not look in your
+    /// `user_folder` at all.
+    #[serde(default)]
+    pub visual_studio_path: Option<PathBuf>,
+
+    /// Use this folder for the user_license, instead of the path within the `user_folder`
+    /// at `~/.config`.
+    ///
+    /// If this field and `visual_studio_path` are both set, then we will not look in your
+    /// `user_folder` at all.
+    #[serde(default)]
+    pub user_license_folder: Option<PathBuf>,
 }
 
 impl From<ConfigFile> for RunOptions {
@@ -67,6 +85,8 @@ impl From<ConfigFile> for RunOptions {
             runtime: o.runtime,
             x64_windows: o.x64_windows,
             runtime_location_override: o.runtime_location_override,
+            visual_studio_path: o.visual_studio_path,
+            user_license_folder: o.user_license_folder,
         }
     }
 }

@@ -255,29 +255,23 @@ impl GmMacros {
             local_cache_directory: application_data.join("GameMakerStudio2/Cache"),
             ide_cache_directory: application_data.join("GameMakerStudio2/Cache/GMS2IDE"),
 
-            user_directory: build_data.user_dir.join(format!(
-                "AppData/Roaming/GameMakerStudio2/{}",
-                build_data.user_string
-            )),
-            user_cache_directory: build_data.user_dir.join(format!(
-                "AppData/Roaming/GameMakerStudio2/{}/Cache",
-                build_data.user_string
-            )),
+            user_directory: build_data.user_dir.join("adam-dummy"),
+            user_cache_directory: build_data.user_dir.join("adam-dummy"),
 
             ..Self::create_internal(build_data)
         }
     }
     fn create_internal(build_data: &BuildData) -> Self {
         let BuildData {
-            application_path: app_path,
-            user_dir,
-            runtime_location: runtime,
-            project_directory,
             output_folder: out,
             output_kind,
             project_filename: project_name,
+            project_directory,
+            user_dir,
+            license_folder: _,
+            runtime_location: runtime,
             target_mask: _,
-            user_string: _,
+            application_path: app_path,
             config: _,
             target_file: _,
         } = build_data;

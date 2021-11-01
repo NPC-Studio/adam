@@ -66,7 +66,7 @@ mod runner {
 mod trailing_comma_util;
 
 fn main() {
-    let (options, operation) = input::parse_inputs();
+    let (mut options, operation) = input::parse_inputs();
 
     // build our platform handle here
     let platform = {
@@ -98,16 +98,19 @@ fn main() {
             return;
         }
     };
-    let user_data = match igor::UserData::new(&platform) {
-        Ok(v) => v,
-        Err(e) => {
-            println!(
-                "{}: {}\naborting",
-                console::style("adam error").bright().red(),
-                console::style(e).bold()
-            );
-            return;
-        }
+
+    // check if we can make a user data raw...
+    if let Err(e) = igor::load_user_data(
+        &platform,
+        &mut options.user_license_folder,
+        &mut options.visual_studio_path,
+    ) {
+        println!(
+            "{}: {}\naborting",
+            console::style("adam error").bright().red(),
+            console::style(e).bold()
+        );
+        return;
     };
 
     // handle a clean, extract the build_data
@@ -141,7 +144,7 @@ fn main() {
             return;
         }
 
-        if user_data.visual_studio_path.exists() == false {
+        if let Some(visual_studio_path) = options.visual_studio_path {
             println!(
                 "{}: {}.\n\
             Supplied path in preferences was \"{}\" but it did not exist.\n\
@@ -151,7 +154,7 @@ fn main() {
         https://help.yoyogames.com/hc/en-us/articles/227860547-GMS2-Required-SDKs",
                 console::style("error").bright().red(),
                 console::style("no valid path to visual studio .bat build file").bold(),
-                user_data.visual_studio_path.display(),
+                visual_studio_path.display(),
             );
 
             return;
@@ -171,18 +174,18 @@ fn main() {
         } else {
             igor::OutputKind::Vm
         },
+        project_filename: application_data.project_name,
         project_directory: application_data.current_directory,
         user_dir: platform.user_data.clone(),
-        user_string: user_data.user_string,
+        license_folder: options.user_license_folder.clone().unwrap(),
         runtime_location: platform.runtime_location.clone(),
         target_mask: platform.target_mask,
         application_path: platform.application_path.clone(),
         config: options.config.as_deref().unwrap_or("Default").to_owned(),
         target_file: None,
-        project_filename: application_data.project_name,
     };
 
-    let gm_build = gm_artifacts::GmBuild::new(&build_data, &platform);
+    let gm_build = gm_artifacts::GmBuild::new(&build_data);
 
     // make our dirs:
     let cache_folder = build_data
@@ -191,6 +194,7 @@ fn main() {
     std::fs::create_dir_all(&cache_folder).unwrap();
 
     let macros = gm_artifacts::GmMacros::new(&build_data);
+    let visual_studio_path = options.visual_studio_path.clone();
 
     // check if we need to make a new build at all, or can go straight to the runner
     if options.ignore_cache == 0
@@ -227,7 +231,7 @@ fn main() {
 
     // write in the preferences
     let preferences = if options.yyc {
-        gm_artifacts::GmPreferences::new(user_data.visual_studio_path)
+        gm_artifacts::GmPreferences::new(visual_studio_path.unwrap())
     } else {
         gm_artifacts::GmPreferences::default()
     };

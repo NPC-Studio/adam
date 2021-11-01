@@ -2,8 +2,6 @@ use crate::igor::BuildData;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-use super::Platform;
-
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GmBuild {
@@ -23,7 +21,8 @@ pub struct GmBuild {
     pub project_path: PathBuf,
     pub temp_folder: PathBuf,
     pub temp_folder_unmapped: PathBuf,
-    pub user_dir: PathBuf,
+    #[serde(rename = "userDir")]
+    pub license_dir: PathBuf,
     pub runtime_location: PathBuf,
     pub target_options: PathBuf,
     pub target_mask: String,
@@ -36,7 +35,7 @@ pub struct GmBuild {
 }
 
 impl GmBuild {
-    pub fn new(build_data: &BuildData, platform: &Platform) -> Self {
+    pub fn new(build_data: &BuildData) -> Self {
         let build = build_data
             .output_folder
             .join(build_data.output_kind.to_string());
@@ -65,7 +64,7 @@ impl GmBuild {
                 .with_extension("yyp"),
             temp_folder: tmp.clone(),
             temp_folder_unmapped: tmp,
-            user_dir: platform.gms2_data.join(&build_data.user_string),
+            license_dir: build_data.license_folder.clone(),
             runtime_location: build_data.runtime_location.clone(),
             target_options: cache.join("targetoptions.json"),
             target_mask: build_data.target_mask.to_string(),
@@ -90,7 +89,7 @@ impl Default for GmBuild {
             project_path: PathBuf::new(),
             temp_folder: PathBuf::new(),
             temp_folder_unmapped: PathBuf::new(),
-            user_dir: PathBuf::new(),
+            license_dir: PathBuf::new(),
             runtime_location: PathBuf::new(),
             target_options: PathBuf::new(),
             target_mask: String::new(),

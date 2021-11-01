@@ -44,6 +44,8 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
         gms2_install_location,
         runtime,
         runtime_location_override,
+        visual_studio_path,
+        user_license_folder,
     } = b;
 
     if let Some(cfg) = config {
@@ -63,6 +65,19 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     }
     if let Some(runtime_location_override) = runtime_location_override {
         config_file.runtime_location_override = Some(runtime_location_override);
+    }
+    if let Some(visual_studio_path) = visual_studio_path {
+        config_file.visual_studio_path = Some(visual_studio_path);
+    }
+    if let Some(user_license_folder) = user_license_folder {
+        config_file.user_license_folder = Some(user_license_folder);
+    }
+
+    // Macos never has a visual studio path!
+    // good stuff, eh?
+    #[cfg(target_os = "macos")]
+    {
+        config_file.visual_studio_path = Some(Default::default());
     }
 
     if x64_windows {

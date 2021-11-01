@@ -47,6 +47,10 @@ pub struct ConfigFile {
     /// In general, it's easiest if you don't use override x64 with certain configs in Gms2.
     #[serde(default)]
     pub x64_windows: bool,
+
+    /// This sets a complete path to the runtime location.
+    #[serde(default)]
+    pub runtime_location_override: Option<std::path::PathBuf>,
 }
 
 impl From<ConfigFile> for RunOptions {
@@ -62,6 +66,7 @@ impl From<ConfigFile> for RunOptions {
             beta: o.beta,
             runtime: o.runtime,
             x64_windows: o.x64_windows,
+            runtime_location_override: o.runtime_location_override,
         }
     }
 }

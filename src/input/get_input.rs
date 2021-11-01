@@ -33,16 +33,17 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     };
 
     let RunOptions {
-        config,
-        verbosity,
         yyc,
+        beta,
+        x64_windows,
+        config,
         yyp,
+        verbosity,
         output_folder,
         ignore_cache,
         gms2_install_location,
-        beta,
         runtime,
-        x64_windows,
+        runtime_location_override,
     } = b;
 
     if let Some(cfg) = config {
@@ -60,6 +61,10 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     if let Some(runtime) = runtime {
         config_file.runtime = Some(runtime);
     }
+    if let Some(runtime_location_override) = runtime_location_override {
+        config_file.runtime_location_override = Some(runtime_location_override);
+    }
+
     if x64_windows {
         config_file.x64_windows = true;
     }

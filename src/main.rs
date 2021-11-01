@@ -80,6 +80,9 @@ fn main() {
         if let Some(runtime) = &options.runtime {
             builder.set_runtime_name(runtime.to_owned());
         }
+        if let Some(runtime_full_path) = &options.runtime_location_override {
+            builder.set_runtime_override(Some(runtime_full_path.to_owned()));
+        }
 
         builder.generate()
     };

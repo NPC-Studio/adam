@@ -80,6 +80,10 @@ pub struct RunOptions {
     /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.409` on stable and beta.
     #[clap(short, long)]
     pub runtime: Option<String>,
+
+    /// This sets a complete path to the runtime location.
+    #[clap(short, long)]
+    pub runtime_location_override: Option<PathBuf>,
 }
 
 #[derive(Parser, Debug)]

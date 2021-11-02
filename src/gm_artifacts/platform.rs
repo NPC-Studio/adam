@@ -107,10 +107,13 @@ impl PlatformBuilder {
                 ))
                 .to_owned()
             }),
-            target_mask: 64,
+            target_mask: 2,
             application_path: match self.app_override {
                 Some(v) => v,
-                None => Path::new(&format!("/Applications/{}.exe", self.long_name)).to_owned(),
+                None => PathBuf::from(format!(
+                    "/Applications/{}.app/Contents/MonoBundle",
+                    self.long_name
+                )),
             },
             gms2_data: Path::new(&format!(
                 "{}/.config/{}",

@@ -42,13 +42,17 @@ pub fn invoke_release(
         igor.arg("-v");
     }
 
+    igor.arg(format!(
+        "--lf={}",
+        macros.user_directory.join("licence.plist").display()
+    ));
+
     // add the platform
     igor.arg("--")
         .arg(gm_artifacts::PLATFORM_KIND.to_string())
-        .arg("PackageZip")
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .unwrap()
+        .arg("PackageZip");
+
+    igor.stdout(std::process::Stdio::piped()).spawn().unwrap()
 }
 
 pub fn invoke_rerun(gm_build: &gm_artifacts::GmBuild) -> Child {

@@ -151,6 +151,10 @@ pub struct GmMacros {
     default_font: String,
     default_style: String,
     default_font_size: String,
+    oauth_opera_server: String,
+    gxc_server: String,
+    gxc_scopes: String,
+    feature_flags_enable: String,
     #[serde(rename = "loginURI")]
     login_uri: String,
     #[serde(rename = "accountsURI")]
@@ -161,7 +165,7 @@ pub struct GmMacros {
     marketplace_api_uri: String,
     #[serde(rename = "carouselSlidesURI")]
     carousel_slides_uri: String,
-    user_directory: PathBuf,
+    pub user_directory: PathBuf,
     user_cache_directory: PathBuf,
     pub project_full_filename: PathBuf,
     pub project_dir: PathBuf,
@@ -217,7 +221,7 @@ impl GmMacros {
     #[cfg(not(target_os = "windows"))]
     pub fn new(build_data: &BuildData) -> Self {
         let application_data = build_data.user_dir.join(".config");
-        let common_app_data = path!("/User/Shared");
+        let common_app_data = path!("/Users/Shared");
         let system_directory = common_app_data.join("GameMakerStudio2");
 
         Self {
@@ -300,8 +304,8 @@ impl GmMacros {
             project_cache_directory_name: "cache".to_owned(),
             options_dir: project_directory.join("options"),
 
-            user_directory: build_data.user_dir.join("adam-dummy"),
-            user_cache_directory: build_data.user_dir.join("adam-dummy"),
+            user_directory: build_data.license_folder.clone(),
+            user_cache_directory: build_data.license_folder.join("cache"),
 
             ..Self::default()
         }
@@ -399,6 +403,11 @@ impl Default for GmMacros {
             default_font: "Open Sans".to_string(),
             default_style: "Regular".to_string(),
             default_font_size: "9".to_string(),
+            oauth_opera_server: "https://oauth2.opera-api.com/oauth2/v1/".to_string(),
+            gxc_server: "https://api.gmx.dev/".to_string(),
+            gxc_scopes: "user+https://api.gmx.dev/gms:read+https://api.gmx.dev/gms:write"
+                .to_string(),
+            feature_flags_enable: "text".to_string(),
             login_uri: "https://api.yoyogames.com".to_owned(),
             accounts_uri: "https://accounts.yoyogames.com".to_string(),
             marketplace_uri: "https://marketplace.yoyogames.com".to_string(),

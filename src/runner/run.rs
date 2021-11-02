@@ -1,6 +1,6 @@
 use super::{
-    compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_run, invoke_rerun,
-    printer::Printer,
+    compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_release,
+    invoke_rerun, invoke_run, printer::Printer,
 };
 use crate::{
     gm_artifacts,
@@ -19,7 +19,7 @@ impl std::fmt::Display for RunCommand {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let word = match self.0 {
             RunKind::Run | RunKind::Build => "compile",
-            // RunKind::Release => "release",
+            RunKind::Release => "release",
         };
 
         write!(f, "{} {}", if self.1.yyc { "yyc" } else { "vm" }, word)
@@ -33,7 +33,10 @@ pub fn run_command(
     run_kind: RunKind,
 ) {
     let sub_command = RunCommand(run_kind, sub_command);
-    let mut child = invoke_run(&macros, build_bff, &sub_command);
+    let mut child = match sub_command.0 {
+        RunKind::Run | RunKind::Build => invoke_run(&macros, build_bff, &sub_command),
+        RunKind::Release => invoke_release(&macros, build_bff, &sub_command),
+    };
 
     if sub_command.1.verbosity > 0 {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
@@ -44,6 +47,7 @@ pub fn run_command(
         let compiler_handler = match sub_command.0 {
             RunKind::Run => CompilerHandler::new_run(),
             RunKind::Build => CompilerHandler::new_build(),
+            RunKind::Release => CompilerHandler::new_release(),
         };
         // startup the printer in a separate thread...
         let project_dir = macros.project_dir.clone();

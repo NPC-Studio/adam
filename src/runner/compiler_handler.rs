@@ -23,6 +23,10 @@ impl CompilerHandler {
         Self(CompilerState::Initialize, true)
     }
 
+    pub fn new_release() -> Self {
+        Self(CompilerState::Initialize, false)
+    }
+
     #[cfg(target_os = "windows")]
     pub fn new_rerun() -> Self {
         Self(CompilerState::PreRunToMainLoop(vec![]), false)

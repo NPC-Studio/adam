@@ -12,6 +12,16 @@ pub enum Operation {
 pub enum RunKind {
     Run,
     Build,
+    Release,
+}
+
+impl RunKind {
+    /// Returns `true` if the run kind is [`Release`].
+    ///
+    /// [`Release`]: RunKind::Release
+    pub fn is_release(&self) -> bool {
+        matches!(self, Self::Release)
+    }
 }
 
 pub fn parse_inputs() -> (RunOptions, Operation) {
@@ -23,6 +33,7 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     let (b, operation) = match value.subcmd {
         ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
+        ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),
         ClapOperation::Clean(co) => (
             RunOptions {
                 output_folder: co.output_folder,

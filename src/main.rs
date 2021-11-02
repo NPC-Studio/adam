@@ -50,12 +50,12 @@ mod runner {
     #[cfg(not(target_os = "windows"))]
     mod invoke_nix;
     #[cfg(not(target_os = "windows"))]
-    pub(super) use invoke_nix::{invoke_rerun, invoke_run};
+    pub(super) use invoke_nix::{invoke_release, invoke_rerun, invoke_run};
 
     #[cfg(target_os = "windows")]
     mod invoke_win;
     #[cfg(target_os = "windows")]
-    pub(super) use invoke_win::{invoke_rerun, invoke_run};
+    pub(super) use invoke_win::{invoke_release, invoke_rerun, invoke_run};
 
     mod compiler_handler;
     mod gm_uri_parse;
@@ -117,17 +117,13 @@ fn main() {
     let run_kind = match operation {
         input::Operation::Run(inner) => inner,
         input::Operation::Clean => {
-            match std::fs::remove_dir_all(
-                application_data.current_directory.join(
-                    options
-                        .output_folder
-                        .unwrap_or_else(|| std::path::Path::new("target").to_owned()),
-                ),
+            // clean up the output folder...
+            if let Err(e) = std::fs::remove_dir_all(
+                application_data
+                    .current_directory
+                    .join(options.output_folder()),
             ) {
-                Ok(()) => {}
-                Err(e) => {
-                    println!("{} on clean: {}", console::style("error").bright().red(), e);
-                }
+                println!("{} on clean: {}", console::style("error").bright().red(), e);
             }
             return;
         }
@@ -174,6 +170,12 @@ fn main() {
         } else {
             igor::OutputKind::Vm
         },
+        target_file: match run_kind {
+            input::RunKind::Run | input::RunKind::Build => None,
+            input::RunKind::Release => {
+                Some(format!("{}.zip", application_data.project_name).into())
+            }
+        },
         project_filename: application_data.project_name,
         project_directory: application_data.current_directory,
         user_dir: platform.user_data.clone(),
@@ -182,7 +184,6 @@ fn main() {
         target_mask: platform.target_mask,
         application_path: platform.application_path.clone(),
         config: options.config.as_deref().unwrap_or("Default").to_owned(),
-        target_file: None,
     };
 
     let gm_build = gm_artifacts::GmBuild::new(&build_data);

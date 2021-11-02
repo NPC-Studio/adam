@@ -26,8 +26,9 @@ pub enum ClapOperation {
     /// Compiles, if necessary, and then runs a project.
     Run(RunOptions),
 
-    // /// Creates a release executable, running `clean` first.
-    // Release(RunOptions),
+    /// Creates a release executable, running `clean` first.
+    Release(RunOptions),
+
     /// Cleans a project target directory.
     Clean(CleanOptions),
 }
@@ -100,6 +101,14 @@ pub struct RunOptions {
     /// `user_folder` at all.
     #[clap(long)]
     pub user_license_folder: Option<PathBuf>,
+}
+
+impl RunOptions {
+    pub fn output_folder(&self) -> &std::path::Path {
+        self.output_folder
+            .as_deref()
+            .unwrap_or_else(|| std::path::Path::new("target"))
+    }
 }
 
 #[derive(Parser, Debug)]

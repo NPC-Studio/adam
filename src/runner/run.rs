@@ -38,7 +38,7 @@ pub fn run_command(
         RunKind::Release => invoke_release(&macros, build_bff, &sub_command),
     };
 
-    if sub_command.1.verbosity > 0 {
+    if sub_command.1.verbosity > 0 || sub_command.0 == RunKind::Release {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
         for line in reader.flatten() {
             println!("{}", line.trim());

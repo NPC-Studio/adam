@@ -15,15 +15,6 @@ pub enum RunKind {
     Release,
 }
 
-impl RunKind {
-    /// Returns `true` if the run kind is [`Release`].
-    ///
-    /// [`Release`]: RunKind::Release
-    pub fn is_release(&self) -> bool {
-        matches!(self, Self::Release)
-    }
-}
-
 pub fn parse_inputs() -> (RunOptions, Operation) {
     let mut config_file: RunOptions = super::config_file::ConfigFile::find_config()
         .unwrap_or_default()

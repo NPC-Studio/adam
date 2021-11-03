@@ -45,8 +45,8 @@ impl GmBuild {
         Self {
             target_file: build_data
                 .target_file
-                .clone()
-                .map(|v| build.parent().unwrap().join(v))
+                .as_ref()
+                .map(|v| build.join(v))
                 .unwrap_or_default(),
             compile_output_file_name: build_data
                 .output_folder

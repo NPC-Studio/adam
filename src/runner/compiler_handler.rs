@@ -150,7 +150,7 @@ impl CompilerHandler {
                         "********",
                     ];
 
-                    if line == "Entering main loop." {
+                    if line == "Entering main loop." || line == "Igor complete." {
                         progress_bar.finish_and_clear();
                         println!(
                             "{} {} {}:{} in {}",

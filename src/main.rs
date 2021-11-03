@@ -232,8 +232,7 @@ fn main() {
 
     // write in the preferences
     let preferences = if options.yyc {
-        // gm_artifacts::GmPreferences::new(visual_studio_path.unwrap())
-        todo!()
+        gm_artifacts::GmPreferences::new(visual_studio_path.unwrap())
     } else {
         gm_artifacts::GmPreferences::default()
     };

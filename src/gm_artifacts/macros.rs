@@ -255,20 +255,17 @@ impl GmMacros {
     }
     fn create_internal(build_data: &BuildData) -> Self {
         let BuildData {
-            output_folder: out,
-            output_kind,
-            project_filename: project_name,
+            folders,
+            project_filename,
             project_directory,
             user_dir,
-            license_folder: _,
-            runtime_location: runtime,
+            runtime_location,
+            application_path,
             target_mask: _,
-            application_path: app_path,
+            license_folder: _,
+            output_kind: _,
             config: _,
-            target_file: _,
         } = build_data;
-
-        let build_dir = out.join(output_kind.to_string());
 
         Self {
             desktop: user_dir.join("Desktop"),
@@ -279,28 +276,32 @@ impl GmMacros {
             my_pictures: user_dir.join("Pictures"),
             user_profile: user_dir.clone(),
 
-            exe_path: app_path.clone(),
-            runtime_location: runtime.clone(),
-            base_options_dir: runtime.join("BaseProject/options"),
-            asset_compiler_path: runtime.join("bin/GMAssetCompiler.exe"),
-            igor_path: runtime.join("bin/Igor.exe"),
-            lib_compatibility_path: runtime.join("lib/compatibility.zip"),
-            runner_path: runtime.join("windows/Runner.exe"),
-            x64_runner_path: runtime.join("windows/x64/Runner.exe"),
-            html5_runner_path: runtime.join("html5/scripts.html5.zip"),
-            webserver_path: runtime.join("bin/GMWebServer.exe"),
-            licenses_path: app_path.join("Licenses"),
-            skin_path: app_path.join("GUI/Skins"),
-            default_skin: app_path.join("GUI/Skins/Dark"),
+            exe_path: application_path.clone(),
+            runtime_location: runtime_location.clone(),
+            base_options_dir: runtime_location.join("BaseProject/options"),
+            asset_compiler_path: runtime_location.join("bin/GMAssetCompiler.exe"),
+            igor_path: runtime_location.join("bin/Igor.exe"),
+            lib_compatibility_path: runtime_location.join("lib/compatibility.zip"),
+            runner_path: runtime_location.join("windows/Runner.exe"),
+            x64_runner_path: runtime_location.join("windows/x64/Runner.exe"),
+            html5_runner_path: runtime_location.join("html5/scripts.html5.zip"),
+            webserver_path: runtime_location.join("bin/GMWebServer.exe"),
+            licenses_path: application_path.join("Licenses"),
+            skin_path: application_path.join("GUI/Skins"),
+            default_skin: application_path.join("GUI/Skins/Dark"),
 
-            local_cache_directory: build_dir.clone(),
-            temp_directory: build_dir.clone(),
-            asset_compiler_cache_directory: build_dir.clone(),
-            my_projects_directory: build_dir.join("GameMakerStudio2"),
-            base_project: runtime.join("BaseProject/BaseProject.yyp"),
-            project_full_filename: project_directory.join(project_name).with_extension("yyp"),
+            local_cache_directory: folders.cache.clone(),
+            temp_directory: folders.tmp.clone(),
+            // for some reason we need this here -- it will append `cache` and find the
+            // `folders.cache` that way itself! that's chaos!
+            asset_compiler_cache_directory: folders.main.clone(),
+            my_projects_directory: user_dir.join("GameMakerStudio2"),
+            base_project: runtime_location.join("BaseProject/BaseProject.yyp"),
+            project_full_filename: project_directory
+                .join(project_filename)
+                .with_extension("yyp"),
             project_dir: project_directory.clone(),
-            project_name: project_name.to_owned(),
+            project_name: project_filename.to_owned(),
             project_cache_directory_name: "cache".to_owned(),
             options_dir: project_directory.join("options"),
 

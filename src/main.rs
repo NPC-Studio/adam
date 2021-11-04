@@ -4,6 +4,10 @@
 
 use gm_artifacts::PlatformBuilder;
 
+use crate::igor::{OutputKind, TargetFolders};
+
+type AnyResult<T = ()> = color_eyre::eyre::Result<T>;
+
 mod input {
     mod cli;
     mod config_file;
@@ -65,7 +69,7 @@ mod runner {
 #[cfg(target_os = "windows")]
 mod trailing_comma_util;
 
-fn main() {
+fn main() -> AnyResult {
     let (mut options, operation) = input::parse_inputs();
 
     // build our platform handle here
@@ -95,7 +99,8 @@ fn main() {
                 console::style("adam error").bright().red(),
                 console::style(e).bold()
             );
-            return;
+
+            return Ok(());
         }
     };
 
@@ -110,7 +115,7 @@ fn main() {
             console::style("adam error").bright().red(),
             console::style(e).bold()
         );
-        return;
+        return Ok(());
     };
 
     // handle a clean, extract the build_data
@@ -125,7 +130,7 @@ fn main() {
             ) {
                 println!("{} on clean: {}", console::style("error").bright().red(), e);
             }
-            return;
+            return Ok(());
         }
     };
 
@@ -137,7 +142,7 @@ fn main() {
                 console::style("adam error",).bright().red(),
                 console::style("adam does not support macOS YYC compilation, yet.").bold(),
             );
-            return;
+            return Ok(());
         }
 
         if let Some(visual_studio_path) = options.visual_studio_path {
@@ -153,29 +158,24 @@ fn main() {
                 visual_studio_path.display(),
             );
 
-            return;
+            return Ok(());
         }
     }
 
+    let output_kind = if options.yyc {
+        igor::OutputKind::Yyc
+    } else {
+        igor::OutputKind::Vm
+    };
+
     let build_data = igor::BuildData {
-        output_folder: application_data.current_directory.join(
-            &options
-                .output_folder
-                .as_deref()
-                .unwrap_or_else(|| std::path::Path::new("target"))
-                .to_owned(),
-        ),
-        output_kind: if options.yyc {
-            igor::OutputKind::Yyc
-        } else {
-            igor::OutputKind::Vm
-        },
-        target_file: match run_kind {
-            input::RunKind::Run | input::RunKind::Build => None,
-            input::RunKind::Release => {
-                Some(format!("{}.zip", application_data.project_name).into())
-            }
-        },
+        folders: TargetFolders::new(
+            &application_data.current_directory,
+            options.output_folder.as_deref(),
+            output_kind,
+            &application_data.project_name,
+        )?,
+        output_kind,
         project_filename: application_data.project_name,
         project_directory: application_data.current_directory,
         user_dir: platform.user_data.clone(),
@@ -187,13 +187,6 @@ fn main() {
     };
 
     let gm_build = gm_artifacts::GmBuild::new(&build_data);
-
-    // make our dirs:
-    let cache_folder = build_data
-        .output_folder
-        .join(&format!("{}/cache", build_data.output_kind));
-    std::fs::create_dir_all(&cache_folder).unwrap();
-
     let macros = gm_artifacts::GmMacros::new(&build_data);
     let visual_studio_path = options.visual_studio_path.clone();
 
@@ -203,25 +196,18 @@ fn main() {
         && manifest::check_manifest(
             build_data.config.clone(),
             &build_data.project_directory,
-            &cache_folder,
-            &build_data.output_folder,
+            &build_data.folders.cache,
+            &build_data.folders.main,
         )
     {
         runner::rerun_old(gm_build, &macros, options);
-        return;
+        return Ok(());
     }
 
-    let build_location = cache_folder.join("build.bff");
+    // clear the temp files...
+    build_data.folders.clear_tmp()?;
 
-    // make and clear our tmps
-    let tmp = build_data
-        .output_folder
-        .join(&format!("{}/tmp", build_data.output_kind));
-    // clear the tmp
-    if tmp.exists() {
-        std::fs::remove_dir_all(&tmp).unwrap();
-    }
-    std::fs::create_dir_all(&tmp).unwrap();
+    let build_location = build_data.folders.cache.join("build.bff");
 
     // write in the build.bff
     std::fs::write(
@@ -231,7 +217,7 @@ fn main() {
     .unwrap();
 
     // write in the preferences
-    let preferences = if options.yyc {
+    let preferences = if build_data.output_kind == OutputKind::Yyc {
         gm_artifacts::GmPreferences::new(visual_studio_path.unwrap())
     } else {
         gm_artifacts::GmPreferences::default()
@@ -252,7 +238,7 @@ fn main() {
     )
     .unwrap();
 
-    // write in the steamoptions
+    // write in the steamoptions -- we just use defaults here...
     std::fs::write(
         &gm_build.steam_options,
         serde_json::to_string_pretty(&gm_artifacts::GmSteamOptions::default()).unwrap(),
@@ -267,4 +253,6 @@ fn main() {
     .unwrap();
 
     runner::run_command(&build_location, macros, options, run_kind);
+
+    Ok(())
 }

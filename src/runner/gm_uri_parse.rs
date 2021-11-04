@@ -19,8 +19,7 @@ pub struct GmUriParser {
 
 impl GmUriParser {
     pub fn new<P: AsRef<Path>>(scripts_directory: P) -> Self {
-        let global_script_regex =
-            Regex::new(r#"\w*GlobalScript_(\w*):(\d*)"#).unwrap();
+        let global_script_regex = Regex::new(r#"\w*GlobalScript_(\w*):(\d*)"#).unwrap();
         let object_regex = Regex::new(r#"gml_Object_(\w*):(\d*)"#).unwrap();
         let script_regex = Regex::new(r#"gml_Script_(\w*):(\d*)"#).unwrap();
 

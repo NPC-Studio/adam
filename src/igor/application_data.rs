@@ -1,5 +1,7 @@
 use std::{env, path::PathBuf};
 
+use crate::AnyResult;
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct ApplicationData {
     pub current_directory: PathBuf,
@@ -7,9 +9,9 @@ pub struct ApplicationData {
 }
 
 impl ApplicationData {
-    pub fn new(destination_yyp: &Option<String>) -> anyhow::Result<Self> {
+    pub fn new(destination_yyp: &Option<String>) -> AnyResult<Self> {
         let current_directory =
-            env::current_dir().map_err(|_| anyhow::anyhow!("cannot read directory"))?;
+            env::current_dir().map_err(|_| color_eyre::eyre::anyhow!("cannot read directory"))?;
 
         let mut project_name = None;
         let mut too_many_projects = vec![];
@@ -39,7 +41,7 @@ impl ApplicationData {
         }
 
         if too_many_projects.is_empty() == false {
-            anyhow::bail!(
+            color_eyre::eyre::bail!(
                 "multiple yyps discovered. specify target with --target. options: \n\
             \t{}",
                 too_many_projects
@@ -62,7 +64,7 @@ impl ApplicationData {
                 project_name,
             })
         } else {
-            anyhow::bail!(
+            color_eyre::eyre::bail!(
                 "could not find a valid yyp in {}",
                 current_directory.display()
             )

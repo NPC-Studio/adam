@@ -36,24 +36,17 @@ pub struct GmBuild {
 
 impl GmBuild {
     pub fn new(build_data: &BuildData) -> Self {
-        let build = build_data
-            .output_folder
-            .join(build_data.output_kind.to_string());
-        let cache = build.join("cache");
-        let tmp = build.join("tmp");
+        let cache = &build_data.folders.cache;
+        let tmp = &build_data.folders.tmp;
 
         Self {
-            target_file: build_data
-                .target_file
-                .as_ref()
-                .map(|v| build.parent().unwrap().join(v))
-                .unwrap_or_default(),
+            target_file: build_data.folders.target_file.clone(),
             compile_output_file_name: build_data
-                .output_folder
-                .join(build_data.output_kind.to_string())
+                .folders
+                .output
                 .join(&build_data.project_filename)
                 .with_extension("win"),
-            steam_options: cache.join("steam_options.yy"),
+            steam_options: build_data.folders.cache.join("steam_options.yy"),
             project_name: build_data.project_filename.clone(),
             macros: cache.join("macros.json"),
             project_dir: build_data.project_directory.clone(),
@@ -63,13 +56,13 @@ impl GmBuild {
                 .join(&build_data.project_filename)
                 .with_extension("yyp"),
             temp_folder: tmp.clone(),
-            temp_folder_unmapped: tmp,
+            temp_folder_unmapped: tmp.clone(),
             license_dir: build_data.license_folder.clone(),
             runtime_location: build_data.runtime_location.clone(),
             target_options: cache.join("targetoptions.json"),
             target_mask: build_data.target_mask.to_string(),
             application_path: build_data.application_path.clone(),
-            output_folder: build,
+            output_folder: build_data.folders.output.clone(),
             config: build_data.config.clone(),
 
             ..Default::default()

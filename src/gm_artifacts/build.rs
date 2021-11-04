@@ -46,7 +46,7 @@ impl GmBuild {
             target_file: build_data
                 .target_file
                 .as_ref()
-                .map(|v| build.join(v))
+                .map(|v| build.parent().unwrap().join(v))
                 .unwrap_or_default(),
             compile_output_file_name: build_data
                 .output_folder

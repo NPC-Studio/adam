@@ -14,6 +14,7 @@ pub struct GmPreferences {
 }
 
 impl GmPreferences {
+    #[allow(clippy::needless_update)]
     pub fn new(visual_studio_path: PathBuf) -> Self {
         Self {
             default_packaging_choice: Some(1),

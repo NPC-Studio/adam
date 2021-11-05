@@ -267,6 +267,8 @@ impl GmMacros {
             config: _,
         } = build_data;
 
+        println!("Runtime location: {:?}", runtime_location.display());
+
         Self {
             desktop: user_dir.join("Desktop"),
             my_documents: user_dir.join("Documents"),

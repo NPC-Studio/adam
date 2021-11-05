@@ -116,27 +116,25 @@ impl RunOptions {
         use color_eyre::Help;
 
         if let Some(runtime_override) = &mut self.runtime_location_override {
-            *runtime_override = runtime_override
-                .canonicalize()
+            *runtime_override = dunce::canonicalize(&runtime_override)
                 .with_note(|| "runtime-overide is invalid")?;
+
+            println!("{}", runtime_override.to_str().unwrap());
         }
 
         if let Some(install_location) = &mut self.gms2_install_location {
-            *install_location = install_location
-                .canonicalize()
+            *install_location = dunce::canonicalize(&install_location)
                 .with_note(|| "install-location is invalid")?;
         }
 
         #[cfg(target_os = "windows")]
         if let Some(visual_studio_path) = &mut self.visual_studio_path {
-            *visual_studio_path = visual_studio_path
-                .canonicalize()
+            *visual_studio_path = dunce::canonicalize(&visual_studio_path)
                 .with_note(|| "visual-studio-path is invalid")?;
         }
 
         if let Some(user_license_folder) = &mut self.user_license_folder {
-            *user_license_folder = user_license_folder
-                .canonicalize()
+            *user_license_folder = dunce::canonicalize(&user_license_folder)
                 .with_note(|| "user-license-folder is invalid")?;
         }
 

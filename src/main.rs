@@ -70,7 +70,10 @@ mod runner {
 mod trailing_comma_util;
 
 fn main() -> AnyResult {
+    color_eyre::install()?;
+
     let (mut options, operation) = input::parse_inputs();
+    options.canonicalize()?;
 
     // build our platform handle here
     let platform = {

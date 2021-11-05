@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
+use crate::AnyResult;
+
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
 #[derive(Parser, Debug)]
 #[clap(version = clap::crate_version!(), author = clap::crate_authors!())]
@@ -108,6 +110,37 @@ impl RunOptions {
         self.output_folder
             .as_deref()
             .unwrap_or_else(|| std::path::Path::new("target"))
+    }
+
+    pub fn canonicalize(&mut self) -> AnyResult {
+        use color_eyre::Help;
+
+        if let Some(runtime_override) = &mut self.runtime_location_override {
+            *runtime_override = runtime_override
+                .canonicalize()
+                .with_note(|| "runtime-overide is invalid")?;
+        }
+
+        if let Some(install_location) = &mut self.gms2_install_location {
+            *install_location = install_location
+                .canonicalize()
+                .with_note(|| "install-location is invalid")?;
+        }
+
+        #[cfg(target_os = "windows")]
+        if let Some(visual_studio_path) = &mut self.visual_studio_path {
+            *visual_studio_path = visual_studio_path
+                .canonicalize()
+                .with_note(|| "visual-studio-path is invalid")?;
+        }
+
+        if let Some(user_license_folder) = &mut self.user_license_folder {
+            *user_license_folder = user_license_folder
+                .canonicalize()
+                .with_note(|| "user-license-folder is invalid")?;
+        }
+
+        Ok(())
     }
 }
 

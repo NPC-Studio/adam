@@ -1,4 +1,3 @@
-use crossbeam::channel;
 use filetime::FileTime;
 use indicatif::ProgressBar;
 use std::{
@@ -44,7 +43,7 @@ pub fn check_manifest(
     );
     progress_bar.enable_steady_tick(1);
 
-    let (s, r) = channel::unbounded();
+    let (s, r) = std::sync::mpsc::channel();
     let mut threads_made = 0;
 
     // iterate over EACH file in the directory, giving us SOME parallelism...
@@ -113,7 +112,10 @@ pub fn invalidate_manifest(manifest_dir: &Path) {
     }
 }
 
-fn quick_thread(path: PathBuf, handle: channel::Sender<u64>) -> std::thread::JoinHandle<()> {
+fn quick_thread(
+    path: PathBuf,
+    handle: std::sync::mpsc::Sender<u64>,
+) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         let mut hasher = rustc_hash::FxHasher::default();
 

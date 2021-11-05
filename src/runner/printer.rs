@@ -1,6 +1,6 @@
 use super::gm_uri_parse::*;
 use aho_corasick::AhoCorasickBuilder;
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 #[derive(Debug)]
 pub struct Printer {
@@ -17,12 +17,12 @@ impl Printer {
     ];
 
     pub fn new(scripts_directory: &Path) -> Self {
-        let str_to_style = maplit::hashmap! {
-            "error".to_string() => console::Style::new().red().bright(),
-            "warn".to_string() => console::Style::new().yellow().bright(),
-            "info".to_string() => console::Style::new().green().bright(),
-            "trace".to_string() => console::Style::new().dim().cyan()
-        };
+        let str_to_style = HashMap::from([
+            ("error".to_string(), console::Style::new().red().bright()),
+            ("warn".to_string(), console::Style::new().yellow().bright()),
+            ("info".to_string(), console::Style::new().green().bright()),
+            ("trace".to_string(), console::Style::new().dim().cyan()),
+        ]);
 
         let aho_corasick = AhoCorasickBuilder::new()
             .ascii_case_insensitive(true)

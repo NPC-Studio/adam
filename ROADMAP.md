@@ -1,9 +1,9 @@
 # ROADMAP
 
-## v0.2.0
+## v0.5.0
 
 - [ ] User defined color overrides within configuration and CLI.
-- [ ] Release mode for creating builds.
+- [x] Release mode for creating builds.
 
 ## v0.1.0
 

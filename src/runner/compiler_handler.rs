@@ -67,7 +67,7 @@ impl CompilerHandler {
 
             match &mut self.0 {
                 CompilerState::Initialize => {
-                    progress_bar.set_message(&line[..max_size]);
+                    progress_bar.set_message(line[..max_size].to_string());
 
                     if line.contains("[Compile]") {
                         self.0 = CompilerState::Compile(vec![]);
@@ -88,7 +88,7 @@ impl CompilerHandler {
                             return CompilerOutput::Errors(e_msgs.clone());
                         }
                     } else if e_msgs.is_empty() {
-                        progress_bar.set_message(&line[..max_size]);
+                        progress_bar.set_message(line[..max_size].to_string());
                     } else {
                         progress_bar.inc(20);
                     }
@@ -132,7 +132,7 @@ impl CompilerHandler {
                             self.0 = CompilerState::PreRunToMainLoop(vec![]);
                         }
                     } else {
-                        progress_bar.set_message(&line[..max_size]);
+                        progress_bar.set_message(line[..max_size].to_string());
                         progress_bar.inc(10);
                     }
                 }
@@ -169,7 +169,7 @@ impl CompilerHandler {
                         if FINAL_EMITS.iter().any(|&v| line.contains(v)) == false {
                             startup_msgs.push(line);
                         } else {
-                            progress_bar.set_message(&line);
+                            progress_bar.set_message(line);
                             progress_bar.inc(25);
                         }
                     }

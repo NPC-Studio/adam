@@ -48,6 +48,7 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
         runtime_location_override,
         visual_studio_path,
         user_license_folder,
+        no_user_folder,
     } = b;
 
     if let Some(cfg) = config {
@@ -85,6 +86,10 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     if x64_windows {
         config_file.x64_windows = true;
     }
+    if no_user_folder {
+        config_file.no_user_folder = true;
+    }
+
     if beta {
         config_file.beta = true;
     }

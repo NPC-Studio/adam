@@ -1,3 +1,4 @@
+use color_eyre::Section;
 use std::path::{Path, PathBuf};
 
 use crate::{gm_artifacts::Platform, AnyResult};
@@ -14,8 +15,15 @@ pub fn load_user_data(
     }
 
     let gms2_data = platform.gms2_data.clone();
-    let um_json: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(gms2_data.join("um.json"))?)?;
+    let um_json: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(gms2_data.join("um.json")).with_note(|| {
+            format!(
+                "Could not read path {}",
+                gms2_data.join("um.json").display()
+            )
+        })?,
+    )
+    .with_note(|| "Couldn't parse `um.json` file.")?;
 
     let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
     let user_name = um_json
@@ -36,7 +44,9 @@ pub fn load_user_data(
         );
     }
 
+    // we need a visual studio path...
     if visual_studio_path.is_none() {
+        // the ide can give us one...
         let new_path = std::fs::read_to_string(
             gms2_data.join(&format!("{}_{}/local_settings.json", user_name, user_id)),
         )

@@ -50,15 +50,29 @@ pub struct ConfigFile {
     #[serde(default)]
     pub x64_windows: bool,
 
+    /// If this option is set, then we will not read your `~/.config/GameMakerStudio2` or `%APPDATA%/GameMakerStudio2` folders
+    /// at all. If you pass this, then you MUST pass in a `user-license-folder` and (on Windows) a `visual-studio-path`. Otherwise,
+    /// adam will exit out with an error.
+    #[serde(default)]
+    pub no_user_folder: bool,
+
     /// This sets a complete path to the runtime location.
     #[serde(default)]
     pub runtime_location_override: Option<PathBuf>,
 
     /// Use this visual studio path, instead of the visual studio path within the `user_folder`
-    /// at `~/.config`.
+    /// at `~/.config`. This is only relevant on Windows.
+    ///
+    /// This should be a path to the `.bat` file, such as:
+    ///
+    /// ```zsh
+    /// C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars32.bat
+    /// ```
+    ///
+    /// For more info on this path, see https://help.yoyogames.com/hc/en-us/articles/235186048-Setting-Up-For-Windows
     ///
     /// If this field and `user_license_folder` are both set, then we will not look in your
-    /// `user_folder` at all.
+    /// `user_folder` at all. To ensure we don't do that, pass `-no-user-folder`.
     #[serde(default)]
     pub visual_studio_path: Option<PathBuf>,
 
@@ -87,6 +101,7 @@ impl From<ConfigFile> for RunOptions {
             runtime_location_override: o.runtime_location_override,
             visual_studio_path: o.visual_studio_path,
             user_license_folder: o.user_license_folder,
+            no_user_folder: o.no_user_folder,
         }
     }
 }

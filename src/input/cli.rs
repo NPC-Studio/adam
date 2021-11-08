@@ -37,17 +37,19 @@ pub enum ClapOperation {
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Default)]
 pub struct RunOptions {
-    /// Uses the YYC instead of the default VM.
+    /// Uses the YYC instead of the default VM. If this is the case, then we'll need to check
+    /// your Visual Studio path on Windows.
     #[clap(long, short)]
     pub yyc: bool,
 
     /// Option to switch to using the Gms2 Beta. By default, this will use the
     /// `C:/Program Files/GameMaker Studio 2 Beta/GameMakerStudio-Beta.exe` filepath,
     /// but can be overriden with `gms2_install_location` for beta Steam builds.
-    #[clap(long, short)]
+    #[clap(long)]
     pub beta: bool,
 
     /// Whether or not to use the x64 variant on windows.
+    /// 
     /// On non-Windows platforms, this option is meaningless. We do a best effort to detect x64 usage by reading
     /// your options.yy, but we don't currently parse configs deeply, which means that a special config set up
     /// to use x64 won't be discovered. For such a circumstance, use this flag to build correctly.
@@ -55,6 +57,12 @@ pub struct RunOptions {
     /// In general, it's easiest if you don't use override x64 with certain configs in Gms2.
     #[clap(long, short)]
     pub x64_windows: bool,
+
+    /// If this option is set, then we will not read your `~/.config/GameMakerStudio2` or `%APPDATA%/GameMakerStudio2` folders
+    /// at all. If you pass this, then you MUST pass in a `user-license-folder` and (on Windows) a `visual-studio-path`. Otherwise,
+    /// adam will exit out with an error.
+    #[clap(long)]
+    pub no_user_folder: bool,
 
     /// Specifies a configuration. If not passed, we use `Default` for our Config.
     #[clap(short, long)]
@@ -77,7 +85,7 @@ pub struct RunOptions {
     pub ignore_cache: usize,
 
     /// The path to your Gms2 installation. Defaults to C drive on Windows and Applications on macOS. If you use Steam, you will need to pass in that fullpath to the .exe, or the .app on macOS.
-    #[clap(short, long)]
+    #[clap(long)]
     pub gms2_install_location: Option<PathBuf>,
 
     /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.409` on stable and beta.
@@ -89,10 +97,18 @@ pub struct RunOptions {
     pub runtime_location_override: Option<PathBuf>,
 
     /// Use this visual studio path, instead of the visual studio path within the `user_folder`
-    /// at `~/.config`.
+    /// at `~/.config`. This is only relevant on Windows.
+    ///
+    /// This should be a path to the `.bat` file, such as:
+    ///
+    /// ```zsh
+    /// C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars32.bat
+    /// ```
+    ///
+    /// For more info on this path, see https://help.yoyogames.com/hc/en-us/articles/235186048-Setting-Up-For-Windows
     ///
     /// If this field and `user_license_folder` are both set, then we will not look in your
-    /// `user_folder` at all.
+    /// `user_folder` at all. To ensure we don't do that, pass `-no-user-folder`.
     #[clap(long)]
     pub visual_studio_path: Option<PathBuf>,
 

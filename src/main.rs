@@ -75,6 +75,24 @@ fn main() -> AnyResult {
     let (mut options, operation) = input::parse_inputs();
     options.canonicalize()?;
 
+    // check for early exit...
+    if options.no_user_folder
+        && (options.user_license_folder.is_none() || options.visual_studio_path.is_none())
+    {
+        let msg = if cfg!(target_os = "windows") {
+            "`no-user-folder` is set, but either `user-license-folder` or `visual-studio-path` is not set."
+        } else {
+            "`no-user-folder` is set, but `user-license-folder` is not set."
+        };
+        println!(
+            "{}: {}",
+            console::style("adam error").bright().red(),
+            console::style(msg).bold()
+        );
+
+        return Ok(());
+    }
+
     // build our platform handle here
     let platform = {
         let mut builder = PlatformBuilder::new();

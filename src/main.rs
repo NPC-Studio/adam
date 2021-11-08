@@ -2,6 +2,9 @@
 #![deny(rust_2018_idioms)]
 #![deny(rust_2021_compatibility)]
 
+#[cfg(not(any(target_os = "windows", target_os = "macos")))]
+compile_error!("we only support `windows` and `macos` targets!");
+
 use gm_artifacts::PlatformBuilder;
 
 use crate::igor::{OutputKind, TargetFolders};

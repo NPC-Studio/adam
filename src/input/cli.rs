@@ -49,7 +49,7 @@ pub struct RunOptions {
     pub beta: bool,
 
     /// Whether or not to use the x64 variant on windows.
-    /// 
+    ///
     /// On non-Windows platforms, this option is meaningless. We do a best effort to detect x64 usage by reading
     /// your options.yy, but we don't currently parse configs deeply, which means that a special config set up
     /// to use x64 won't be discovered. For such a circumstance, use this flag to build correctly.
@@ -143,10 +143,13 @@ impl RunOptions {
                 .with_note(|| "install-location is invalid")?;
         }
 
-        #[cfg(target_os = "windows")]
         if let Some(visual_studio_path) = &mut self.visual_studio_path {
-            *visual_studio_path = dunce::canonicalize(&visual_studio_path)
-                .with_note(|| "visual-studio-path is invalid")?;
+            // we set the visual studio path to an empty path as a dummy
+            // outside the --yyc option and on all macOS compiles.
+            if visual_studio_path.as_os_str().is_empty() == false {
+                *visual_studio_path = dunce::canonicalize(&visual_studio_path)
+                    .with_note(|| "visual-studio-path is invalid")?;
+            }
         }
 
         if let Some(user_license_folder) = &mut self.user_license_folder {

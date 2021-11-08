@@ -100,6 +100,9 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
     // if we say to use the yyc, we use the yyc
     if yyc {
         config_file.yyc = true;
+    } else {
+        // we just set the visual studio path here..
+        config_file.visual_studio_path = Some(Default::default());
     }
 
     if ignore_cache != 0 {

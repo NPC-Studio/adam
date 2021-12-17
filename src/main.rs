@@ -87,6 +87,7 @@ fn main() -> AnyResult {
         } else {
             "`no-user-folder` is set, but `user-license-folder` is not set."
         };
+        
         println!(
             "{}: {}",
             console::style("adam error").bright().red(),

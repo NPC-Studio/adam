@@ -216,7 +216,6 @@ fn main() -> AnyResult {
 
     // check if we need to make a new build at all, or can go straight to the runner
     if options.ignore_cache == 0
-        && cfg!(target_os = "windows")
         && manifest::check_manifest(
             build_data.config.clone(),
             &build_data.project_directory,

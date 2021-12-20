@@ -1,23 +1,23 @@
 use filetime::FileTime;
 use indicatif::ProgressBar;
 use std::{
-    collections::HashSet,
     hash::Hasher,
     path::{Path, PathBuf},
+    sync::mpsc,
 };
 use walkdir::WalkDir;
 
 #[derive(Debug, PartialEq, Eq, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct Manifest {
     config: String,
-    fingerprint: HashSet<u64>,
+    fingerprint: u64,
 }
 
 impl Manifest {
     pub fn new(config: String) -> Self {
         Manifest {
             config,
-            fingerprint: HashSet::new(),
+            fingerprint: 0,
         }
     }
 }
@@ -44,7 +44,8 @@ pub fn check_manifest(
     progress_bar.enable_steady_tick(1);
 
     let (s, r) = std::sync::mpsc::channel();
-    let mut threads_made = 0;
+
+    let time = std::time::Instant::now();
 
     // iterate over EACH file in the directory, giving us SOME parallelism...
     for entry in std::fs::read_dir(yyp_dir)
@@ -56,23 +57,24 @@ pub fn check_manifest(
         if path == target_directory {
             continue;
         }
-        threads_made += 1;
         quick_thread(path, s.clone());
     }
+    // drop our sender so we don't infinite loop!
+    drop(s);
 
     // sleep for 3 ms so we don't contend with ourselves too fast...
     std::thread::sleep(std::time::Duration::new(0, 3_000_000));
 
     // each thread is done...
-    while let Ok(new_value) = r.recv() {
-        new_manifest.fingerprint.insert(new_value);
-        threads_made -= 1;
-        if threads_made == 0 {
-            break;
-        }
-    }
+    let mut hasher = rustc_hash::FxHasher::default();
 
+    while let Ok(new_value) = r.recv() {
+        hasher.write_i64(new_value);
+    }
+    new_manifest.fingerprint = hasher.finish();
     progress_bar.finish_and_clear();
+
+    println!("Time is {:?}", time.elapsed());
 
     if new_manifest != old_manifest {
         if let Err(e) = std::fs::write(
@@ -112,24 +114,16 @@ pub fn invalidate_manifest(manifest_dir: &Path) {
     }
 }
 
-fn quick_thread(
-    path: PathBuf,
-    handle: std::sync::mpsc::Sender<u64>,
-) -> std::thread::JoinHandle<()> {
+fn quick_thread(path: PathBuf, handle: mpsc::Sender<i64>) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
-        let mut hasher = rustc_hash::FxHasher::default();
-
         for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
             if let Ok(metadata) = entry.metadata() {
                 if metadata.is_file() {
                     let last_accesstime =
                         FileTime::from_last_modification_time(&metadata).seconds();
-
-                    hasher.write_i64(last_accesstime);
+                    handle.send(last_accesstime).unwrap();
                 }
             }
         }
-
-        handle.send(hasher.finish()).unwrap();
     })
 }

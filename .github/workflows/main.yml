@@ -1,0 +1,25 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build-pc:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build the Application
+        run: cargo build --release
+
+      - name: zip
+        run: Compress-Archive ./target/release/adam.exe adam-x86_64-pc-windows-msvc.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: adam-x86_64-pc-windows-msvc.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

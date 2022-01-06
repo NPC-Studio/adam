@@ -45,8 +45,6 @@ pub fn check_manifest(
 
     let (s, r) = std::sync::mpsc::channel();
 
-    let time = std::time::Instant::now();
-
     // iterate over EACH file in the directory, giving us SOME parallelism...
     for entry in std::fs::read_dir(yyp_dir)
         .unwrap()
@@ -73,8 +71,6 @@ pub fn check_manifest(
     }
     new_manifest.fingerprint = hasher.finish();
     progress_bar.finish_and_clear();
-
-    println!("Time is {:?}", time.elapsed());
 
     if new_manifest != old_manifest {
         if let Err(e) = std::fs::write(

@@ -135,7 +135,7 @@ impl RunOptions {
             *runtime_override = dunce::canonicalize(&runtime_override)
                 .with_note(|| "runtime-overide is invalid")?;
 
-            println!("{}", runtime_override.to_str().unwrap());
+            // println!("{}", runtime_override.to_str().unwrap());
         }
 
         if let Some(install_location) = &mut self.gms2_install_location {

@@ -1,7 +1,7 @@
 use crate::gm_artifacts;
 
 use super::run::RunCommand;
-use heck::TitleCase;
+use heck::ToTitleCase;
 use indicatif::ProgressBar;
 use std::{io::BufRead, io::BufReader, path::Path, process::Child};
 

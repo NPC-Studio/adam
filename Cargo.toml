@@ -1,6 +1,6 @@
 [package]
 name = "adam"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Jonathan Spira <jjspira@gmail.com>"]
 edition = "2021"
 description = "A command-line interface for compiling Gms2 projects"
@@ -13,13 +13,13 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.5.8"
 
-clap = { version = "3.0.0-rc.7", features = ["derive", "cargo"]}
+clap = { version = "3.0.5", features = ["derive", "cargo"]}
 directories = "4.0"
 color-eyre = "0.5"
 
 console = "0.15"
 indicatif = "0.16"
-heck = "0.3.1"
+heck = "0.4.0"
 walkdir = "2.3"
 filetime = "0.2"
 regex = "1.3"

@@ -116,7 +116,7 @@ impl CompilerHandler {
                             println!(
                                 "{} {} {}:{} in {}",
                                 console::style("Completed").green().bright(),
-                                gm_artifacts::PLATFORM_KIND.to_string(),
+                                gm_artifacts::PLATFORM_KIND,
                                 run_command,
                                 console::style(
                                     &run_command.1.config.as_deref().unwrap_or("Default")
@@ -155,7 +155,7 @@ impl CompilerHandler {
                         println!(
                             "{} {} {}:{} in {}",
                             console::style("Completed").green().bright(),
-                            gm_artifacts::PLATFORM_KIND.to_string(),
+                            gm_artifacts::PLATFORM_KIND,
                             run_command,
                             console::style(&run_command.1.config.as_deref().unwrap_or("Default"))
                                 .yellow()

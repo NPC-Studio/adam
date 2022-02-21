@@ -27,7 +27,7 @@ pub fn load_user_data(
 
     let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
     let user_name = um_json
-        .get("username")
+        .get("login")
         .unwrap()
         .as_str()
         .unwrap()

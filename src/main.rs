@@ -39,47 +39,8 @@ mod trailing_comma_util;
 fn main() -> AnyResult {
     color_eyre::install()?;
 
-    // // build our platform handle here
-    // let platform = {
-    //     let mut builder = PlatformBuilder::new();
-    //     if options.beta {
-    //         builder.set_beta();
-    //     }
-    //     if let Some(install) = &options.gms2_install_location {
-    //         builder.set_app_override(Some(install.to_owned()));
-    //     }
-    //     if let Some(runtime) = &options.runtime {
-    //         builder.set_runtime_name(runtime.to_owned());
-    //     }
-    //     if let Some(runtime_full_path) = &options.runtime_location_override {
-    //         builder.set_runtime_override(Some(runtime_full_path.to_owned()));
-    //     }
-
-    //     builder.generate()
-    // };
-
     let (mut options, operation) = input::parse_inputs()?;
     options.platform.canonicalize()?;
-
-    // // check for early exit...
-    // if options.task.no_user_folder
-    //     && (options.platform.user_license_folder.is_none()
-    //         || options.platform.visual_studio_path.is_none())
-    // {
-    //     let msg = if cfg!(target_os = "windows") {
-    //         "`no-user-folder` is set, but either `user-license-folder` or `visual-studio-path` is not set."
-    //     } else {
-    //         "`no-user-folder` is set, but `user-license-folder` is not set."
-    //     };
-
-    //     println!(
-    //         "{}: {}",
-    //         console::style("adam error").bright().red(),
-    //         console::style(msg).bold()
-    //     );
-
-    //     return Ok(());
-    // }
 
     let application_data = match igor::ApplicationData::new() {
         Ok(v) => v,

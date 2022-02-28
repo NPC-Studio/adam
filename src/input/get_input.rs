@@ -76,6 +76,23 @@ pub fn load_user_data(
         return Ok(());
     }
 
+    // check for early exit...
+    if options.task.no_user_folder {
+        let msg = if cfg!(target_os = "windows") {
+            "`no-user-folder` is set, but either `user-license-folder` or `visual-studio-path` is not set."
+        } else {
+            "`no-user-folder` is set, but `user-license-folder` is not set."
+        };
+
+        println!(
+            "{}: {}",
+            console::style("adam error").bright().red(),
+            console::style(msg).bold()
+        );
+
+        std::process::exit(1);
+    }
+
     let um_json: serde_json::Value = serde_json::from_str(
         &std::fs::read_to_string(options.platform.compiler_cache.join("um.json")).with_note(
             || {

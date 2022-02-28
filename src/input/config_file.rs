@@ -1,16 +1,12 @@
-use std::path::PathBuf;
-
+use camino::Utf8PathBuf;
 use serde::Deserialize;
 
-use super::cli::RunOptions;
+// use super::cli::RunOptions;
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Default)]
 pub struct ConfigFile {
     /// the Gms2 configuration to use. If blank, will use "Default".
     pub configuration: Option<String>,
-
-    /// the target yyp project name. If blank, will use a Yyp if found in the directory.
-    pub yyp: Option<String>,
 
     /// the verbosity to use in the compiler.
     /// >0 disable the pretty compile widget
@@ -19,7 +15,7 @@ pub struct ConfigFile {
     pub verbosity: Option<usize>,
 
     /// The output folder, relative to the current working directory. Defaults to `target`
-    pub output_folder: Option<PathBuf>,
+    pub output_folder: Option<Utf8PathBuf>,
 
     /// Ignore cache.
     /// >0 disables the quick run when no files have been changed.
@@ -31,7 +27,7 @@ pub struct ConfigFile {
     /// On Windows, this defaults to `C:\Program Files\GameMaker Studio 2\GameMakerStudio.exe`.
     /// On macOS, this default to `/Applications/GameMaker Studio 2.app`. (For macOS, you can point to just
     /// the .app -- internally, we will search inside the app bundle for the executable)
-    pub gms2_install_location: Option<PathBuf>,
+    pub gms2_install_location: Option<Utf8PathBuf>,
 
     /// Option to switch to using the Gms2 Beta. By default, this will use the `C:/Program Files/GameMaker Studio 2 Beta/GameMakerStudio-Beta.exe`
     /// filepath, but can be overriden with `gms2_install_location` for beta Steam builds.
@@ -58,7 +54,7 @@ pub struct ConfigFile {
 
     /// This sets a complete path to the runtime location.
     #[serde(default)]
-    pub runtime_location_override: Option<PathBuf>,
+    pub runtime_location_override: Option<Utf8PathBuf>,
 
     /// Use this visual studio path, instead of the visual studio path within the `user_folder`
     /// at `~/.config`. This is only relevant on Windows.
@@ -74,7 +70,7 @@ pub struct ConfigFile {
     /// If this field and `user_license_folder` are both set, then we will not look in your
     /// `user_folder` at all. To ensure we don't do that, pass `-no-user-folder`.
     #[serde(default)]
-    pub visual_studio_path: Option<PathBuf>,
+    pub visual_studio_path: Option<Utf8PathBuf>,
 
     /// Use this folder for the user_license, instead of the path within the `user_folder`
     /// at `~/.config`.
@@ -82,29 +78,91 @@ pub struct ConfigFile {
     /// If this field and `visual_studio_path` are both set, then we will not look in your
     /// `user_folder` at all.
     #[serde(default)]
-    pub user_license_folder: Option<PathBuf>,
+    pub user_license_folder: Option<Utf8PathBuf>,
 }
 
-impl From<ConfigFile> for RunOptions {
-    fn from(o: ConfigFile) -> Self {
-        Self {
-            yyc: false,
-            config: o.configuration,
-            yyp: o.yyp,
-            verbosity: o.verbosity.unwrap_or_default(),
-            output_folder: o.output_folder,
-            gms2_install_location: o.gms2_install_location,
-            ignore_cache: o.ignore_cache.unwrap_or_default(),
-            beta: o.beta,
-            runtime: o.runtime,
-            x64_windows: o.x64_windows,
-            runtime_location_override: o.runtime_location_override,
-            visual_studio_path: o.visual_studio_path,
-            user_license_folder: o.user_license_folder,
-            no_user_folder: o.no_user_folder,
+impl ConfigFile {
+    pub fn write_to_options(self, run_options: &mut crate::RunOptions) {
+        if let Some(o) = self.configuration {
+            run_options.task.config = o;
         }
+
+        if let Some(verb) = self.verbosity {
+            run_options.task.verbosity = verb;
+        }
+
+        if let Some(output_folder) = self.output_folder {
+            run_options.task.output_folder = output_folder;
+        }
+
+        if let Some(gms2_install_location) = self.gms2_install_location {
+            run_options.platform.gms2_application_location = gms2_install_location;
+        }
+
+        if let Some(ignore_cache) = self.ignore_cache {
+            run_options.task.ignore_cache = ignore_cache;
+        }
+
+        if self.beta {
+            run_options.platform.gms2_application_location =
+                crate::DEFAULT_PLATFORM_DATA.beta_application_path.into();
+
+            run_options.platform.runtime_location =
+                crate::DEFAULT_PLATFORM_DATA.beta_runtime_location.into();
+
+            run_options.platform.compiler_cache = crate::BETA_CACHED_DATA.clone();
+        }
+
+        if let Some(runtime) = self.runtime {
+            let path = run_options
+                .platform
+                .runtime_location
+                .parent()
+                .unwrap()
+                .join(format!("runtime-{}", runtime));
+            run_options.platform.runtime_location = path;
+        }
+
+        run_options.task.x64_windows = self.x64_windows;
+
+        if let Some(o) = self.runtime_location_override {
+            run_options.platform.runtime_location = o;
+        }
+
+        if let Some(o) = self.visual_studio_path {
+            run_options.platform.visual_studio_path = o;
+        }
+
+        if let Some(o) = self.user_license_folder {
+            run_options.platform.user_license_folder = o;
+        }
+        run_options.task.no_user_folder = self.no_user_folder;
     }
 }
+
+// impl From<ConfigFile> for crate::RunOptions {
+//     fn from(o: ConfigFile) -> Self {
+//         Self {
+//             yyc: false,
+//             config: o.configuration.unwrap_or_else(|| "Default".to_string()),
+//             verbosity: o.verbosity.unwrap_or_default(),
+//             output_folder: o
+//                 .output_folder
+//                 .unwrap_or_else(|| camino::Utf8Path::new("target").to_owned()),
+//             gms2_install_location: o
+//                 .gms2_install_location
+//                 .unwrap_or_else(|| crate::PlatformBuilder::generate()),
+//             ignore_cache: o.ignore_cache.unwrap_or_default(),
+//             beta: o.beta,
+//             runtime: o.runtime,
+//             x64_windows: o.x64_windows,
+//             runtime_location_override: o.runtime_location_override,
+//             visual_studio_path: o.visual_studio_path,
+//             user_license_folder: o.user_license_folder,
+//             no_user_folder: o.no_user_folder,
+//         }
+//     }
+// }
 
 impl ConfigFile {
     pub fn find_config() -> Option<ConfigFile> {

@@ -5,8 +5,6 @@
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
 compile_error!("we only support `windows` and `macos` targets!");
 
-use gm_artifacts::PlatformBuilder;
-
 use crate::igor::{OutputKind, TargetFolders};
 
 type AnyResult<T = ()> = color_eyre::eyre::Result<T>;
@@ -15,7 +13,6 @@ mod input {
     mod cli;
     mod config_file;
     mod get_input;
-    pub use cli::RunOptions;
     pub use get_input::{parse_inputs, Operation, RunKind};
 }
 mod igor {
@@ -24,50 +21,17 @@ mod igor {
 
     mod build;
     pub use build::*;
-
-    mod user_data;
-    pub use user_data::*;
 }
 
-mod gm_artifacts {
-    mod steam_options;
-    pub use steam_options::*;
-
-    mod macros;
-    pub use macros::*;
-
-    mod preferences;
-    pub use preferences::*;
-
-    mod target_options;
-    pub use target_options::*;
-
-    mod platform;
-    pub use platform::*;
-
-    mod build;
-    pub use build::*;
-}
+mod gm_artifacts;
+pub use gm_artifacts::{
+    DefaultPlatformData, BETA_CACHED_DATA, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME, HOME_DIR,
+    STABLE_CACHED_DATA,
+};
 mod manifest;
 
-mod runner {
-    mod run;
-    pub use run::{rerun_old, run_command};
-
-    #[cfg(not(target_os = "windows"))]
-    mod invoke_nix;
-    #[cfg(not(target_os = "windows"))]
-    pub(super) use invoke_nix::{invoke_release, invoke_rerun, invoke_run};
-
-    #[cfg(target_os = "windows")]
-    mod invoke_win;
-    #[cfg(target_os = "windows")]
-    pub(super) use invoke_win::{invoke_release, invoke_rerun, invoke_run};
-
-    mod compiler_handler;
-    mod gm_uri_parse;
-    mod printer;
-}
+mod runner;
+pub use runner::{PlatformOptions, RunOptions, TaskOptions};
 
 #[cfg(target_os = "windows")]
 mod trailing_comma_util;
@@ -75,48 +39,49 @@ mod trailing_comma_util;
 fn main() -> AnyResult {
     color_eyre::install()?;
 
-    let (mut options, operation) = input::parse_inputs();
-    options.canonicalize()?;
+    // // build our platform handle here
+    // let platform = {
+    //     let mut builder = PlatformBuilder::new();
+    //     if options.beta {
+    //         builder.set_beta();
+    //     }
+    //     if let Some(install) = &options.gms2_install_location {
+    //         builder.set_app_override(Some(install.to_owned()));
+    //     }
+    //     if let Some(runtime) = &options.runtime {
+    //         builder.set_runtime_name(runtime.to_owned());
+    //     }
+    //     if let Some(runtime_full_path) = &options.runtime_location_override {
+    //         builder.set_runtime_override(Some(runtime_full_path.to_owned()));
+    //     }
 
-    // check for early exit...
-    if options.no_user_folder
-        && (options.user_license_folder.is_none() || options.visual_studio_path.is_none())
-    {
-        let msg = if cfg!(target_os = "windows") {
-            "`no-user-folder` is set, but either `user-license-folder` or `visual-studio-path` is not set."
-        } else {
-            "`no-user-folder` is set, but `user-license-folder` is not set."
-        };
-        
-        println!(
-            "{}: {}",
-            console::style("adam error").bright().red(),
-            console::style(msg).bold()
-        );
+    //     builder.generate()
+    // };
 
-        return Ok(());
-    }
+    let (mut options, operation) = input::parse_inputs()?;
+    options.platform.canonicalize()?;
 
-    // build our platform handle here
-    let platform = {
-        let mut builder = PlatformBuilder::new();
-        if options.beta {
-            builder.set_beta();
-        }
-        if let Some(install) = &options.gms2_install_location {
-            builder.set_app_override(Some(install.to_owned()));
-        }
-        if let Some(runtime) = &options.runtime {
-            builder.set_runtime_name(runtime.to_owned());
-        }
-        if let Some(runtime_full_path) = &options.runtime_location_override {
-            builder.set_runtime_override(Some(runtime_full_path.to_owned()));
-        }
+    // // check for early exit...
+    // if options.task.no_user_folder
+    //     && (options.platform.user_license_folder.is_none()
+    //         || options.platform.visual_studio_path.is_none())
+    // {
+    //     let msg = if cfg!(target_os = "windows") {
+    //         "`no-user-folder` is set, but either `user-license-folder` or `visual-studio-path` is not set."
+    //     } else {
+    //         "`no-user-folder` is set, but `user-license-folder` is not set."
+    //     };
 
-        builder.generate()
-    };
+    //     println!(
+    //         "{}: {}",
+    //         console::style("adam error").bright().red(),
+    //         console::style(msg).bold()
+    //     );
 
-    let application_data = match igor::ApplicationData::new(&options.yyp) {
+    //     return Ok(());
+    // }
+
+    let application_data = match igor::ApplicationData::new() {
         Ok(v) => v,
         Err(e) => {
             println!(
@@ -129,20 +94,6 @@ fn main() -> AnyResult {
         }
     };
 
-    // check if we can make a user data raw...
-    if let Err(e) = igor::load_user_data(
-        &platform,
-        &mut options.user_license_folder,
-        &mut options.visual_studio_path,
-    ) {
-        println!(
-            "{}: {}\naborting",
-            console::style("adam error").bright().red(),
-            console::style(e).bold()
-        );
-        return Ok(());
-    };
-
     // handle a clean, extract the build_data
     let run_kind = match operation {
         input::Operation::Run(inner) => inner,
@@ -151,7 +102,7 @@ fn main() -> AnyResult {
             if let Err(e) = std::fs::remove_dir_all(
                 application_data
                     .current_directory
-                    .join(options.output_folder()),
+                    .join(&options.task.output_folder),
             ) {
                 println!("{} on clean: {}", console::style("error").bright().red(), e);
             }
@@ -160,7 +111,7 @@ fn main() -> AnyResult {
     };
 
     // check if we have a valid yyc bat
-    if options.yyc {
+    if options.task.yyc {
         if cfg!(not(target_os = "windows")) {
             println!(
                 "{}: {}\nPlease log a feature request at https://github.com/NPC-Studio/adam/issues",
@@ -170,7 +121,7 @@ fn main() -> AnyResult {
             return Ok(());
         }
 
-        if let Some(visual_studio_path) = options.visual_studio_path {
+        if options.platform.visual_studio_path.exists() == false {
             println!(
                 "{}: {}.\n\
             Supplied path in preferences was \"{}\" but it did not exist.\n\
@@ -180,14 +131,14 @@ fn main() -> AnyResult {
         https://help.yoyogames.com/hc/en-us/articles/227860547-GMS2-Required-SDKs",
                 console::style("error").bright().red(),
                 console::style("no valid path to visual studio .bat build file").bold(),
-                visual_studio_path.display(),
+                options.platform.visual_studio_path,
             );
 
             return Ok(());
         }
     }
 
-    let output_kind = if options.yyc {
+    let output_kind = if options.task.yyc {
         igor::OutputKind::Yyc
     } else {
         igor::OutputKind::Vm
@@ -196,27 +147,37 @@ fn main() -> AnyResult {
     let build_data = igor::BuildData {
         folders: TargetFolders::new(
             &application_data.current_directory,
-            options.output_folder.as_deref(),
+            options.task.output_folder.as_std_path(),
             output_kind,
             &application_data.project_name,
         )?,
         output_kind,
         project_filename: application_data.project_name,
         project_directory: application_data.current_directory,
-        user_dir: platform.user_data.clone(),
-        license_folder: options.user_license_folder.clone().unwrap(),
-        runtime_location: platform.runtime_location.clone(),
-        target_mask: platform.target_mask,
-        application_path: platform.application_path.clone(),
-        config: options.config.as_deref().unwrap_or("Default").to_owned(),
+        // user_dir: options.platform.user_data.clone(),
+        user_dir: Default::default(),
+        license_folder: options
+            .platform
+            .user_license_folder
+            .as_std_path()
+            .to_owned(),
+        runtime_location: options.platform.runtime_location.as_std_path().to_owned(),
+        // target_mask: options.platform.target_mask,
+        target_mask: 0,
+        application_path: options
+            .platform
+            .gms2_application_location
+            .as_std_path()
+            .to_owned(),
+        config: options.task.config.clone(),
     };
 
     let gm_build = gm_artifacts::GmBuild::new(&build_data);
     let macros = gm_artifacts::GmMacros::new(&build_data);
-    let visual_studio_path = options.visual_studio_path.clone();
+    let visual_studio_path = options.platform.visual_studio_path.clone();
 
     // check if we need to make a new build at all, or can go straight to the runner
-    if options.ignore_cache == 0
+    if options.task.ignore_cache == 0
         && manifest::check_manifest(
             build_data.config.clone(),
             &build_data.project_directory,
@@ -242,7 +203,7 @@ fn main() -> AnyResult {
 
     // write in the preferences
     let preferences = if build_data.output_kind == OutputKind::Yyc {
-        gm_artifacts::GmPreferences::new(visual_studio_path.unwrap())
+        gm_artifacts::GmPreferences::new(visual_studio_path.as_std_path().to_owned())
     } else {
         gm_artifacts::GmPreferences::default()
     };

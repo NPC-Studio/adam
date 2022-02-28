@@ -14,7 +14,7 @@ pub fn invoke_run(
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity
-    if sub_command.1.verbosity > 1 {
+    if sub_command.1.task.verbosity > 1 {
         igor.arg("-v");
     }
 
@@ -38,7 +38,7 @@ pub fn invoke_release(
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity
-    if sub_command.1.verbosity > 1 {
+    if sub_command.1.task.verbosity > 1 {
         igor.arg("-v");
     }
 

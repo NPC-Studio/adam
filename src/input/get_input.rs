@@ -1,6 +1,13 @@
+use camino::Utf8Path;
 use clap::Parser;
+use color_eyre::Help;
 
-use super::cli::{ClapOperation, RunOptions};
+use crate::{AnyResult, PlatformOptions, RunOptions, TaskOptions, DEFAULT_PLATFORM_DATA};
+
+use super::{
+    cli::{self, ClapOperation},
+    config_file,
+};
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Ord, PartialOrd)]
 pub enum Operation {
@@ -15,18 +22,31 @@ pub enum RunKind {
     Release,
 }
 
-pub fn parse_inputs() -> (RunOptions, Operation) {
-    let mut config_file: RunOptions = super::config_file::ConfigFile::find_config()
-        .unwrap_or_default()
-        .into();
+pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
+    let mut runtime_options = {
+        let platform: PlatformOptions = PlatformOptions {
+            gms2_application_location: DEFAULT_PLATFORM_DATA.stable_application_path.into(),
+            runtime_location: DEFAULT_PLATFORM_DATA.stable_runtime_location.into(),
+            visual_studio_path: Default::default(),
+            user_license_folder: Default::default(),
+            home_dir: crate::HOME_DIR.clone(),
+            compiler_cache: crate::STABLE_CACHED_DATA.clone(),
+        };
+        let task = TaskOptions::default();
 
-    let value: super::cli::InputOpts = super::cli::InputOpts::parse();
-    let (b, operation) = match value.subcmd {
+        RunOptions { task, platform }
+    };
+    config_file::ConfigFile::find_config()
+        .unwrap_or_default()
+        .write_to_options(&mut runtime_options);
+
+    let value: cli::InputOpts = cli::InputOpts::parse();
+    let (cli_options, operation) = match value.subcmd {
         ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
         ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),
         ClapOperation::Clean(co) => (
-            RunOptions {
+            cli::CliOptions {
                 output_folder: co.output_folder,
                 ..Default::default()
             },
@@ -34,80 +54,85 @@ pub fn parse_inputs() -> (RunOptions, Operation) {
         ),
     };
 
-    let RunOptions {
-        yyc,
-        beta,
-        x64_windows,
-        config,
-        yyp,
-        verbosity,
-        output_folder,
-        ignore_cache,
-        gms2_install_location,
-        runtime,
-        runtime_location_override,
-        visual_studio_path,
-        user_license_folder,
-        no_user_folder,
-    } = b;
+    // write them cli_options down!
+    cli_options.write_to_options(&mut runtime_options);
 
-    if let Some(cfg) = config {
-        config_file.config = Some(cfg);
-    }
-    if let Some(cfg) = yyp {
-        config_file.yyp = Some(cfg);
-    }
-    if let Some(of) = output_folder {
-        config_file.output_folder = Some(of);
-    }
-    if let Some(gms2) = gms2_install_location {
-        config_file.gms2_install_location = Some(gms2);
-    }
-    if let Some(runtime) = runtime {
-        config_file.runtime = Some(runtime);
-    }
-    if let Some(runtime_location_override) = runtime_location_override {
-        config_file.runtime_location_override = Some(runtime_location_override);
-    }
-    if let Some(visual_studio_path) = visual_studio_path {
-        config_file.visual_studio_path = Some(visual_studio_path);
-    }
-    if let Some(user_license_folder) = user_license_folder {
-        config_file.user_license_folder = Some(user_license_folder);
-    }
+    // check if we can make a user data raw...
+    load_user_data(&mut runtime_options)?;
 
-    // Macos never has a visual studio path!
-    // good stuff, eh?
-    #[cfg(target_os = "macos")]
+    Ok((runtime_options, operation))
+}
+
+/// Loads in the license folder path and the visual studio path.
+pub fn load_user_data(
+    options: &mut RunOptions,
+    // license_folder: &mut Option<PathBuf>,
+    // visual_studio_path: &mut Option<PathBuf>
+) -> AnyResult {
+    // user has loaded all of these!
+    if options.platform.user_license_folder.exists()
+        && options.platform.user_license_folder.exists()
     {
-        config_file.visual_studio_path = Some(Default::default());
+        return Ok(());
     }
 
-    if x64_windows {
-        config_file.x64_windows = true;
-    }
-    if no_user_folder {
-        config_file.no_user_folder = true;
+    let um_json: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(options.platform.compiler_cache.join("um.json")).with_note(
+            || {
+                format!(
+                    "Could not read path {}",
+                    crate::STABLE_CACHED_DATA.join("um.json")
+                )
+            },
+        )?,
+    )
+    .with_note(|| "Couldn't parse `um.json` file.")?;
+
+    let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
+    let user_name = um_json
+        .get("login")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .split('@')
+        .next()
+        .unwrap()
+        .to_owned();
+
+    if options.platform.user_license_folder.exists() == false {
+        options.platform.user_license_folder = options
+            .platform
+            .compiler_cache
+            .join(format!("{}_{}", user_name, user_id));
     }
 
-    if beta {
-        config_file.beta = true;
-    }
-    if verbosity != 0 {
-        config_file.verbosity = verbosity;
+    // we need a visual studio path...
+    if cfg!(target_os = "windows") && options.platform.visual_studio_path.exists() == false {
+        // the ide can give us one...
+        let new_path = std::fs::read_to_string(
+            options
+                .platform
+                .compiler_cache
+                .join(&format!("{}_{}/local_settings.json", user_name, user_id)),
+        )
+        .ok()
+        .and_then(|data| {
+            let local_settings: serde_json::Value = serde_json::from_str(&data).unwrap();
+
+            local_settings
+                .get("machine.Platform Settings.Windows.visual_studio_path")
+                .map(|v| {
+                    let v = v.as_str().unwrap();
+                    Utf8Path::new(v).to_owned()
+                })
+        })
+        .unwrap_or_else(|| {
+            Utf8Path::new("C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/vcvars32.bat")
+                .to_owned()
+        });
+
+        options.platform.visual_studio_path = new_path;
     }
 
-    // if we say to use the yyc, we use the yyc
-    if yyc {
-        config_file.yyc = true;
-    } else {
-        // we just set the visual studio path here..
-        config_file.visual_studio_path = Some(Default::default());
-    }
-
-    if ignore_cache != 0 {
-        config_file.ignore_cache = ignore_cache;
-    }
-
-    (config_file, operation)
+    Ok(())
 }

@@ -54,11 +54,10 @@ pub struct TargetFolders {
 impl TargetFolders {
     pub fn new(
         current_directory: &Path,
-        output_folder: Option<&Path>,
+        output_folder: &Path,
         output_kind: OutputKind,
         project_name: &str,
     ) -> AnyResult<Self> {
-        let output_folder = output_folder.unwrap_or_else(|| Path::new("target"));
         let dir = current_directory
             .join(output_folder)
             .join(output_kind.to_string());

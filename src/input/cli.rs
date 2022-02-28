@@ -1,8 +1,7 @@
-use std::path::PathBuf;
-
+use camino::Utf8PathBuf;
 use clap::Parser;
 
-use crate::AnyResult;
+use crate::RunOptions;
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
 #[derive(Parser, Debug)]
@@ -23,20 +22,20 @@ pub struct InputOpts {
 #[derive(Parser, Debug)]
 pub enum ClapOperation {
     /// Builds a project *without* running it.
-    Build(RunOptions),
+    Build(CliOptions),
 
     /// Compiles, if necessary, and then runs a project.
-    Run(RunOptions),
+    Run(CliOptions),
 
     /// Creates a release executable, running `clean` first.
-    Release(RunOptions),
+    Release(CliOptions),
 
     /// Cleans a project target directory.
     Clean(CleanOptions),
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Default)]
-pub struct RunOptions {
+pub struct CliOptions {
     /// Uses the YYC instead of the default VM. If this is the case, then we'll need to check
     /// your Visual Studio path on Windows.
     #[clap(long, short)]
@@ -78,7 +77,7 @@ pub struct RunOptions {
 
     /// The relative path to the output folder. Defaults to `target`.
     #[clap(short, long)]
-    pub output_folder: Option<std::path::PathBuf>,
+    pub output_folder: Option<Utf8PathBuf>,
 
     /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
     #[clap(short, long, parse(from_occurrences))]
@@ -86,7 +85,7 @@ pub struct RunOptions {
 
     /// The path to your Gms2 installation. Defaults to C drive on Windows and Applications on macOS. If you use Steam, you will need to pass in that fullpath to the .exe, or the .app on macOS.
     #[clap(long)]
-    pub gms2_install_location: Option<PathBuf>,
+    pub gms2_install_location: Option<Utf8PathBuf>,
 
     /// If the non-current runtime is desired, it can be set here. We default right now to `2.3.1.409` on stable and beta.
     #[clap(short, long)]
@@ -94,7 +93,7 @@ pub struct RunOptions {
 
     /// This sets a complete path to the runtime location.
     #[clap(long)]
-    pub runtime_location_override: Option<PathBuf>,
+    pub runtime_location_override: Option<Utf8PathBuf>,
 
     /// Use this visual studio path, instead of the visual studio path within the `user_folder`
     /// at `~/.config`. This is only relevant on Windows.
@@ -110,7 +109,7 @@ pub struct RunOptions {
     /// If this field and `user_license_folder` are both set, then we will not look in your
     /// `user_folder` at all. To ensure we don't do that, pass `-no-user-folder`.
     #[clap(long)]
-    pub visual_studio_path: Option<PathBuf>,
+    pub visual_studio_path: Option<Utf8PathBuf>,
 
     /// Use this folder for the user_license, instead of the path within the `user_folder`
     /// at `~/.config`.
@@ -118,46 +117,77 @@ pub struct RunOptions {
     /// If this field and `visual_studio_path` are both set, then we will not look in your
     /// `user_folder` at all.
     #[clap(long)]
-    pub user_license_folder: Option<PathBuf>,
+    pub user_license_folder: Option<Utf8PathBuf>,
 }
 
-impl RunOptions {
-    pub fn output_folder(&self) -> &std::path::Path {
-        self.output_folder
-            .as_deref()
-            .unwrap_or_else(|| std::path::Path::new("target"))
-    }
-
-    pub fn canonicalize(&mut self) -> AnyResult {
-        use color_eyre::Help;
-
-        if let Some(runtime_override) = &mut self.runtime_location_override {
-            *runtime_override = dunce::canonicalize(&runtime_override)
-                .with_note(|| "runtime-overide is invalid")?;
-
-            // println!("{}", runtime_override.to_str().unwrap());
+impl CliOptions {
+    pub fn write_to_options(self, run_options: &mut RunOptions) {
+        if let Some(cfg) = self.config {
+            run_options.task.config = cfg;
+        }
+        if let Some(of) = self.output_folder {
+            run_options.task.output_folder = of;
+        }
+        if let Some(gms2) = self.gms2_install_location {
+            run_options.platform.gms2_application_location = gms2;
+        }
+        if let Some(runtime) = self.runtime {
+            let path = run_options
+                .platform
+                .runtime_location
+                .parent()
+                .unwrap()
+                .join(format!("runtime-{}", runtime));
+            run_options.platform.runtime_location = path;
+        }
+        if let Some(runtime_location_override) = self.runtime_location_override {
+            run_options.platform.runtime_location = runtime_location_override;
+        }
+        if let Some(visual_studio_path) = self.visual_studio_path {
+            run_options.platform.visual_studio_path = visual_studio_path;
+        }
+        if let Some(user_license_folder) = self.user_license_folder {
+            run_options.platform.user_license_folder = user_license_folder;
         }
 
-        if let Some(install_location) = &mut self.gms2_install_location {
-            *install_location = dunce::canonicalize(&install_location)
-                .with_note(|| "install-location is invalid")?;
+        // Macos never has a visual studio path!
+        // good stuff, eh?
+        #[cfg(target_os = "macos")]
+        {
+            run_options.platform.visual_studio_path = Default::default();
         }
 
-        if let Some(visual_studio_path) = &mut self.visual_studio_path {
-            // we set the visual studio path to an empty path as a dummy
-            // outside the --yyc option and on all macOS compiles.
-            if visual_studio_path.as_os_str().is_empty() == false {
-                *visual_studio_path = dunce::canonicalize(&visual_studio_path)
-                    .with_note(|| "visual-studio-path is invalid")?;
-            }
+        if self.x64_windows {
+            run_options.task.x64_windows = true;
+        }
+        if self.no_user_folder {
+            run_options.task.no_user_folder = true;
         }
 
-        if let Some(user_license_folder) = &mut self.user_license_folder {
-            *user_license_folder = dunce::canonicalize(&user_license_folder)
-                .with_note(|| "user-license-folder is invalid")?;
+        if self.beta {
+            run_options.platform.gms2_application_location =
+                crate::DEFAULT_PLATFORM_DATA.beta_application_path.into();
+
+            run_options.platform.runtime_location =
+                crate::DEFAULT_PLATFORM_DATA.beta_runtime_location.into();
+
+            run_options.platform.compiler_cache = crate::BETA_CACHED_DATA.clone();
+        }
+        if self.verbosity != 0 {
+            run_options.task.verbosity = self.verbosity;
         }
 
-        Ok(())
+        // if we say to use the yyc, we use the yyc
+        if self.yyc {
+            run_options.task.yyc = true;
+        } else {
+            // we just set the visual studio path here..
+            run_options.platform.visual_studio_path = Default::default();
+        }
+
+        if self.ignore_cache != 0 {
+            run_options.task.ignore_cache = self.ignore_cache;
+        }
     }
 }
 
@@ -165,5 +195,5 @@ impl RunOptions {
 pub struct CleanOptions {
     /// The relative path to the output folder. Defaults to `target`.
     #[clap(short, long)]
-    pub output_folder: Option<std::path::PathBuf>,
+    pub output_folder: Option<Utf8PathBuf>,
 }

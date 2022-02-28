@@ -2,11 +2,7 @@ use super::{
     compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_release,
     invoke_rerun, invoke_run, printer::Printer,
 };
-use crate::{
-    gm_artifacts,
-    input::{RunKind, RunOptions},
-    manifest,
-};
+use crate::{gm_artifacts, input::RunKind, manifest, RunOptions};
 use std::{
     io::Lines,
     io::{BufRead, BufReader},
@@ -22,23 +18,23 @@ impl std::fmt::Display for RunCommand {
             RunKind::Release => "release",
         };
 
-        write!(f, "{} {}", if self.1.yyc { "yyc" } else { "vm" }, word)
+        write!(f, "{} {}", if self.1.task.yyc { "yyc" } else { "vm" }, word)
     }
 }
 
 pub fn run_command(
     build_bff: &Path,
     macros: gm_artifacts::GmMacros,
-    sub_command: RunOptions,
+    run_options: RunOptions,
     run_kind: RunKind,
 ) {
-    let sub_command = RunCommand(run_kind, sub_command);
+    let sub_command = RunCommand(run_kind, run_options);
     let mut child = match sub_command.0 {
         RunKind::Run | RunKind::Build => invoke_run(&macros, build_bff, &sub_command),
         RunKind::Release => invoke_release(&macros, build_bff, &sub_command),
     };
 
-    if sub_command.1.verbosity > 0 || sub_command.0 == RunKind::Release {
+    if sub_command.1.task.verbosity > 0 || sub_command.0 == RunKind::Release {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
         for line in reader.flatten() {
             println!("{}", line.trim());
@@ -109,7 +105,7 @@ pub fn rerun_old(
     let project_dir = gm_build.project_dir.clone();
     let printer_handler = std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));
 
-    if run_data.verbosity > 0 {
+    if run_data.task.verbosity > 0 {
         let reader = BufReader::new(child.stdout.unwrap()).lines();
         for line in reader.flatten() {
             println!("{}", line.trim());

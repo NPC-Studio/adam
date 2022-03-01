@@ -21,6 +21,10 @@ pub struct InputOpts {
 
 #[derive(Parser, Debug)]
 pub enum ClapOperation {
+    /// Runs the user specified check command. Takes the command name
+    /// as well as a list of args to pass in.
+    Check,
+
     /// Builds a project *without* running it.
     Build(CliOptions),
 

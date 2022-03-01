@@ -79,6 +79,19 @@ pub struct ConfigFile {
     /// `user_folder` at all.
     #[serde(default)]
     pub user_license_folder: Option<Utf8PathBuf>,
+
+    /// The command to run when executing a check.
+    #[serde(default)]
+    pub check_command: Option<String>,
+
+    /// The arguments to pass the check command when executing a check.
+    #[serde(default)]
+    pub check_args: Option<Vec<String>>,
+
+    /// If true, will always run the check command prior to executing a build, run, or release.
+    /// If the command returns a non-zero status, adam will not continue its operation.
+    #[serde(default)]
+    pub always_check: bool,
 }
 
 impl ConfigFile {
@@ -137,6 +150,16 @@ impl ConfigFile {
             run_options.platform.user_license_folder = o;
         }
         run_options.task.no_user_folder = self.no_user_folder;
+
+        if let Some(check_command) = self.check_command {
+            run_options.task.check_command = Some(check_command);
+            if let Some(check_args) = self.check_args {
+                run_options.task.check_args = Some(check_args);
+            }
+            if self.always_check {
+                run_options.task.always_check = true;
+            }
+        }
     }
 }
 

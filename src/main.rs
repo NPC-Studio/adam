@@ -5,6 +5,8 @@
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
 compile_error!("we only support `windows` and `macos` targets!");
 
+use std::io::Write;
+
 use crate::igor::{OutputKind, TargetFolders};
 
 type AnyResult<T = ()> = color_eyre::eyre::Result<T>;
@@ -55,9 +57,21 @@ fn main() -> AnyResult {
         }
     };
 
-    // handle a clean, extract the build_data
+    // handle a non runs or extract the build_data
     let run_kind = match operation {
-        input::Operation::Run(inner) => inner,
+        input::Operation::Run(inner) => {
+            if options.task.always_check {
+                let output = execute_check(&options, &application_data.current_directory);
+                if !output {
+                    println!(
+                        "{}: The process was canceled due to the check failing.",
+                        console::style("error").bright().red(),
+                    );
+                    return Ok(());
+                }
+            }
+            inner
+        }
         input::Operation::Clean => {
             // clean up the output folder...
             if let Err(e) = std::fs::remove_dir_all(
@@ -67,6 +81,10 @@ fn main() -> AnyResult {
             ) {
                 println!("{} on clean: {}", console::style("error").bright().red(), e);
             }
+            return Ok(());
+        }
+        input::Operation::Check => {
+            execute_check(&options, &application_data.current_directory);
             return Ok(());
         }
     };
@@ -201,4 +219,26 @@ fn main() -> AnyResult {
     runner::run_command(&build_location, macros, options, run_kind);
 
     Ok(())
+}
+
+/// Executes the user's defined check, returning if it exited with a successful status.
+fn execute_check(options: &RunOptions, directory_to_run_in: &std::path::Path) -> bool {
+    let command_name = options
+        .task
+        .check_command
+        .as_ref()
+        .expect("Attempted to run Check with no check command set!");
+    let mut command = std::process::Command::new(command_name);
+    if let Some(args) = options.task.check_args.as_ref() {
+        for arg in args {
+            command.arg(arg);
+        }
+    }
+    let output = command
+        .current_dir(directory_to_run_in)
+        .stdout(std::process::Stdio::piped())
+        .output()
+        .unwrap();
+    std::io::stdout().write_all(&output.stdout).unwrap();
+    output.status.success()
 }

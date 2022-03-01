@@ -39,6 +39,16 @@ pub struct TaskOptions {
 
     /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
     pub ignore_cache: usize,
+
+    /// The name of the check command to run, if any
+    pub check_command: Option<String>,
+
+    /// The arguments to pass to the check command, if any
+    pub check_args: Option<Vec<String>>,
+
+    /// If true, will always run the check command prior to executing a build, run, or release.
+    /// If the command returns a non-zero status, adam will not continue its operation.
+    pub always_check: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -113,6 +123,9 @@ impl Default for TaskOptions {
             verbosity: 0,
             output_folder: "target".into(),
             ignore_cache: 0,
+            check_command: None,
+            check_args: None,
+            always_check: false,
         }
     }
 }

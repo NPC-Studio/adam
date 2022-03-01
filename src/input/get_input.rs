@@ -13,6 +13,7 @@ use super::{
 pub enum Operation {
     Run(RunKind),
     Clean,
+    Check,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Ord, PartialOrd)]
@@ -42,6 +43,7 @@ pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
 
     let value: cli::InputOpts = cli::InputOpts::parse();
     let (cli_options, operation) = match value.subcmd {
+        ClapOperation::Check => (cli::CliOptions::default(), Operation::Check),
         ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
         ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),

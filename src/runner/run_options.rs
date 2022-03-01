@@ -39,6 +39,9 @@ pub struct TaskOptions {
 
     /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
     pub ignore_cache: usize,
+
+    /// A list of environment variable names that will be set to "1" if running `adam test`.
+    pub test_env_variables: Vec<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -113,6 +116,7 @@ impl Default for TaskOptions {
             verbosity: 0,
             output_folder: "target".into(),
             ignore_cache: 0,
+            test_env_variables: vec![],
         }
     }
 }

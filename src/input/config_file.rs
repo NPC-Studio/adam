@@ -79,6 +79,10 @@ pub struct ConfigFile {
     /// `user_folder` at all.
     #[serde(default)]
     pub user_license_folder: Option<Utf8PathBuf>,
+
+    /// A list of environment variable names that will be set to "1" if running `adam test`.
+    #[serde(default)]
+    pub test_env_variables: Option<Vec<String>>,
 }
 
 impl ConfigFile {
@@ -137,6 +141,10 @@ impl ConfigFile {
             run_options.platform.user_license_folder = o;
         }
         run_options.task.no_user_folder = self.no_user_folder;
+
+        if let Some(test_env_variables) = self.test_env_variables {
+            run_options.task.test_env_variables = test_env_variables;
+        }
     }
 }
 

@@ -95,15 +95,10 @@ pub fn load_user_data(
         std::process::exit(1);
     }
 
+    let um_json_path = options.platform.compiler_cache.join("um.json");
     let um_json: serde_json::Value = serde_json::from_str(
-        &std::fs::read_to_string(options.platform.compiler_cache.join("um.json")).with_note(
-            || {
-                format!(
-                    "Could not read path {}",
-                    crate::STABLE_CACHED_DATA.join("um.json")
-                )
-            },
-        )?,
+        &std::fs::read_to_string(&um_json_path)
+            .with_note(|| format!("Could not read path {}", um_json_path))?,
     )
     .with_note(|| "Couldn't parse `um.json` file.")?;
 

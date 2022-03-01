@@ -1,3 +1,6 @@
 /target
 adam_bootstrapper.ps1
 adam_bootstrapper.sh
+test.ps1
+test.sh
+test-release.sh

@@ -148,6 +148,26 @@ gms2_install_location = "C:/Program Files/Steam/common/GameMaker Studio 2/GameMa
 }
 ```
 
+### test_env_variables
+
+> Type: Vec<String>
+>
+> Default Windows: []
+> Default Mac: []
+
+Sets environment variables when running `adam test`. `adam test` is the same as `adam run`, but with
+these environment variables set.
+
+```toml
+test_env_variables = ["TEST_ENV_VARIABLE"]
+```
+
+```json
+{
+    "test_env_variables": ["TEST_ENV_VARIABLE"]
+}
+```
+
 ## How the CLI and Config Files Interact
 
 Options passed into the CLI and the Config Files are **additive**, but in the case of conflicts, the CLI wins. This will allow users, for example, to set their default configuration as `"Debug"`, but pass in `-c "Release"` during times when they would like to change their configuration temporarily.

@@ -82,7 +82,7 @@ pub struct ConfigFile {
 
     /// A list of environment variable names that will be set to "1" if running `adam test`.
     #[serde(default)]
-    pub test_env_variables: Option<Vec<String>>,
+    pub test_env_variables: Vec<String>,
 }
 
 impl ConfigFile {
@@ -141,36 +141,9 @@ impl ConfigFile {
             run_options.platform.user_license_folder = o;
         }
         run_options.task.no_user_folder = self.no_user_folder;
-
-        if let Some(test_env_variables) = self.test_env_variables {
-            run_options.task.test_env_variables = test_env_variables;
-        }
+        run_options.task.test_env_variables = self.test_env_variables;
     }
 }
-
-// impl From<ConfigFile> for crate::RunOptions {
-//     fn from(o: ConfigFile) -> Self {
-//         Self {
-//             yyc: false,
-//             config: o.configuration.unwrap_or_else(|| "Default".to_string()),
-//             verbosity: o.verbosity.unwrap_or_default(),
-//             output_folder: o
-//                 .output_folder
-//                 .unwrap_or_else(|| camino::Utf8Path::new("target").to_owned()),
-//             gms2_install_location: o
-//                 .gms2_install_location
-//                 .unwrap_or_else(|| crate::PlatformBuilder::generate()),
-//             ignore_cache: o.ignore_cache.unwrap_or_default(),
-//             beta: o.beta,
-//             runtime: o.runtime,
-//             x64_windows: o.x64_windows,
-//             runtime_location_override: o.runtime_location_override,
-//             visual_studio_path: o.visual_studio_path,
-//             user_license_folder: o.user_license_folder,
-//             no_user_folder: o.no_user_folder,
-//         }
-//     }
-// }
 
 impl ConfigFile {
     pub fn find_config() -> Option<ConfigFile> {

@@ -1,4 +1,4 @@
 cargo build;
-cd ../SwordAndField;
-../adam/target/debug/adam run;
-cd ../adam;
+cd ../../Gms2/SwordAndField;
+./../../Rust/adam/target/debug/adam build;
+cd ../../Rust/adam;

@@ -20,6 +20,7 @@ pub enum RunKind {
     Run,
     Build,
     Release,
+    Test,
 }
 
 pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
@@ -45,6 +46,7 @@ pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
         ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
         ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),
+        ClapOperation::Test(b) => (b, Operation::Run(RunKind::Test)),
         ClapOperation::Clean(co) => (
             cli::CliOptions {
                 output_folder: co.output_folder,

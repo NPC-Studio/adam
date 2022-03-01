@@ -16,6 +16,7 @@ impl std::fmt::Display for RunCommand {
         let word = match self.0 {
             RunKind::Run | RunKind::Build => "compile",
             RunKind::Release => "release",
+            RunKind::Test => "test",
         };
 
         write!(f, "{} {}", if self.1.task.yyc { "yyc" } else { "vm" }, word)
@@ -30,7 +31,9 @@ pub fn run_command(
 ) {
     let sub_command = RunCommand(run_kind, run_options);
     let mut child = match sub_command.0 {
-        RunKind::Run | RunKind::Build => invoke_run(&macros, build_bff, &sub_command),
+        RunKind::Run | RunKind::Build | RunKind::Test => {
+            invoke_run(&macros, build_bff, &sub_command)
+        }
         RunKind::Release => invoke_release(&macros, build_bff, &sub_command),
     };
 
@@ -44,6 +47,7 @@ pub fn run_command(
             RunKind::Run => CompilerHandler::new_run(),
             RunKind::Build => CompilerHandler::new_build(),
             RunKind::Release => CompilerHandler::new_release(),
+            RunKind::Test => CompilerHandler::new_test(),
         };
         // startup the printer in a separate thread...
         let project_dir = macros.project_dir.clone();

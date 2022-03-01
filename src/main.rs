@@ -71,6 +71,13 @@ fn main() -> AnyResult {
         }
     };
 
+    // fire any specific behavior to this run kind
+    if run_kind == input::RunKind::Test {
+        for var in options.task.test_env_variables.iter() {
+            std::env::set_var(var, "1");
+        }
+    }
+
     // check if we have a valid yyc bat
     if options.task.yyc {
         if cfg!(not(target_os = "windows")) {

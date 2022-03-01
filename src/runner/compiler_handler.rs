@@ -27,6 +27,10 @@ impl CompilerHandler {
         Self(CompilerState::Initialize, false)
     }
 
+    pub fn new_test() -> Self {
+        Self(CompilerState::Initialize, false)
+    }
+
     #[cfg(target_os = "windows")]
     pub fn new_rerun() -> Self {
         Self(CompilerState::PreRunToMainLoop(vec![]), false)

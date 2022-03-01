@@ -1,6 +1,5 @@
 use camino::Utf8PathBuf;
 use once_cell::sync::Lazy;
-use std::path::PathBuf;
 
 #[cfg(target_os = "windows")]
 pub const PLATFORM_KIND: crate::igor::PlatformKind = crate::igor::PlatformKind::Windows;
@@ -8,7 +7,7 @@ pub const PLATFORM_KIND: crate::igor::PlatformKind = crate::igor::PlatformKind::
 #[cfg(not(target_os = "windows"))]
 pub const PLATFORM_KIND: crate::igor::PlatformKind = crate::igor::PlatformKind::Darwin;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct DefaultPlatformData {
     pub stable_runtime_location: &'static str,
     pub beta_runtime_location: &'static str,
@@ -16,49 +15,61 @@ pub struct DefaultPlatformData {
     pub beta_application_path: &'static str,
 
     pub target_mask: usize,
-    // pub gms2_data: &'static str,
-    // pub user_data: &'static str,
+    pub home_dir: Lazy<Utf8PathBuf>,
+    pub stable_cached_data: Lazy<Utf8PathBuf>,
+    pub beta_cached_data: Lazy<Utf8PathBuf>,
 }
-
 pub const DEFAULT_RUNTIME_NAME: &str = "2.3.5.458";
 
-pub const DEFAULT_PLATFORM_DATA: DefaultPlatformData = DefaultPlatformData {
-    stable_runtime_location: const_format::concatcp!(
-        "/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-",
-        DEFAULT_RUNTIME_NAME
-    ),
-    beta_runtime_location: const_format::concatcp!(
-        "/Users/Shared/GameMakerStudio2-Beta/Cache/runtimes/runtime-",
-        DEFAULT_RUNTIME_NAME
-    ),
-    stable_application_path: "/Applications/GameMaker Studio 2.app/Contents/MonoBundle",
-    beta_application_path: "/Applications/GameMaker Studio 2-Beta.app/Contents/MonoBundle",
+#[cfg(not(target_os = "windows"))]
+pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
+    DefaultPlatformData {
+        stable_runtime_location: const_format::concatcp!(
+            "/Users/Shared/GameMakerStudio2/Cache/runtimes/runtime-",
+            DEFAULT_RUNTIME_NAME
+        ),
+        beta_runtime_location: const_format::concatcp!(
+            "/Users/Shared/GameMakerStudio2-Beta/Cache/runtimes/runtime-",
+            DEFAULT_RUNTIME_NAME
+        ),
+        stable_application_path: "/Applications/GameMaker Studio 2.app/Contents/MonoBundle",
+        beta_application_path: "/Applications/GameMaker Studio 2-Beta.app/Contents/MonoBundle",
 
-    target_mask: 2,
+        target_mask: 2,
+        stable_cached_data: Lazy::new(|| home_dir().join(".config/GameMakerStudio2")),
+        beta_cached_data: Lazy::new(|| home_dir().join(".config/GameMakerStudio2-Beta")),
+        home_dir: Lazy::new(home_dir),
+    }
 };
 
-pub static HOME_DIR: Lazy<Utf8PathBuf> = Lazy::new(|| {
+#[cfg(target_os = "windows")]
+pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
+    DefaultPlatformData {
+        stable_runtime_location: const_format::concatcp!(
+            "C:/ProgramData/GameMakerStudio2/Cache/runtimes/runtime-",
+            DEFAULT_RUNTIME_NAME
+        ),
+        beta_runtime_location: const_format::concatcp!(
+            "C:/ProgramData/GameMakerStudio2-Beta/Cache/runtimes/runtime-",
+            DEFAULT_RUNTIME_NAME
+        ),
+        stable_application_path: "C:/Program Files/GameMaker Studio 2/GameMakerStudio.exe",
+        beta_application_path: "C:/Program Files/GameMaker Studio 2-Beta/GameMakerStudio-Beta.exe",
+
+        target_mask: 64,
+        stable_cached_data: Lazy::new(|| home_dir().join("AppData/Roaming/GameMakerStudio2")),
+        beta_cached_data: Lazy::new(|| home_dir().join("AppData/Roaming/GameMakerStudio2-Beta")),
+        home_dir: Lazy::new(home_dir),
+    }
+};
+
+fn home_dir() -> Utf8PathBuf {
     directories::UserDirs::new()
         .unwrap()
         .home_dir()
         .to_owned()
         .try_into()
         .unwrap()
-});
-
-pub static STABLE_CACHED_DATA: Lazy<Utf8PathBuf> =
-    Lazy::new(|| HOME_DIR.join(".config/GameMakerStudio2"));
-
-pub static BETA_CACHED_DATA: Lazy<Utf8PathBuf> =
-    Lazy::new(|| HOME_DIR.join(".config/GameMakerStudio2-Beta"));
-
-#[derive(Debug, Clone)]
-pub struct Platform {
-    pub runtime_location: PathBuf,
-    pub target_mask: usize,
-    pub application_path: PathBuf,
-    pub gms2_data: PathBuf,
-    pub user_data: PathBuf,
 }
 
 // #[derive(Debug, Clone)]
@@ -173,9 +184,4 @@ pub struct Platform {
 // }
 
 #[cfg(target_os = "macos")]
-mod macos {
-    pub const MONO_LOCATION: &str =
-        "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";
-}
-#[cfg(target_os = "macos")]
-pub use macos::*;
+pub const MONO_LOCATION: &str = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";

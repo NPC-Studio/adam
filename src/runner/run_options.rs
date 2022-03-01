@@ -83,22 +83,43 @@ impl PlatformOptions {
         use color_eyre::Help;
 
         self.runtime_location = dunce::canonicalize(&self.runtime_location)
-            .with_note(|| "runtime-overide is invalid")?
+            .with_note(|| format!("runtime-overide ({:?}) is invalid", self.runtime_location,))?
             .try_into()?;
 
         self.gms2_application_location = dunce::canonicalize(&self.gms2_application_location)
-            .with_note(|| "install-location is invalid")?
+            .with_note(|| {
+                format!(
+                    "install-location ({:?}) is invalid",
+                    self.gms2_application_location
+                )
+            })?
             .try_into()?;
-
-        if self.visual_studio_path.as_str().is_empty() == false {
-            self.visual_studio_path = dunce::canonicalize(&self.visual_studio_path)
-                .with_note(|| "visual_studio_path is invalid")?
-                .try_into()?;
-        }
 
         if self.user_license_folder.as_str().is_empty() == false {
             self.user_license_folder = dunce::canonicalize(&self.user_license_folder)
-                .with_note(|| "user-license-folder is invalid")?
+                .with_note(|| {
+                    format!(
+                        "user-license-folder ({:?}) is invalid",
+                        self.user_license_folder
+                    )
+                })?
+                .try_into()?;
+        }
+
+        Ok(())
+    }
+
+    pub fn canonicalize_yyc(&mut self) -> AnyResult {
+        use color_eyre::Help;
+
+        if self.visual_studio_path.as_str().is_empty() == false {
+            self.visual_studio_path = dunce::canonicalize(&self.visual_studio_path)
+                .with_note(|| {
+                    format!(
+                        "visual_studio_path ({:?}) is invalid",
+                        self.visual_studio_path
+                    )
+                })?
                 .try_into()?;
         }
 

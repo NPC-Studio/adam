@@ -30,8 +30,8 @@ pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
             runtime_location: DEFAULT_PLATFORM_DATA.stable_runtime_location.into(),
             visual_studio_path: Default::default(),
             user_license_folder: Default::default(),
-            home_dir: crate::HOME_DIR.clone(),
-            compiler_cache: crate::STABLE_CACHED_DATA.clone(),
+            home_dir: DEFAULT_PLATFORM_DATA.home_dir.clone(),
+            compiler_cache: DEFAULT_PLATFORM_DATA.stable_cached_data.clone(),
         };
         let task = TaskOptions::default();
 
@@ -66,11 +66,7 @@ pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
 }
 
 /// Loads in the license folder path and the visual studio path.
-pub fn load_user_data(
-    options: &mut RunOptions,
-    // license_folder: &mut Option<PathBuf>,
-    // visual_studio_path: &mut Option<PathBuf>
-) -> AnyResult {
+pub fn load_user_data(options: &mut RunOptions) -> AnyResult {
     // user has loaded all of these!
     if options.platform.user_license_folder.exists()
         && options.platform.user_license_folder.exists()

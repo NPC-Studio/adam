@@ -97,7 +97,7 @@ pub fn rerun_old(
     run_data: RunOptions,
 ) {
     #[cfg(target_os = "windows")]
-    let mut child = invoke_rerun(run_data.x64_windows, &gm_build, macros);
+    let mut child = invoke_rerun(run_data.task.x64_windows, &gm_build, macros);
 
     #[cfg(not(target_os = "windows"))]
     let mut child = invoke_rerun(&gm_build);

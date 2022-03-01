@@ -24,10 +24,7 @@ mod igor {
 }
 
 mod gm_artifacts;
-pub use gm_artifacts::{
-    DefaultPlatformData, BETA_CACHED_DATA, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME, HOME_DIR,
-    STABLE_CACHED_DATA,
-};
+pub use gm_artifacts::{DefaultPlatformData, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
 mod manifest;
 
 mod runner;
@@ -40,7 +37,26 @@ fn main() -> AnyResult {
     color_eyre::install()?;
 
     let (mut options, operation) = input::parse_inputs()?;
-    options.platform.canonicalize()?;
+    if let Err(e) = options.platform.canonicalize() {
+        println!(
+            "{}: {}",
+            console::style("adam error").bright().red(),
+            console::style(e).bold()
+        );
+
+        return Ok(());
+    }
+    if options.task.yyc {
+        if let Err(e) = options.platform.canonicalize_yyc() {
+            println!(
+                "{}: {}",
+                console::style("adam error").bright().red(),
+                console::style(e).bold()
+            );
+
+            return Ok(());
+        }
+    }
 
     let application_data = match igor::ApplicationData::new() {
         Ok(v) => v,

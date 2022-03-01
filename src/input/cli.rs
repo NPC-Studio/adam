@@ -1,7 +1,7 @@
 use camino::Utf8PathBuf;
 use clap::Parser;
 
-use crate::RunOptions;
+use crate::{RunOptions, DEFAULT_PLATFORM_DATA};
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
 #[derive(Parser, Debug)]
@@ -29,7 +29,7 @@ pub enum ClapOperation {
 
     /// Creates a release executable, running `clean` first.
     Release(CliOptions),
- 
+
     /// Runs the project, enabling any `test_env_variables` set in the config.
     Test(CliOptions),
 
@@ -169,12 +169,12 @@ impl CliOptions {
 
         if self.beta {
             run_options.platform.gms2_application_location =
-                crate::DEFAULT_PLATFORM_DATA.beta_application_path.into();
+                DEFAULT_PLATFORM_DATA.beta_application_path.into();
 
             run_options.platform.runtime_location =
-                crate::DEFAULT_PLATFORM_DATA.beta_runtime_location.into();
+                DEFAULT_PLATFORM_DATA.beta_runtime_location.into();
 
-            run_options.platform.compiler_cache = crate::BETA_CACHED_DATA.clone();
+            run_options.platform.compiler_cache = DEFAULT_PLATFORM_DATA.beta_cached_data.clone();
         }
         if self.verbosity != 0 {
             run_options.task.verbosity = self.verbosity;

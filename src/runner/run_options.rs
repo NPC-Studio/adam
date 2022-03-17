@@ -42,6 +42,9 @@ pub struct TaskOptions {
 
     /// A list of environment variable names that will be set to "1" if running `adam test`.
     pub test_env_variables: Vec<String>,
+
+    /// This is the code in a test case that we search for.
+    pub test_success_needle: String,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -138,6 +141,7 @@ impl Default for TaskOptions {
             output_folder: "target".into(),
             ignore_cache: 0,
             test_env_variables: vec![],
+            test_success_needle: "RUN_SUCCESS".to_string(),
         }
     }
 }

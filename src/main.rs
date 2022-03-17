@@ -221,7 +221,9 @@ fn main() -> AnyResult {
     )
     .unwrap();
 
-    runner::run_command(&build_location, macros, options, run_kind);
-
-    Ok(())
+    if runner::run_command(&build_location, macros, options, run_kind) {
+        Ok(())
+    } else {
+        Err(color_eyre::eyre::eyre!("adam failed"))
+    }
 }

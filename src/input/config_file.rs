@@ -85,31 +85,53 @@ pub struct ConfigFile {
     /// A list of environment variable names that will be set to "1" if running `adam test`.
     #[serde(default)]
     pub test_env_variables: Vec<String>,
+
+    /// A keyword in the output to look for in `adam test` which indicates that a run completed. Ideally,
+    /// this should be printed right before the program completes.
+    #[serde(default)]
+    pub test_success_keyword: Option<String>,
 }
 
 impl ConfigFile {
     pub fn write_to_options(self, run_options: &mut crate::RunOptions) {
-        if let Some(o) = self.configuration {
+        let Self {
+            configuration,
+            verbosity,
+            output_folder,
+            ignore_cache,
+            gms2_install_location,
+            beta,
+            runtime,
+            x64_windows,
+            no_user_folder,
+            runtime_location_override,
+            visual_studio_path,
+            user_license_folder,
+            test_env_variables,
+            test_success_keyword: test_success_code,
+        } = self;
+
+        if let Some(o) = configuration {
             run_options.task.config = o;
         }
 
-        if let Some(verb) = self.verbosity {
+        if let Some(verb) = verbosity {
             run_options.task.verbosity = verb;
         }
 
-        if let Some(output_folder) = self.output_folder {
+        if let Some(output_folder) = output_folder {
             run_options.task.output_folder = output_folder;
         }
 
-        if let Some(gms2_install_location) = self.gms2_install_location {
+        if let Some(gms2_install_location) = gms2_install_location {
             run_options.platform.gms2_application_location = gms2_install_location;
         }
 
-        if let Some(ignore_cache) = self.ignore_cache {
+        if let Some(ignore_cache) = ignore_cache {
             run_options.task.ignore_cache = ignore_cache;
         }
 
-        if self.beta {
+        if beta {
             run_options.platform.gms2_application_location =
                 DEFAULT_PLATFORM_DATA.beta_application_path.into();
 
@@ -119,7 +141,7 @@ impl ConfigFile {
             run_options.platform.compiler_cache = DEFAULT_PLATFORM_DATA.beta_cached_data.clone();
         }
 
-        if let Some(runtime) = self.runtime {
+        if let Some(runtime) = runtime {
             let path = run_options
                 .platform
                 .runtime_location
@@ -129,21 +151,24 @@ impl ConfigFile {
             run_options.platform.runtime_location = path;
         }
 
-        run_options.task.x64_windows = self.x64_windows;
+        run_options.task.x64_windows = x64_windows;
 
-        if let Some(o) = self.runtime_location_override {
+        if let Some(o) = runtime_location_override {
             run_options.platform.runtime_location = o;
         }
 
-        if let Some(o) = self.visual_studio_path {
+        if let Some(o) = visual_studio_path {
             run_options.platform.visual_studio_path = o;
         }
 
-        if let Some(o) = self.user_license_folder {
+        if let Some(o) = user_license_folder {
             run_options.platform.user_license_folder = o;
         }
-        run_options.task.no_user_folder = self.no_user_folder;
-        run_options.task.test_env_variables = self.test_env_variables;
+        run_options.task.no_user_folder = no_user_folder;
+        run_options.task.test_env_variables = test_env_variables;
+        if let Some(o) = test_success_code {
+            run_options.task.test_success_needle = o;
+        }
     }
 }
 

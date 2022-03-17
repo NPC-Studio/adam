@@ -1,18 +1,18 @@
-use super::run::RunCommand;
+use super::run::RunOptions;
 use crate::gm_artifacts;
 use std::{path::Path, process::Child};
 
 pub fn invoke_release(
     macros: &gm_artifacts::GmMacros,
     build_bff: &Path,
-    sub_command: &RunCommand,
+    sub_command: &RunOptions,
 ) -> Child {
     let mut igor = std::process::Command::new(macros.igor_path.clone());
     igor.arg("-j=8")
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity
-    if sub_command.1.task.verbosity > 1 {
+    if sub_command.task.verbosity > 1 {
         igor.arg("-v");
     }
 
@@ -35,7 +35,7 @@ pub fn invoke_run(
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity
-    if sub_command.1.task.verbosity > 1 {
+    if sub_command.task.verbosity > 1 {
         igor.arg("-v");
     }
 

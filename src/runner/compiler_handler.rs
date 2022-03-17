@@ -1,11 +1,13 @@
-use crate::gm_artifacts;
+use crate::{gm_artifacts, input::RunKind, RunOptions};
 
-use super::run::RunCommand;
 use heck::ToTitleCase;
 use indicatif::ProgressBar;
 use std::{io::BufRead, io::BufReader, path::Path, process::Child};
 
-pub struct CompilerHandler(CompilerState, bool);
+pub struct CompilerHandler {
+    state: CompilerState,
+    is_build: bool,
+}
 
 enum CompilerState {
     Initialize,
@@ -16,29 +18,33 @@ enum CompilerState {
 
 impl CompilerHandler {
     pub fn new_run() -> Self {
-        Self(CompilerState::Initialize, false)
+        Self {
+            state: CompilerState::Initialize,
+            is_build: false,
+        }
     }
 
     pub fn new_build() -> Self {
-        Self(CompilerState::Initialize, true)
-    }
-
-    pub fn new_release() -> Self {
-        Self(CompilerState::Initialize, false)
-    }
-
-    pub fn new_test() -> Self {
-        Self(CompilerState::Initialize, false)
+        Self {
+            state: CompilerState::Initialize,
+            is_build: false,
+        }
     }
 
     #[cfg(target_os = "windows")]
     pub fn new_rerun() -> Self {
-        Self(CompilerState::PreRunToMainLoop(vec![]), false)
+        Self {
+            state: CompilerState::PreRunToMainLoop(vec![]),
+            kill_signum: false,
+        }
     }
 
     #[cfg(not(target_os = "windows"))]
     pub fn new_rerun() -> Self {
-        Self(CompilerState::ChunkBuilder, false)
+        Self {
+            state: CompilerState::ChunkBuilder,
+            is_build: false,
+        }
     }
 
     pub fn compile(
@@ -46,7 +52,8 @@ impl CompilerHandler {
         child: &mut Child,
         project_name: &str,
         project_path: &Path,
-        run_command: RunCommand,
+        run_kind: RunKind,
+        run_command: &RunOptions,
     ) -> CompilerOutput {
         let progress_bar = ProgressBar::new(1000);
         progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
@@ -69,12 +76,12 @@ impl CompilerHandler {
         for line in lines.filter_map(|v| v.ok()) {
             let max_size = line.len().min(30);
 
-            match &mut self.0 {
+            match &mut self.state {
                 CompilerState::Initialize => {
                     progress_bar.set_message(line[..max_size].to_string());
 
                     if line.contains("[Compile]") {
-                        self.0 = CompilerState::Compile(vec![]);
+                        self.state = CompilerState::Compile(vec![]);
                         progress_bar.set_position(progress_bar.position().max(250));
                     } else {
                         progress_bar.inc(20);
@@ -87,7 +94,7 @@ impl CompilerHandler {
                     } else if line.contains("Final Compile...finished") {
                         progress_bar.set_position(progress_bar.position().max(500));
                         if e_msgs.is_empty() {
-                            self.0 = CompilerState::ChunkBuilder;
+                            self.state = CompilerState::ChunkBuilder;
                         } else {
                             return CompilerOutput::Errors(e_msgs.clone());
                         }
@@ -107,7 +114,8 @@ impl CompilerHandler {
                     // we're in the final stage...
                     if line.contains(CHUNK_ENDER) {
                         progress_bar.set_message("adam compile complete");
-                        if self.1 {
+
+                        if self.is_build {
                             progress_bar.finish_and_clear();
                             if let Err(e) = child.kill() {
                                 println!(
@@ -118,18 +126,19 @@ impl CompilerHandler {
                             }
                             progress_bar.finish_and_clear();
                             println!(
-                                "{} {} {}:{} in {}",
+                                "{} {} {} {}:{} in {}",
                                 console::style("Completed").green().bright(),
                                 gm_artifacts::PLATFORM_KIND,
-                                run_command,
-                                console::style(&run_command.1.task.config).yellow().bright(),
+                                if run_command.task.yyc { "yyc" } else { "vm" },
+                                run_kind,
+                                console::style(&run_command.task.config).yellow().bright(),
                                 indicatif::HumanDuration(std::time::Instant::now() - start_time)
                             );
 
                             return CompilerOutput::SuccessAndBuild;
                         } else {
                             progress_bar.set_position(progress_bar.position().max(750));
-                            self.0 = CompilerState::PreRunToMainLoop(vec![]);
+                            self.state = CompilerState::PreRunToMainLoop(vec![]);
                         }
                     } else {
                         progress_bar.set_message(line[..max_size].to_string());
@@ -153,11 +162,12 @@ impl CompilerHandler {
                     if line == "Entering main loop." || line == "Igor complete." {
                         progress_bar.finish_and_clear();
                         println!(
-                            "{} {} {}:{} in {}",
+                            "{} {} {} {}:{} in {}",
                             console::style("Completed").green().bright(),
                             gm_artifacts::PLATFORM_KIND,
-                            run_command,
-                            console::style(&run_command.1.task.config).yellow().bright(),
+                            if run_command.task.yyc { "yyc" } else { "vm" },
+                            run_kind,
+                            console::style(&run_command.task.config).yellow().bright(),
                             indicatif::HumanDuration(std::time::Instant::now() - start_time)
                         );
 
@@ -175,7 +185,7 @@ impl CompilerHandler {
             }
         }
 
-        match self.0 {
+        match self.state {
             CompilerState::Compile(msgs) | CompilerState::PreRunToMainLoop(msgs) => {
                 CompilerOutput::Errors(msgs)
             }

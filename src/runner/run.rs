@@ -9,45 +9,34 @@ use std::{
     path::Path,
 };
 
-pub struct RunCommand(pub(super) RunKind, pub(super) RunOptions);
-
-impl std::fmt::Display for RunCommand {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let word = match self.0 {
-            RunKind::Run | RunKind::Build => "compile",
-            RunKind::Release => "release",
-            RunKind::Test => "test",
-        };
-
-        write!(f, "{} {}", if self.1.task.yyc { "yyc" } else { "vm" }, word)
-    }
-}
-
 pub fn run_command(
     build_bff: &Path,
     macros: gm_artifacts::GmMacros,
     run_options: RunOptions,
     run_kind: RunKind,
-) {
-    let sub_command = RunCommand(run_kind, run_options);
-    let mut child = match sub_command.0 {
+) -> bool {
+    let mut child = match run_kind {
         RunKind::Run | RunKind::Build | RunKind::Test => {
-            invoke_run(&macros, build_bff, &sub_command)
+            invoke_run(&macros, build_bff, &run_options)
         }
-        RunKind::Release => invoke_release(&macros, build_bff, &sub_command),
+        RunKind::Release => invoke_release(&macros, build_bff, &run_options),
     };
 
-    if sub_command.1.task.verbosity > 0 || sub_command.0 == RunKind::Release {
-        let reader = BufReader::new(child.stdout.unwrap()).lines();
+    if run_options.task.verbosity > 0 || run_kind == RunKind::Release {
+        let reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
         for line in reader.flatten() {
             println!("{}", line.trim());
         }
+
+        match child.wait() {
+            Ok(e) => e.success(),
+            Err(_) => false,
+        }
     } else {
-        let compiler_handler = match sub_command.0 {
-            RunKind::Run => CompilerHandler::new_run(),
-            RunKind::Build => CompilerHandler::new_build(),
-            RunKind::Release => CompilerHandler::new_release(),
-            RunKind::Test => CompilerHandler::new_test(),
+        let compiler_handler = if run_kind == RunKind::Build {
+            CompilerHandler::new_build()
+        } else {
+            CompilerHandler::new_run()
         };
         // startup the printer in a separate thread...
         let project_dir = macros.project_dir.clone();
@@ -58,7 +47,8 @@ pub fn run_command(
             &mut child,
             &macros.project_name,
             &macros.project_full_filename,
-            sub_command,
+            run_kind,
+            &run_options,
         );
 
         let mut printer = printer_handler.join().unwrap();
@@ -70,6 +60,8 @@ pub fn run_command(
                 }
                 let cache_folder = build_bff.parent().unwrap();
                 manifest::invalidate_manifest(cache_folder);
+
+                false
             }
             CompilerOutput::SuccessAndRun(msgs) => {
                 let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
@@ -80,13 +72,20 @@ pub fn run_command(
                 // skip the annoying ass "controller"
                 reader.next();
 
+                // otherwise, print out some early messages...
                 for msg in msgs {
                     printer.print_line(msg);
                 }
 
-                run_game(&mut reader, &mut printer);
+                let kill_word = if run_kind == RunKind::Test {
+                    &run_options.task.test_success_needle
+                } else {
+                    "Igor complete"
+                };
+
+                run_game(&mut reader, &mut printer, kill_word)
             }
-            CompilerOutput::SuccessAndBuild => {}
+            CompilerOutput::SuccessAndBuild => true,
         }
     }
 }
@@ -95,7 +94,7 @@ pub fn rerun_old(
     gm_build: gm_artifacts::GmBuild,
     macros: &gm_artifacts::GmMacros,
     run_data: RunOptions,
-) {
+) -> bool {
     #[cfg(target_os = "windows")]
     let mut child = invoke_rerun(run_data.task.x64_windows, &gm_build, macros);
 
@@ -110,11 +109,15 @@ pub fn rerun_old(
     let printer_handler = std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));
 
     if run_data.task.verbosity > 0 {
-        let reader = BufReader::new(child.stdout.unwrap()).lines();
+        let reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
         for line in reader.flatten() {
             println!("{}", line.trim());
         }
-        return;
+
+        return match child.wait() {
+            Ok(e) => e.success(),
+            Err(_) => false,
+        };
     }
 
     let compile_handler = CompilerHandler::new_rerun();
@@ -122,7 +125,8 @@ pub fn rerun_old(
         &mut child,
         &gm_build.project_name,
         &gm_build.project_path,
-        RunCommand(RunKind::Build, run_data),
+        RunKind::Build,
+        &run_data,
     );
 
     let mut printer = printer_handler.join().unwrap();
@@ -134,6 +138,8 @@ pub fn rerun_old(
             }
             let cache_folder = gm_build.output_folder;
             manifest::invalidate_manifest(&cache_folder);
+
+            false
         }
         CompilerOutput::SuccessAndRun(msgs) => {
             let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
@@ -151,21 +157,26 @@ pub fn rerun_old(
                 printer.print_line(msg);
             }
 
-            run_game(&mut reader, &mut printer);
+            run_game(&mut reader, &mut printer, "Igor complete")
         }
         CompilerOutput::SuccessAndBuild => unimplemented!(),
     }
 }
 
-fn run_game(lines: &mut Lines<impl BufRead>, printer: &mut Printer) {
-    for line in lines.flatten() {
-        let message = line.to_string();
+fn run_game(lines: &mut Lines<impl BufRead>, printer: &mut Printer, kill_word: &str) -> bool {
+    let mut found = false;
 
-        if message == "Igor complete." {
+    for line in lines.flatten() {
+        let message = line;
+
+        if message.contains(kill_word) {
             println!("adam complete");
+            found = true;
             break;
         }
 
         printer.print_line(message);
     }
+
+    found
 }

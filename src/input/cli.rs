@@ -30,7 +30,7 @@ pub enum ClapOperation {
     /// Creates a release executable, running `clean` first.
     Release(CliOptions),
 
-    /// Runs the project, enabling any `test_env_variables` set in the config.
+    /// Runs the project, enabling any `test_env_variables` and searches for the `test_success_code`, set in the config.
     Test(CliOptions),
 
     /// Cleans a project target directory.

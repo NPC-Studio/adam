@@ -1,3 +1,5 @@
+use std::fmt;
+
 use camino::Utf8Path;
 use clap::Parser;
 use color_eyre::Help;
@@ -21,6 +23,18 @@ pub enum RunKind {
     Build,
     Release,
     Test,
+}
+
+impl fmt::Display for RunKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let word = match self {
+            RunKind::Run | RunKind::Build => "compile",
+            RunKind::Release => "release",
+            RunKind::Test => "test",
+        };
+
+        f.pad(word)
+    }
 }
 
 pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {

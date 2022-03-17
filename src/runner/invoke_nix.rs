@@ -1,12 +1,10 @@
-use crate::gm_artifacts;
+use crate::{gm_artifacts, RunOptions};
 use std::{path::Path, process::Child};
-
-use super::run::RunCommand;
 
 pub fn invoke_run(
     macros: &gm_artifacts::GmMacros,
     build_bff: &Path,
-    sub_command: &RunCommand,
+    sub_command: &RunOptions,
 ) -> Child {
     let mut igor = std::process::Command::new(gm_artifacts::MONO_LOCATION);
     igor.arg(macros.igor_path.clone())
@@ -14,7 +12,7 @@ pub fn invoke_run(
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity
-    if sub_command.1.task.verbosity > 1 {
+    if sub_command.task.verbosity > 1 {
         igor.arg("-v");
     }
 
@@ -30,7 +28,7 @@ pub fn invoke_run(
 pub fn invoke_release(
     macros: &gm_artifacts::GmMacros,
     build_bff: &Path,
-    sub_command: &RunCommand,
+    sub_command: &RunOptions,
 ) -> Child {
     let mut igor = std::process::Command::new(gm_artifacts::MONO_LOCATION);
     igor.arg(macros.igor_path.clone())
@@ -38,7 +36,7 @@ pub fn invoke_release(
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity
-    if sub_command.1.task.verbosity > 1 {
+    if sub_command.task.verbosity > 1 {
         igor.arg("-v");
     }
 

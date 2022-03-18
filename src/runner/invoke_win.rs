@@ -1,5 +1,4 @@
-use super::run::RunOptions;
-use crate::gm_artifacts;
+use crate::{gm_artifacts, RunOptions};
 use std::{path::Path, process::Child};
 
 pub fn invoke_release(
@@ -28,7 +27,7 @@ pub fn invoke_release(
 pub fn invoke_run(
     macros: &gm_artifacts::GmMacros,
     build_bff: &Path,
-    sub_command: &RunCommand,
+    sub_command: &RunOptions,
 ) -> Child {
     let mut igor = std::process::Command::new(macros.igor_path.clone());
     igor.arg("-j=8")

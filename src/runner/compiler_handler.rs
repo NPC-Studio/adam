@@ -35,7 +35,7 @@ impl CompilerHandler {
     pub fn new_rerun() -> Self {
         Self {
             state: CompilerState::PreRunToMainLoop(vec![]),
-            kill_signum: false,
+            is_build: false,
         }
     }
 

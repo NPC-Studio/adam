@@ -222,8 +222,26 @@ fn main() -> AnyResult {
     .unwrap();
 
     if runner::run_command(&build_location, macros, options, run_kind) {
-        Ok(())
+        if run_kind.is_test() {
+            println!(
+                "adam test result: {}",
+                console::style("ok").green().bright()
+            );
+        } else {
+            println!("adam {}", console::style("complete").green().bright());
+        }
+
+        std::process::exit(0);
     } else {
-        Err(color_eyre::eyre::eyre!("adam failed"))
+        if run_kind.is_test() {
+            println!(
+                "adam test result: {}",
+                console::style("FAILED").red().bright()
+            );
+        } else {
+            println!("adam {}", console::style("FAILED").red().bright());
+        }
+
+        std::process::exit(1);
     }
 }

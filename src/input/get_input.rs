@@ -25,6 +25,15 @@ pub enum RunKind {
     Test,
 }
 
+impl RunKind {
+    /// Returns `true` if the run kind is [`Test`].
+    ///
+    /// [`Test`]: RunKind::Test
+    pub fn is_test(&self) -> bool {
+        matches!(self, Self::Test)
+    }
+}
+
 impl fmt::Display for RunKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let word = match self {

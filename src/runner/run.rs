@@ -77,13 +77,7 @@ pub fn run_command(
                     printer.print_line(msg);
                 }
 
-                let kill_word = if run_kind == RunKind::Test {
-                    &run_options.task.test_success_needle
-                } else {
-                    "Igor complete"
-                };
-
-                run_game(&mut reader, &mut printer, kill_word)
+                run_game(&mut reader, &mut printer, run_kind, &run_options)
             }
             CompilerOutput::SuccessAndBuild => true,
         }
@@ -157,25 +151,33 @@ pub fn rerun_old(
                 printer.print_line(msg);
             }
 
-            run_game(&mut reader, &mut printer, "Igor complete")
+            run_game(&mut reader, &mut printer, RunKind::Build, &run_data)
         }
         CompilerOutput::SuccessAndBuild => unimplemented!(),
     }
 }
 
-fn run_game(lines: &mut Lines<impl BufRead>, printer: &mut Printer, kill_word: &str) -> bool {
+fn run_game(
+    lines: &mut Lines<impl BufRead>,
+    printer: &mut Printer,
+    run_kind: RunKind,
+    run_options: &RunOptions,
+) -> bool {
     let mut found = false;
 
-    for line in lines.flatten() {
-        let message = line;
+    let kill_word = if run_kind == RunKind::Test {
+        &run_options.task.test_success_needle
+    } else {
+        "Igor complete"
+    };
 
-        if message.contains(kill_word) {
-            println!("adam complete");
+    for line in lines.flatten() {
+        if line.contains(kill_word) {
             found = true;
             break;
         }
 
-        printer.print_line(message);
+        printer.print_line(line);
     }
 
     found

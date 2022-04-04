@@ -37,15 +37,17 @@ fn main() -> AnyResult {
     color_eyre::install()?;
 
     let (mut options, operation) = input::parse_inputs()?;
+
     if let Err(e) = options.platform.canonicalize() {
         println!(
-            "{}: {}",
+            "{}: {:?}",
             console::style("adam error").bright().red(),
             console::style(e).bold()
         );
 
         return Ok(());
     }
+
     if options.task.yyc {
         if let Err(e) = options.platform.canonicalize_yyc() {
             println!(

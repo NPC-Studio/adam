@@ -1,15 +1,11 @@
 use std::fmt;
 
 use camino::Utf8Path;
-use clap::Parser;
 use color_eyre::Help;
 
-use crate::{AnyResult, PlatformOptions, RunOptions, TaskOptions, DEFAULT_PLATFORM_DATA};
+use crate::{AnyResult, RunOptions};
 
-use super::{
-    cli::{self, ClapOperation},
-    config_file,
-};
+use super::cli::{self, ClapOperation};
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Ord, PartialOrd)]
 pub enum Operation {
@@ -46,26 +42,11 @@ impl fmt::Display for RunKind {
     }
 }
 
-pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
-    let mut runtime_options = {
-        let platform: PlatformOptions = PlatformOptions {
-            gms2_application_location: DEFAULT_PLATFORM_DATA.stable_application_path.into(),
-            runtime_location: DEFAULT_PLATFORM_DATA.stable_runtime_location.into(),
-            visual_studio_path: Default::default(),
-            user_license_folder: Default::default(),
-            home_dir: DEFAULT_PLATFORM_DATA.home_dir.clone(),
-            compiler_cache: DEFAULT_PLATFORM_DATA.stable_cached_data.clone(),
-        };
-        let task = TaskOptions::default();
-
-        RunOptions { task, platform }
-    };
-    let value: cli::InputOpts = cli::InputOpts::parse();
-    config_file::ConfigFile::find_config(value.config.as_ref())
-        .unwrap_or_default()
-        .write_to_options(&mut runtime_options);
-
-    let (cli_options, operation) = match value.subcmd {
+pub fn parse_inputs(
+    operation: ClapOperation,
+    mut runtime_options: RunOptions,
+) -> AnyResult<(RunOptions, Operation)> {
+    let (cli_options, operation) = match operation {
         ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
         ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),

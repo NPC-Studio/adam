@@ -25,8 +25,8 @@ pub struct ConfigFile {
 
     /// An absolute path to the Gms2 install location on the system.
     ///
-    /// On Windows, this defaults to `C:\Program Files\GameMaker Studio 2\GameMakerStudio.exe`.
-    /// On macOS, this default to `/Applications/GameMaker Studio 2.app`. (For macOS, you can point to just
+    /// On Windows, this defaults to `C:\Program Files\GameMaker Studio 2\GameMaker.exe`.
+    /// On macOS, this default to `/Applications/GameMaker.app`. (For macOS, you can point to just
     /// the .app -- internally, we will search inside the app bundle for the executable)
     pub gms2_install_location: Option<Utf8PathBuf>,
 

@@ -130,8 +130,8 @@ ignore_cache = 1
 
 > Type: String
 >
-> Default Windows: C:/Program Files/GameMaker Studio 2/GameMakerStudio.exe
-> Default Mac: /Applications/GameMaker Studio 2.app
+> Default Windows: C:/Program Files/GameMaker Studio 2/GameMaker.exe
+> Default Mac: /Applications/GameMaker.app
 
 Uses a non-standard Gms2 install location. If you have installed Gms2 with Steam, this is required.
 
@@ -139,12 +139,12 @@ Uses a non-standard Gms2 install location. If you have installed Gms2 with Steam
 **Mac**: please provide a path just to the `.app` file. Do not index within the `.app` file -- adam will handle that.
 
 ```toml
-gms2_install_location = "C:/Program Files/Steam/common/GameMaker Studio 2/GameMakerStudio.exe"
+gms2_install_location = "C:/Program Files/Steam/common/GameMaker Studio 2/GameMaker.exe"
 ```
 
 ```json
 {
-    "gms2_install_location": "C:/Program Files/Steam/common/GameMaker Studio 2/GameMakerStudio.exe"
+    "gms2_install_location": "C:/Program Files/Steam/common/GameMaker Studio 2/GameMaker.exe"
 }
 ```
 

@@ -7,17 +7,29 @@
 > I am thy creature: I ought to be thy Adam, but I am rather the fallen angel, whom thou drivest from joy for no misdeed.
 > -- Frankenstein's Monster in *Frankenstein* by Mary Shelly
 
-adam is a command-line utility for compiling Gms2 projects on Windows 10 and Mac OS Catalina. Invoking adam is trivial:
+adam is a command-line utility for compiling GameMaker projects on Windows and macOS. Invoking adam is trivial:
 
 ```sh
 adam run
 ```
 
-This will compile your project, run it, and give you stdout (`"show_debug_message"`) with colorization and links. `adam` supports compiling with the VM (default) and the YYC (by passing in `--yyc`). `adam` also supports faster recompilation than Gms2 does, so if users recompile a game without making changes, their game will instantly load, without invoking the compiler at all. This is especially useful, since `adam` easily allows you to run multiple instances of your game at the same time on your machine.
+This will compile your project, run it, and give you stdout (`"show_debug_message"`) with colorization and links. `adam` supports compiling with the VM (default) and the YYC (by passing in `--yyc`). `adam` also supports faster recompilation than GameMaker does, so if users recompile a game without making changes, their game will instantly load, without invoking the compiler at all. This is especially useful, since `adam` easily allows you to run multiple instances of your game at the same time on your machine.
 
 `adam` will place all its generated artifacts within a folder relative to the working directory -- by default, it will use `"target"` as its output output. **It is highly advised that you add your output directory to your .gitignore.**
 
-Additionally, `adam` has the commands `build`, which builds a project without running it (but will report compile errors), `release`, which releases a Zip of the project (but only if you have an Enterprise license), and `clean`, which cleans the output directory.
+## COMMANDS
+
+`run`: Builds and runs the project.
+
+`build`: Builds a project without running it (but will report compile errors)
+
+`release`: Builds a zip of the project (only available for users with an Enterprise license)
+
+`clean`: Cleans the output directory
+
+`test`: Runs the game after setting user-defined environment variables. See the [config file guide](docs/CONFIG_FILE_GUIDE.md) for more information.
+
+You can also run `adam help` to see a more detailed version of the above.
 
 ## INSTALLATION
 
@@ -49,7 +61,7 @@ Please see the [CHANGELOG](CHANGELOG.md) for release history, and the [ROADMAP](
 
 You will likely need to customize an `adam` command for most usages. To see CLI options, simply run `adam run --help`:
 
-Of special note, please see `--yyc`, which will allow users to compile using the Yyc, and `-c`, which allows users to pass in a configuration.
+Of special note, please see `--yyc`, which will allow users to compile using the YYC, and `-c`, which allows users to pass in a configuration.
 
 However, passing in numerous values every compile can become tiresome. To support this, users can create a config file in either `JSON` or `TOML`, where these options can be specified. To create an adam configuration file, please follow [this guide](docs/CONFIG_FILE_GUIDE.md).
 

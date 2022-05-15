@@ -8,7 +8,7 @@ use crate::{RunOptions, DEFAULT_PLATFORM_DATA};
 #[clap(version, author)]
 pub struct InputOpts {
     #[clap(subcommand)]
-    pub subcmd: ClapOperation,
+    pub subcmd: Option<ClapOperation>,
 
     /// The path to a non-standard named configuration file. Possible names are .adam, .adam.json, and adam.toml
     #[clap(short, long, parse(from_os_str))]
@@ -17,6 +17,10 @@ pub struct InputOpts {
     /// Prints version information
     #[clap(short, long)]
     pub version: bool,
+
+    /// Prints the GM runtime this directory is set up to use.
+    #[clap(short, long)]
+    pub runtime: bool,
 }
 
 #[derive(Parser, Debug)]

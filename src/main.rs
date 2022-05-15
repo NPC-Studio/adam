@@ -13,6 +13,8 @@ mod input {
     mod cli;
     mod config_file;
     mod get_input;
+    pub use cli::InputOpts;
+    pub use config_file::ConfigFile;
     pub use get_input::{parse_inputs, Operation, RunKind};
 }
 mod igor {
@@ -24,6 +26,7 @@ mod igor {
 }
 
 mod gm_artifacts;
+use clap::Parser;
 pub use gm_artifacts::{DefaultPlatformData, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
 mod manifest;
 
@@ -35,8 +38,42 @@ mod trailing_comma_util;
 
 fn main() -> AnyResult {
     color_eyre::install()?;
+    let inputs = input::InputOpts::parse();
+    let config = input::ConfigFile::find_config(inputs.config.as_ref()).unwrap_or_default();
 
-    let (mut options, operation) = input::parse_inputs()?;
+    if inputs.runtime {
+        println!(
+            "{}",
+            config
+                .runtime
+                .as_ref()
+                .unwrap_or(&DEFAULT_RUNTIME_NAME.into())
+        );
+        return Ok(());
+    }
+
+    let mut runtime_options = {
+        let platform: PlatformOptions = PlatformOptions {
+            gms2_application_location: DEFAULT_PLATFORM_DATA.stable_application_path.into(),
+            runtime_location: DEFAULT_PLATFORM_DATA.stable_runtime_location.into(),
+            visual_studio_path: Default::default(),
+            user_license_folder: Default::default(),
+            home_dir: DEFAULT_PLATFORM_DATA.home_dir.clone(),
+            compiler_cache: DEFAULT_PLATFORM_DATA.stable_cached_data.clone(),
+        };
+        let task = TaskOptions::default();
+
+        RunOptions { task, platform }
+    };
+    config.write_to_options(&mut runtime_options);
+
+    let operation = if let Some(operation) = inputs.subcmd {
+        operation
+    } else {
+        return Ok(());
+    };
+
+    let (mut options, operation) = input::parse_inputs(operation, runtime_options)?;
 
     if let Err(e) = options.platform.canonicalize() {
         println!(

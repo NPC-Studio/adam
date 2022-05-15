@@ -60,11 +60,11 @@ pub fn parse_inputs() -> AnyResult<(RunOptions, Operation)> {
 
         RunOptions { task, platform }
     };
-    config_file::ConfigFile::find_config()
+    let value: cli::InputOpts = cli::InputOpts::parse();
+    config_file::ConfigFile::find_config(value.config.as_ref())
         .unwrap_or_default()
         .write_to_options(&mut runtime_options);
 
-    let value: cli::InputOpts = cli::InputOpts::parse();
     let (cli_options, operation) = match value.subcmd {
         ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),

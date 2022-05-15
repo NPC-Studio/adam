@@ -5,14 +5,14 @@ use crate::{RunOptions, DEFAULT_PLATFORM_DATA};
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
 #[derive(Parser, Debug)]
-#[clap(version = clap::crate_version!(), author = clap::crate_authors!())]
+#[clap(version, author)]
 pub struct InputOpts {
     #[clap(subcommand)]
     pub subcmd: ClapOperation,
 
     /// The path to a non-standard named configuration file. Possible names are .adam, .adam.json, and adam.toml
-    #[clap(short, long)]
-    pub config: Option<String>,
+    #[clap(short, long, parse(from_os_str))]
+    pub config: Option<std::path::PathBuf>,
 
     /// Prints version information
     #[clap(short, long)]

@@ -1,9 +1,8 @@
+use std::path::PathBuf;
 use camino::Utf8PathBuf;
 use serde::Deserialize;
 
 use crate::DEFAULT_PLATFORM_DATA;
-
-// use super::cli::RunOptions;
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Default)]
 pub struct ConfigFile {
@@ -173,92 +172,37 @@ impl ConfigFile {
 }
 
 impl ConfigFile {
-    pub fn find_config() -> Option<ConfigFile> {
-        let current_directory = std::env::current_dir().expect("cannot work in current directory");
-        let iterator = current_directory.read_dir().ok()?;
-
-        let mut config = None;
-
-        for file in iterator {
-            let file = file.ok()?.path();
-
-            if let Some(fname) = file.file_name() {
-                let lossy = fname.to_string_lossy();
-
-                if lossy == ".adam" {
-                    if let Ok(txt) = std::fs::read_to_string(&file) {
-                        let mut output = toml::from_str(&txt).ok();
-                        if output.is_none() {
-                            output = serde_json::from_str(&txt).ok();
-                        }
-
-                        if let Some(output) = output {
-                            if config.is_some() {
-                                println!(
-                                    "{}: two config files present. \
-                                please specify with `--config`. Ignoring both...",
-                                    console::style("configuration error").red()
-                                );
-                            } else {
-                                config = Some(output);
-                            }
-                        } else {
-                            println!(
-                                "{}: could not deserialize configuration file. Ignoring...",
-                                console::style("configuration error").red()
-                            );
-                        }
-                    }
-                }
-                if lossy == "adam.json" || lossy == ".adam.json" {
-                    if let Ok(txt) = std::fs::read_to_string(&file) {
-                        match serde_json::from_str(&txt) {
-                            Ok(v) => {
-                                if config.is_some() {
-                                    println!(
-                                        "{}: two config files present. \
-                                        please specify with `--config`. Ignoring both...",
-                                        console::style("configuration error").red()
-                                    );
-                                } else {
-                                    config = Some(v);
-                                }
-                            }
-                            Err(v) => {
-                                println!(
-                                    "{}: could not deserialize configuration file, {}. Ignoring...",
-                                    console::style("configuration error").red(),
-                                    v
-                                );
-                            }
-                        }
-                    }
-                }
-                if lossy == "adam.toml" || lossy == ".adam.toml" {
-                    if let Ok(txt) = std::fs::read_to_string(&file) {
-                        match toml::from_str(&txt) {
-                            Ok(v) => {
-                                if config.is_some() {
-                                    println!(
-                                        "{}: two config files present. \
-                                        please specify with `--config`. Ignoring both...",
-                                        console::style("configuration error").red()
-                                    );
-                                } else {
-                                    config = Some(v);
-                                }
-                            }
-                            Err(v) => {
-                                println!(
-                                    "{}: could not deserialize configuration file, {}. Ignoring...",
-                                    console::style("configuration error").red(),
-                                    v
-                                );
-                            }
-                        }
-                    }
-                }
+    pub fn find_config(user_supplied_path: Option<&PathBuf>) -> Option<ConfigFile> {
+        let config_path = match user_supplied_path {
+            Some(path) => path.to_path_buf(),
+            None => {
+                let current_directory =
+                    std::env::current_dir().expect("cannot work in current directory");
+                let mut iterator = current_directory.read_dir().ok()?.flatten();
+                iterator
+                    .find(|entry| {
+                        entry.file_name().to_str().map_or(false, |file| {
+                            matches!(
+                                file,
+                                ".adam" | "adam.toml" | ".adam.toml" | "adam.json" | ".adam.json"
+                            )
+                        })
+                    })
+                    .map(|entry| entry.path())?
             }
+        };
+
+        let config = std::fs::read_to_string(&config_path).ok().and_then(|txt| {
+            toml::from_str(&txt)
+                .or_else(|_| serde_json::from_str(&txt))
+                .ok()
+        });
+
+        if config.is_none() {
+            println!(
+                "{}: could not deserialize configuration file. Ignoring...",
+                console::style("configuration error").red()
+            );
         }
 
         config

@@ -178,6 +178,12 @@ impl GmMacros {
     #[cfg(target_os = "windows")]
     pub fn new(build_data: &BuildData) -> Self {
         Self {
+            igor_path: build_data
+                .runtime_location
+                .join("bin/igor/windows/x64/Igor.exe"),
+            asset_compiler_path: build_data
+                .runtime_location
+                .join("bin/assetcompiler/windows/x64/GMAssetCompiler"),
             favorites: build_data.user_dir.join("Favorites"),
             fonts: path!("C:/Windows/Fonts"),
             templates: path!("C:/Users/jjspi/AppData/Roaming/Microsoft/Windows/Templates"),
@@ -234,6 +240,8 @@ impl GmMacros {
             common_application_data: common_app_data,
             program_files: path!("/Applications"),
             common_templates: path!("/usr/share/templates"),
+            igor_path: unimplemented!(),
+            asset_compiler_path: unimplemented!(),
             temp_path: build_data
                 .user_dir
                 .join("/var/folders/v_/r1l809l94_vbd75s98fbd6rr0000gn"),
@@ -279,8 +287,6 @@ impl GmMacros {
             exe_path: application_path.clone(),
             runtime_location: runtime_location.clone(),
             base_options_dir: runtime_location.join("BaseProject/options"),
-            asset_compiler_path: runtime_location.join("bin/GMAssetCompiler.exe"),
-            igor_path: runtime_location.join("bin/Igor.exe"),
             lib_compatibility_path: runtime_location.join("lib/compatibility.zip"),
             runner_path: runtime_location.join("windows/Runner.exe"),
             x64_runner_path: runtime_location.join("windows/x64/Runner.exe"),

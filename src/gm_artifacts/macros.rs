@@ -231,6 +231,10 @@ impl GmMacros {
         let system_directory = common_app_data.join("GameMakerStudio2");
 
         Self {
+            igor_path: build_data.runtime_location.join("bin/igor/osx/x64/Igor"),
+            asset_compiler_path: build_data
+                .runtime_location
+                .join("bin/assetcompiler/osx/x64/GMAssetCompiler.dll"),
             favorites: build_data.user_dir.join("Library/Favorites"),
             fonts: build_data.user_dir.join("Library/Fonts"),
             templates: build_data.user_dir.join("Templates"),
@@ -240,8 +244,6 @@ impl GmMacros {
             common_application_data: common_app_data,
             program_files: path!("/Applications"),
             common_templates: path!("/usr/share/templates"),
-            igor_path: unimplemented!(),
-            asset_compiler_path: unimplemented!(),
             temp_path: build_data
                 .user_dir
                 .join("/var/folders/v_/r1l809l94_vbd75s98fbd6rr0000gn"),

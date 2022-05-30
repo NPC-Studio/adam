@@ -6,9 +6,8 @@ pub fn invoke_run(
     build_bff: &Path,
     sub_command: &RunOptions,
 ) -> Child {
-    let mut igor = std::process::Command::new(gm_artifacts::MONO_LOCATION);
-    igor.arg(macros.igor_path.clone())
-        .arg("-j=8")
+    let mut igor = std::process::Command::new(macros.igor_path.clone());
+    igor.arg("-j=8")
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity
@@ -30,9 +29,8 @@ pub fn invoke_release(
     build_bff: &Path,
     sub_command: &RunOptions,
 ) -> Child {
-    let mut igor = std::process::Command::new(gm_artifacts::MONO_LOCATION);
-    igor.arg(macros.igor_path.clone())
-        .arg("-j=8")
+    let mut igor = std::process::Command::new(macros.igor_path.clone());
+    igor.arg("-j=8")
         .arg(format!("-options={}", build_bff.display()));
 
     // add the verbosity

@@ -32,8 +32,8 @@ pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
             "/Users/Shared/GameMakerStudio2-Beta/Cache/runtimes/runtime-",
             DEFAULT_RUNTIME_NAME
         ),
-        stable_application_path: "/Applications/GameMaker.app/Contents/MonoBundle",
-        beta_application_path: "/Applications/GameMaker-Beta.app/Contents/MonoBundle",
+        stable_application_path: "/Applications/GameMaker.app/Contents",
+        beta_application_path: "/Applications/GameMaker-Beta.app/Contents",
 
         target_mask: 2,
         stable_cached_data: Lazy::new(|| home_dir().join(".config/GameMakerStudio2")),
@@ -71,6 +71,3 @@ fn home_dir() -> Utf8PathBuf {
         .try_into()
         .unwrap()
 }
-
-#[cfg(target_os = "macos")]
-pub const MONO_LOCATION: &str = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono";

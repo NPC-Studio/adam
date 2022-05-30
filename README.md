@@ -33,25 +33,13 @@ You can also run `adam help` to see a more detailed version of the above.
 
 ## INSTALLATION
 
-If you're a **macOS Homebrew** user, then you can install `adam` through homebrew:
-
-```sh
-brew tap sanbox-irl/homebrew-adam
-brew install adam
-```
-
-If you're a Windows **scoop** user, then you can install `adam` through scoop:
-
-```ps1
-scoop bucket add scoop-adam https://github.com/sanbox-irl/scoop-adam
-scoop install adam
-```
-
-If you're a **Rust programmer**, then you can install `adam` through cargo:
+The best way to install adam is through cargo:
 
 ```sh
 cargo install adam
 ```
+
+You can get cargo by install Rust.
 
 ## CHANGELOG AND ROADMAP
 

@@ -1,8 +1,8 @@
 use super::{
     compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_release,
-    invoke_rerun, invoke_run, printer::Printer,
+    invoke_run, printer::Printer,
 };
-use crate::{gm_artifacts, input::RunKind, manifest, RunOptions};
+use crate::{gm_artifacts, input::RunKind, RunOptions};
 use std::{
     io::Lines,
     io::{BufRead, BufReader},
@@ -58,8 +58,6 @@ pub fn run_command(
                 for error in e {
                     printer.print_line(error);
                 }
-                let cache_folder = build_bff.parent().unwrap();
-                manifest::invalidate_manifest(cache_folder);
 
                 false
             }
@@ -81,79 +79,6 @@ pub fn run_command(
             }
             CompilerOutput::SuccessAndBuild => true,
         }
-    }
-}
-
-pub fn rerun_old(
-    gm_build: gm_artifacts::GmBuild,
-    macros: &gm_artifacts::GmMacros,
-    run_data: RunOptions,
-) -> bool {
-    #[cfg(target_os = "windows")]
-    let mut child = invoke_rerun(run_data.task.x64_windows, &gm_build, macros);
-
-    #[cfg(not(target_os = "windows"))]
-    let mut child = invoke_rerun(&gm_build);
-    #[cfg(not(target_os = "windows"))]
-    // very good code!
-    let _ = macros;
-
-    // startup the printer in a separate thread...
-    let project_dir = gm_build.project_dir.clone();
-    let printer_handler = std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));
-
-    if run_data.task.verbosity > 0 {
-        let reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
-        for line in reader.flatten() {
-            println!("{}", line.trim());
-        }
-
-        return match child.wait() {
-            Ok(e) => e.success(),
-            Err(_) => false,
-        };
-    }
-
-    let compile_handler = CompilerHandler::new_rerun();
-    let output = compile_handler.compile(
-        &mut child,
-        &gm_build.project_name,
-        &gm_build.project_path,
-        RunKind::Build,
-        &run_data,
-    );
-
-    let mut printer = printer_handler.join().unwrap();
-
-    match output {
-        CompilerOutput::Errors(e) => {
-            for error in e {
-                printer.print_line(error);
-            }
-            let cache_folder = gm_build.output_folder;
-            manifest::invalidate_manifest(&cache_folder);
-
-            false
-        }
-        CompilerOutput::SuccessAndRun(msgs) => {
-            let mut reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
-
-            // skip the ****
-            reader.next();
-
-            // skip the annoying ass "controller"
-            reader.next();
-
-            // startup the printer...
-            let mut printer = Printer::new(&gm_build.project_dir.join("scripts"));
-
-            for msg in msgs {
-                printer.print_line(msg);
-            }
-
-            run_game(&mut reader, &mut printer, RunKind::Build, &run_data)
-        }
-        CompilerOutput::SuccessAndBuild => unimplemented!(),
     }
 }
 

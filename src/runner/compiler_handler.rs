@@ -31,22 +31,6 @@ impl CompilerHandler {
         }
     }
 
-    #[cfg(target_os = "windows")]
-    pub fn new_rerun() -> Self {
-        Self {
-            state: CompilerState::PreRunToMainLoop(vec![]),
-            is_build: false,
-        }
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    pub fn new_rerun() -> Self {
-        Self {
-            state: CompilerState::ChunkBuilder,
-            is_build: false,
-        }
-    }
-
     pub fn compile(
         mut self,
         child: &mut Child,

@@ -28,7 +28,6 @@ mod igor {
 mod gm_artifacts;
 use clap::Parser;
 pub use gm_artifacts::{DefaultPlatformData, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
-mod manifest;
 
 mod runner;
 pub use runner::{PlatformOptions, RunOptions, TaskOptions};
@@ -198,19 +197,6 @@ fn main() -> AnyResult {
     let gm_build = gm_artifacts::GmBuild::new(&build_data);
     let macros = gm_artifacts::GmMacros::new(&build_data);
     let visual_studio_path = options.platform.visual_studio_path.clone();
-
-    // // check if we need to make a new build at all, or can go straight to the runner
-    // if options.task.ignore_cache == 0
-    //     && manifest::check_manifest(
-    //         build_data.config.clone(),
-    //         &build_data.project_directory,
-    //         &build_data.folders.cache,
-    //         &build_data.folders.main,
-    //     )
-    // {
-    //     runner::rerun_old(gm_build, &macros, options);
-    //     return Ok(());
-    // }
 
     // clear the temp files...
     build_data.folders.clear_tmp()?;

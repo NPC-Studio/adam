@@ -10,10 +10,11 @@ pub struct Printer {
 }
 
 impl Printer {
-    const SHUTDOWN: [&'static str; 3] = [
+    const IGNORE_LINES: [&'static str; 4] = [
         "Attempting to set gamepadcount to",
         "Not shutting down steam as it is not initialised",
         "Script_Free called",
+        "ConnectWrap with g_network_async_connect",
     ];
 
     pub fn new(scripts_directory: &Path) -> Self {
@@ -36,7 +37,7 @@ impl Printer {
     }
 
     pub fn print_line(&mut self, msg: String) {
-        if Self::SHUTDOWN.iter().any(|v| msg.contains(v)) {
+        if Self::IGNORE_LINES.iter().any(|v| msg.contains(v)) {
             return;
         }
 

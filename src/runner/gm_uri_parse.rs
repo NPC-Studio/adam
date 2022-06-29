@@ -78,10 +78,14 @@ impl GmUriParser {
                 if let Some(line) = cap_iter.next().unwrap() {
                     let mut output = String::with_capacity(input.len());
                     output.push_str(&input[..entire_match.start()]);
+                    let line_txt = match line.as_str().parse::<i32>() {
+                        Ok(v) => (v + 1).to_string(),
+                        Err(_) => line.as_str().to_owned(),
+                    };
                     output.push_str(&format!(
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = script_name.as_str(),
-                        line = line.as_str(),
+                        line = line_txt,
                     ));
                     output.push_str(&input[line.end()..]);
 
@@ -103,10 +107,15 @@ impl GmUriParser {
                 if let Some(line) = cap_iter.next().unwrap() {
                     let mut output = String::with_capacity(input.len());
                     output.push_str(&input[..entire_match.start()]);
+                    let line_txt = match line.as_str().parse::<i32>() {
+                        Ok(v) => (v + 1).to_string(),
+                        Err(_) => line.as_str().to_owned(),
+                    };
+
                     output.push_str(&format!(
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = script_name.as_str(),
-                        line = line.as_str(),
+                        line = line_txt,
                     ));
                     output.push_str(&input[entire_match.end()..]);
 
@@ -162,11 +171,15 @@ impl GmUriParser {
                 if let Some(line) = cap_iter.next().unwrap() {
                     let mut output = String::with_capacity(input.len());
                     output.push_str(&input[..entire_match.start()]);
+
+                    let line_txt = match line.as_str().parse::<i32>() {
+                        Ok(v) => (v + 1).to_string(),
+                        Err(_) => line.as_str().to_owned(),
+                    };
+
                     output.push_str(&format!(
                         "objects/{}/{}.gml:{}:0",
-                        o_name,
-                        event_name,
-                        line.as_str(),
+                        o_name, event_name, line_txt,
                     ));
                     output.push_str(&input[entire_match.end()..]);
 
@@ -222,11 +235,14 @@ impl GmUriParser {
                 if let Some(line) = cap_iter.next().unwrap() {
                     let mut output = String::with_capacity(input.len());
                     output.push_str(&input[..entire_match.start()]);
+                    let line_txt = match line.as_str().parse::<i32>() {
+                        Ok(v) => (v + 1).to_string(),
+                        Err(_) => line.as_str().to_owned(),
+                    };
+
                     output.push_str(&format!(
                         "objects/{}/{}.gml:{}:0",
-                        o_name,
-                        event_name,
-                        line.as_str(),
+                        o_name, event_name, line_txt,
                     ));
                     output.push_str(&input[entire_match.end()..]);
 
@@ -273,10 +289,15 @@ impl GmUriParser {
                     let mut output = String::with_capacity(input.len());
                     output.push_str(&input[..entire_match.start()]);
 
+                    let line_txt = match line.as_str().parse::<i32>() {
+                        Ok(v) => (v + 1).to_string(),
+                        Err(_) => line.as_str().to_owned(),
+                    };
+
                     output.push_str(&format!(
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = found_script_fname,
-                        line = line.as_str(),
+                        line = line_txt,
                     ));
                     output.push_str(&input[line.end()..]);
 
@@ -323,10 +344,15 @@ impl GmUriParser {
                     let mut output = String::with_capacity(input.len());
                     output.push_str(&input[..entire_match.start()]);
 
+                    let line_txt = match line.as_str().parse::<i32>() {
+                        Ok(v) => (v + 1).to_string(),
+                        Err(_) => line.as_str().to_owned(),
+                    };
+
                     output.push_str(&format!(
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = found_script_fname,
-                        line = line.as_str(),
+                        line = line_txt,
                     ));
                     output.push_str(&input[line.end()..]);
 
@@ -348,11 +374,11 @@ mod tests {
             "[9/26/2020 12:27:12 AM] TRACE gml_Script_set_view_size_Camera_gml_GlobalScript_CameraClass:110 -- Creating new Mistria GUI! [Reason: View Resize]",
         )
         .unwrap();
-        assert_eq!(output, "[9/26/2020 12:27:12 AM] TRACE scripts/CameraClass/CameraClass.gml:110:0 -- Creating new Mistria GUI! [Reason: View Resize]");
+        assert_eq!(output, "[9/26/2020 12:27:12 AM] TRACE scripts/CameraClass/CameraClass.gml:111:0 -- Creating new Mistria GUI! [Reason: View Resize]");
 
         assert_eq!(
             parser.parse_global_script("[9/26/2020 12:52:54 AM] TRACE gml_Script_play_track_Boombox_gml_GlobalScript_Boombox:123 -- Playing new music track").unwrap(),
-            "[9/26/2020 12:52:54 AM] TRACE scripts/Boombox/Boombox.gml:123:0 -- Playing new music track"
+            "[9/26/2020 12:52:54 AM] TRACE scripts/Boombox/Boombox.gml:124:0 -- Playing new music track"
         );
         assert_eq!(
             parser.parse_global_script("[9/26/2020 12:52:54 AM] TRACE gml_Script_anon___add_track_stop_to_chain_Boombox_gml_GlobalScript_Boombox_2441___add_track_stop_to_chain_Boombox_gml_GlobalScript_Boombox:103 -- Set music state to FadeOut").unwrap(),
@@ -370,7 +396,7 @@ mod tests {
 
         let output = parser.parse_object("[9/26/2020 11:26:04 AM] TRACE gml_Object_Game_Create_0:256 --   attempted to load save.json").unwrap();
         assert_eq!(
-            output, "[9/26/2020 11:26:04 AM] TRACE objects/Game/Create_0.gml:256:0 --   attempted to load save.json"
+            output, "[9/26/2020 11:26:04 AM] TRACE objects/Game/Create_0.gml:257:0 --   attempted to load save.json"
         );
 
         let output = parser.parse_object("[9/26/2020 11:26:04 AM] WARN gml_Object_Game_Create_0:1032 -- Gabe is doing some graphic stuff here that he doesn't know where else to put...").unwrap();

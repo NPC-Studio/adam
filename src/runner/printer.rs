@@ -10,11 +10,13 @@ pub struct Printer {
 }
 
 impl Printer {
-    const IGNORE_LINES: [&'static str; 4] = [
+    const IGNORE_LINES: [&'static str; 6] = [
         "Attempting to set gamepadcount to",
         "Not shutting down steam as it is not initialised",
         "Script_Free called",
         "ConnectWrap with g_network_async_connect",
+        "###game_end###",
+        "Unsetting previous scheduler resolution",
     ];
 
     pub fn new(scripts_directory: &Path) -> Self {

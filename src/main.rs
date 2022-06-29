@@ -32,9 +32,6 @@ pub use gm_artifacts::{DefaultPlatformData, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTI
 mod runner;
 pub use runner::{PlatformOptions, RunOptions, TaskOptions};
 
-#[cfg(target_os = "windows")]
-mod trailing_comma_util;
-
 fn main() -> AnyResult {
     color_eyre::install()?;
     let inputs = input::InputOpts::parse();

@@ -1,5 +1,6 @@
 use regex::Regex;
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::path::Path;
 use walkdir::WalkDir;
 
@@ -82,11 +83,13 @@ impl GmUriParser {
                         Ok(v) => (v + 1).to_string(),
                         Err(_) => line.as_str().to_owned(),
                     };
-                    output.push_str(&format!(
+                    write!(
+                        output,
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = script_name.as_str(),
                         line = line_txt,
-                    ));
+                    )
+                    .unwrap();
                     output.push_str(&input[line.end()..]);
 
                     return Some(output);
@@ -112,11 +115,13 @@ impl GmUriParser {
                         Err(_) => line.as_str().to_owned(),
                     };
 
-                    output.push_str(&format!(
+                    write!(
+                        output,
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = script_name.as_str(),
                         line = line_txt,
-                    ));
+                    )
+                    .unwrap();
                     output.push_str(&input[entire_match.end()..]);
 
                     return Some(output);
@@ -177,10 +182,12 @@ impl GmUriParser {
                         Err(_) => line.as_str().to_owned(),
                     };
 
-                    output.push_str(&format!(
+                    write!(
+                        output,
                         "objects/{}/{}.gml:{}:0",
                         o_name, event_name, line_txt,
-                    ));
+                    )
+                    .unwrap();
                     output.push_str(&input[entire_match.end()..]);
 
                     return Some(output);
@@ -240,10 +247,12 @@ impl GmUriParser {
                         Err(_) => line.as_str().to_owned(),
                     };
 
-                    output.push_str(&format!(
+                    write!(
+                        output,
                         "objects/{}/{}.gml:{}:0",
                         o_name, event_name, line_txt,
-                    ));
+                    )
+                    .unwrap();
                     output.push_str(&input[entire_match.end()..]);
 
                     return Some(output);
@@ -294,11 +303,13 @@ impl GmUriParser {
                         Err(_) => line.as_str().to_owned(),
                     };
 
-                    output.push_str(&format!(
+                    write!(
+                        output,
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = found_script_fname,
                         line = line_txt,
-                    ));
+                    )
+                    .unwrap();
                     output.push_str(&input[line.end()..]);
 
                     return Some(output);
@@ -349,11 +360,13 @@ impl GmUriParser {
                         Err(_) => line.as_str().to_owned(),
                     };
 
-                    output.push_str(&format!(
+                    write!(
+                        output,
                         "scripts/{name}/{name}.gml:{line}:0",
                         name = found_script_fname,
                         line = line_txt,
-                    ));
+                    )
+                    .unwrap();
                     output.push_str(&input[line.end()..]);
 
                     return Some(output);

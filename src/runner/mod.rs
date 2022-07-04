@@ -4,7 +4,7 @@ pub use run::run_command;
 #[cfg(not(target_os = "windows"))]
 mod invoke_nix;
 #[cfg(not(target_os = "windows"))]
-pub(super) use invoke_nix::{invoke_release, invoke_run};
+pub(super) use invoke_nix::{invoke_release, invoke_run, invoke_stop};
 
 #[cfg(target_os = "windows")]
 mod invoke_win;

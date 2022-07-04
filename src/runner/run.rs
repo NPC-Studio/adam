@@ -1,6 +1,6 @@
 use super::{
     compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_release,
-    invoke_run, printer::Printer,
+    invoke_run, invoke_stop, printer::Printer,
 };
 use crate::{gm_artifacts, input::RunKind, RunOptions};
 use std::{
@@ -15,6 +15,16 @@ pub fn run_command(
     run_options: RunOptions,
     run_kind: RunKind,
 ) -> bool {
+    // and now let's set our kill cmd
+    {
+        let path_buf = macros.igor_path.clone();
+        let verbosity = run_options.task.verbosity > 1;
+        let build_bff_path = build_bff.to_path_buf();
+        ctrlc::set_handler(move || {
+            invoke_stop(&path_buf, &build_bff_path, verbosity);
+        })
+        .unwrap();
+    }
     let mut child = match run_kind {
         RunKind::Run | RunKind::Build | RunKind::Test => {
             invoke_run(&macros, build_bff, &run_options)

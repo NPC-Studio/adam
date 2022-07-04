@@ -230,11 +230,25 @@ impl GmMacros {
         let common_app_data = path!("/Users/Shared");
         let system_directory = common_app_data.join("GameMakerStudio2");
 
-        Self {
-            igor_path: build_data.runtime_location.join("bin/igor/osx/x64/Igor"),
-            asset_compiler_path: build_data
+        let igor_path = if cfg!(target_arch = "aarch64") {
+            build_data.runtime_location.join("bin/igor/osx/arm64/Igor")
+        } else {
+            build_data.runtime_location.join("bin/igor/osx/x64/Igor")
+        };
+
+        let asset_compiler_path = if cfg!(target_arch = "aarch64") {
+            build_data
                 .runtime_location
-                .join("bin/assetcompiler/osx/x64/GMAssetCompiler.dll"),
+                .join("bin/assetcompiler/osx/arm64/GMAssetCompiler.dll")
+        } else {
+            build_data
+                .runtime_location
+                .join("bin/assetcompiler/osx/x64/GMAssetCompiler.dll")
+        };
+
+        Self {
+            igor_path,
+            asset_compiler_path,
             favorites: build_data.user_dir.join("Library/Favorites"),
             fonts: build_data.user_dir.join("Library/Fonts"),
             templates: build_data.user_dir.join("Templates"),

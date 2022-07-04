@@ -193,6 +193,7 @@ fn main() -> AnyResult {
 
     let gm_build = gm_artifacts::GmBuild::new(&build_data);
     let macros = gm_artifacts::GmMacros::new(&build_data);
+
     let visual_studio_path = options.platform.visual_studio_path.clone();
 
     // clear the temp files...

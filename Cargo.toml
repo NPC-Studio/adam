@@ -30,4 +30,6 @@ rustc-hash = "1.1.0"
 dunce = "1.0"
 const_format = "0.2.22"
 
+sysinfo = "0.24"
+
 ctrlc = { version = "3.2", features = ["termination"] }

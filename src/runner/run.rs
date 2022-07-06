@@ -1,6 +1,6 @@
 use super::{
     compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_release,
-    invoke_run, invoke_stop, printer::Printer,
+    invoke_run, printer::Printer,
 };
 use crate::{gm_artifacts, input::RunKind, RunOptions};
 use std::{
@@ -16,12 +16,15 @@ pub fn run_command(
     run_kind: RunKind,
 ) -> bool {
     // and now let's set our kill cmd
-    {
-        let path_buf = macros.igor_path.clone();
-        let verbosity = run_options.task.verbosity > 1;
-        let build_bff_path = build_bff.to_path_buf();
+    if std::env::var("KILL_GM_PROCESS").is_ok() {
         ctrlc::set_handler(move || {
-            invoke_stop(&path_buf, &build_bff_path, verbosity);
+            use sysinfo::{ProcessExt, SystemExt};
+
+            let mut system = sysinfo::System::new_all();
+            system.refresh_processes();
+            for process in system.processes_by_name("Mac_Runner") {
+                process.kill();
+            }
         })
         .unwrap();
     }

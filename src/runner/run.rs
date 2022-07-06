@@ -16,18 +16,17 @@ pub fn run_command(
     run_kind: RunKind,
 ) -> bool {
     // and now let's set our kill cmd
-    if std::env::var("KILL_GM_PROCESS").is_ok() {
-        ctrlc::set_handler(move || {
-            use sysinfo::{ProcessExt, SystemExt};
+    ctrlc::set_handler(move || {
+        use sysinfo::{ProcessExt, SystemExt};
 
-            let mut system = sysinfo::System::new_all();
-            system.refresh_processes();
-            for process in system.processes_by_name("Mac_Runner") {
-                process.kill();
-            }
-        })
-        .unwrap();
-    }
+        let mut system = sysinfo::System::new_all();
+        system.refresh_processes();
+        for process in system.processes_by_name("Mac_Runner") {
+            process.kill();
+        }
+    })
+    .unwrap();
+
     let mut child = match run_kind {
         RunKind::Run | RunKind::Build | RunKind::Test => {
             invoke_run(&macros, build_bff, &run_options)

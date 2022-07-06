@@ -45,6 +45,9 @@ pub struct TaskOptions {
 
     /// This is the code in a test case that we search for.
     pub test_success_needle: String,
+
+    /// If true, will try to find the PID of a runner game and force it to close.
+    pub close_on_sig_kill: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -142,6 +145,7 @@ impl Default for TaskOptions {
             ignore_cache: 0,
             test_env_variables: vec![],
             test_success_needle: "RUN_SUCCESS".to_string(),
+            close_on_sig_kill: false,
         }
     }
 }

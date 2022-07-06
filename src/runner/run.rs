@@ -16,23 +16,25 @@ pub fn run_command(
     run_kind: RunKind,
 ) -> bool {
     // and now let's set our kill cmd
-    ctrlc::set_handler(move || {
-        use sysinfo::{ProcessExt, SystemExt};
+    if run_options.task.close_on_sig_kill {
+        ctrlc::set_handler(move || {
+            use sysinfo::{ProcessExt, SystemExt};
 
-        let mut system = sysinfo::System::new_all();
-        system.refresh_processes();
+            let mut system = sysinfo::System::new_all();
+            system.refresh_processes();
 
-        let needle = if cfg!(target_os = "windows") {
-            "Runner.exe"
-        } else {
-            "Mac_Runner"
-        };
+            let needle = if cfg!(target_os = "windows") {
+                "Runner.exe"
+            } else {
+                "Mac_Runner"
+            };
 
-        for process in system.processes_by_name(needle) {
-            process.kill();
-        }
-    })
-    .unwrap();
+            for process in system.processes_by_name(needle) {
+                process.kill();
+            }
+        })
+        .unwrap();
+    }
 
     let mut child = match run_kind {
         RunKind::Run | RunKind::Build | RunKind::Test => {

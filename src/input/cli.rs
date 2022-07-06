@@ -125,6 +125,10 @@ pub struct CliOptions {
     /// `user_folder` at all.
     #[clap(long)]
     pub user_license_folder: Option<Utf8PathBuf>,
+
+    /// If true, will try to find the PID of a runner game and force it to close.
+    #[clap(long)]
+    pub close_on_sig_kill: bool,
 }
 
 impl CliOptions {
@@ -194,6 +198,10 @@ impl CliOptions {
 
         if self.ignore_cache != 0 {
             run_options.task.ignore_cache = self.ignore_cache;
+        }
+
+        if self.close_on_sig_kill {
+            run_options.task.close_on_sig_kill = self.close_on_sig_kill;
         }
     }
 }

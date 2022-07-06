@@ -21,7 +21,14 @@ pub fn run_command(
 
         let mut system = sysinfo::System::new_all();
         system.refresh_processes();
-        for process in system.processes_by_name("Mac_Runner") {
+
+        let needle = if cfg!(target_os = "windows") {
+            "Runner.exe"
+        } else {
+            "Mac_Runner"
+        };
+
+        for process in system.processes_by_name(needle) {
             process.kill();
         }
     })

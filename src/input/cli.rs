@@ -25,6 +25,9 @@ pub struct InputOpts {
 
 #[derive(Parser, Debug)]
 pub enum ClapOperation {
+    /// Runs some presumably shorter "check" script
+    Check(CliCheckOptions),
+
     /// Builds a project *without* running it.
     Build(CliOptions),
 
@@ -39,6 +42,21 @@ pub enum ClapOperation {
 
     /// Cleans a project target directory.
     Clean(CleanOptions),
+}
+
+#[derive(Parser, Debug, PartialEq, Eq, Clone, Default, Ord, PartialOrd)]
+pub struct CliCheckOptions {
+    /// This is the shell script which we will run.
+    ///
+    /// This path is relative to the current working directory.
+    pub path_to_run: Utf8PathBuf,
+
+    /// This is the path the shell script will be executed in. If not given, defaults to use
+    /// the current working directory.
+    ///
+    /// This path is relative to the current working directory.
+    #[clap(long, short)]
+    pub directory_to_use: Option<Utf8PathBuf>,
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Default)]

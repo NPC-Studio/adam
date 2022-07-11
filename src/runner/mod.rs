@@ -1,6 +1,9 @@
 mod run;
 pub use run::run_command;
 
+mod check_options;
+pub use check_options::{run_check, CheckOptions};
+
 #[cfg(not(target_os = "windows"))]
 mod invoke_nix;
 #[cfg(not(target_os = "windows"))]

@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use camino::Utf8PathBuf;
 use serde::Deserialize;
+use std::path::PathBuf;
 
 use crate::DEFAULT_PLATFORM_DATA;
 
@@ -89,6 +89,25 @@ pub struct ConfigFile {
     /// this should be printed right before the program completes.
     #[serde(default)]
     pub test_success_keyword: Option<String>,
+
+    /// This is the shell script which we will run on Windows.
+    ///
+    /// This path is relative to the current working directory.
+    #[serde(default)]
+    pub path_to_run_windows: Option<Utf8PathBuf>,
+
+    /// This is the shell script which we will run on *Nix platforms (macOS only currently).
+    ///
+    /// This path is relative to the current working directory.
+    #[serde(default)]
+    pub path_to_run_nix: Option<Utf8PathBuf>,
+
+    /// This is the path the shell script will be executed in. If not given, defaults to use
+    /// the current working directory.
+    ///
+    /// This path is relative to the current working directory.
+    #[serde(default)]
+    pub directory_to_use: Option<Utf8PathBuf>,
 }
 
 impl ConfigFile {
@@ -108,7 +127,12 @@ impl ConfigFile {
             user_license_folder,
             test_env_variables,
             test_success_keyword: test_success_code,
+            path_to_run_windows,
+            path_to_run_nix,
+            directory_to_use,
         } = self;
+
+        
 
         if let Some(o) = configuration {
             run_options.task.config = o;

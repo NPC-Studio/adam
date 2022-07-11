@@ -3,13 +3,14 @@ use std::fmt;
 use camino::Utf8Path;
 use color_eyre::Help;
 
-use crate::{AnyResult, RunOptions};
+use crate::{runner::CheckOptions, AnyResult, RunOptions};
 
-use super::cli::{self, ClapOperation};
+use super::cli::{ClapOperation, CliOptions};
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Ord, PartialOrd)]
 pub enum Operation {
     Run(RunKind),
+    Check,
     Clean,
 }
 
@@ -45,17 +46,26 @@ impl fmt::Display for RunKind {
 pub fn parse_inputs(
     operation: ClapOperation,
     mut runtime_options: RunOptions,
-) -> AnyResult<(RunOptions, Operation)> {
-    let (cli_options, operation) = match operation {
-        ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
-        ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
-        ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),
-        ClapOperation::Test(b) => (b, Operation::Run(RunKind::Test)),
+) -> AnyResult<(RunOptions, CheckOptions, Operation)> {
+    let (cli_options, check_options, operation) = match operation {
+        ClapOperation::Run(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Run)),
+        ClapOperation::Build(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Build)),
+        ClapOperation::Release(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Release)),
+        ClapOperation::Test(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Test)),
+        ClapOperation::Check(b) => (
+            CliOptions::default(),
+            CheckOptions {
+                path_to_run: b.path_to_run,
+                directory_to_use: b.directory_to_use,
+            },
+            Operation::Check,
+        ),
         ClapOperation::Clean(co) => (
-            cli::CliOptions {
+            CliOptions {
                 output_folder: co.output_folder,
                 ..Default::default()
             },
+            CheckOptions::default(),
             Operation::Clean,
         ),
     };
@@ -66,7 +76,7 @@ pub fn parse_inputs(
     // check if we can make a user data raw...
     load_user_data(&mut runtime_options)?;
 
-    Ok((runtime_options, operation))
+    Ok((runtime_options, check_options, operation))
 }
 
 /// Loads in the license folder path and the visual studio path.

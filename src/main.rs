@@ -69,7 +69,7 @@ fn main() -> AnyResult {
         return Ok(());
     };
 
-    let (mut options, operation) = input::parse_inputs(operation, runtime_options)?;
+    let (mut options, check_options, operation) = input::parse_inputs(operation, runtime_options)?;
 
     if let Err(e) = options.platform.canonicalize() {
         println!(
@@ -109,6 +109,26 @@ fn main() -> AnyResult {
     // handle a clean, extract the build_data
     let run_kind = match operation {
         input::Operation::Run(inner) => inner,
+        input::Operation::Check => {
+            // run the check!
+            if let Err(output) = runner::run_check(check_options) {
+                println!(
+                    "{}: check FAILED with {}",
+                    console::style("adam error").bright().red(),
+                    output.status
+                );
+                if let Ok(value) = String::from_utf8(output.stdout) {
+                    println!("---stdout of check command---");
+                    println!("{}", value);
+                }
+                if let Ok(value) = String::from_utf8(output.stderr) {
+                    println!("---stderr of check command---");
+                    println!("{}", value);
+                }
+            }
+
+            return Ok(());
+        }
         input::Operation::Clean => {
             // clean up the output folder...
             if let Err(e) = std::fs::remove_dir_all(

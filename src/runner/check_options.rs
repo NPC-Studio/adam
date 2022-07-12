@@ -10,10 +10,13 @@ pub struct CheckOptions {
 
 /// Run the check option
 pub fn run_check(check_options: CheckOptions) -> Result<(), Output> {
-    let mut cmd = Command::new(&check_options.path_to_run);
+    let current_dir = std::env::current_dir().unwrap();
+    let path = current_dir.join(&check_options.path_to_run);
+    let mut cmd = Command::new(&path);
 
     if let Some(d2u) = check_options.directory_to_use {
-        cmd.current_dir(d2u);
+        let dir_to_use = current_dir.join(&d2u);
+        cmd.current_dir(dir_to_use);
     }
 
     let output = cmd.output().expect("Failed to execute command");

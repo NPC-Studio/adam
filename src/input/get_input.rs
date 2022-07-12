@@ -67,8 +67,15 @@ pub fn parse_inputs(
     // write them cli_options down!
     cli_options.write_to_options(&mut runtime_options);
 
-    if let (Some(cli_check_options), Some(check_options)) = (cli_check_options, &mut check_options)
-    {
+    if let Some(cli_check_options) = cli_check_options {
+        let check_options = match check_options.as_mut() {
+            Some(v) => v,
+            None => {
+                check_options = Some(Default::default());
+                check_options.as_mut().unwrap()
+            }
+        };
+
         cli_check_options.write_to_options(check_options);
     }
 

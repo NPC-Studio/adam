@@ -111,7 +111,29 @@ fn main() -> AnyResult {
 
     // handle a clean, extract the build_data
     let run_kind = match operation {
-        input::Operation::Run(inner) => inner,
+        input::Operation::Run(inner) => {
+            if let Some(check_options) = check_options {
+                if let Err(output) = runner::run_check(check_options) {
+                    println!(
+                        "{}: check FAILED with {}",
+                        console::style("adam error").bright().red(),
+                        output.status
+                    );
+                    if let Ok(value) = String::from_utf8(output.stdout) {
+                        println!("---stdout of check command---");
+                        println!("{}", value);
+                    }
+                    if let Ok(value) = String::from_utf8(output.stderr) {
+                        println!("---stderr of check command---");
+                        println!("{}", value);
+                    }
+
+                    return Ok(());
+                }
+            }
+
+            inner
+        }
         input::Operation::Check => {
             let check_options = check_options.unwrap();
             // run the check!

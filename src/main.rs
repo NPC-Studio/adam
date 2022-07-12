@@ -30,6 +30,7 @@ use clap::Parser;
 pub use gm_artifacts::{DefaultPlatformData, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
 
 mod runner;
+use runner::CheckOptions;
 pub use runner::{PlatformOptions, RunOptions, TaskOptions};
 
 fn main() -> AnyResult {
@@ -61,7 +62,8 @@ fn main() -> AnyResult {
 
         RunOptions { task, platform }
     };
-    config.write_to_options(&mut runtime_options);
+    let mut check_options = None;
+    config.write_to_options(&mut runtime_options, &mut check_options);
 
     let operation = if let Some(operation) = inputs.subcmd {
         operation
@@ -69,7 +71,8 @@ fn main() -> AnyResult {
         return Ok(());
     };
 
-    let (mut options, check_options, operation) = input::parse_inputs(operation, runtime_options)?;
+    let (mut options, check_options, operation) =
+        input::parse_inputs(operation, runtime_options, check_options)?;
 
     if let Err(e) = options.platform.canonicalize() {
         println!(
@@ -110,6 +113,7 @@ fn main() -> AnyResult {
     let run_kind = match operation {
         input::Operation::Run(inner) => inner,
         input::Operation::Check => {
+            let check_options = check_options.unwrap();
             // run the check!
             if let Err(output) = runner::run_check(check_options) {
                 println!(

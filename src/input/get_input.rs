@@ -46,32 +46,31 @@ impl fmt::Display for RunKind {
 pub fn parse_inputs(
     operation: ClapOperation,
     mut runtime_options: RunOptions,
-) -> AnyResult<(RunOptions, CheckOptions, Operation)> {
-    let (cli_options, check_options, operation) = match operation {
-        ClapOperation::Run(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Run)),
-        ClapOperation::Build(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Build)),
-        ClapOperation::Release(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Release)),
-        ClapOperation::Test(b) => (b, CheckOptions::default(), Operation::Run(RunKind::Test)),
-        ClapOperation::Check(b) => (
-            CliOptions::default(),
-            CheckOptions {
-                path_to_run: b.path_to_run,
-                directory_to_use: b.directory_to_use,
-            },
-            Operation::Check,
-        ),
+    mut check_options: Option<CheckOptions>,
+) -> AnyResult<(RunOptions, Option<CheckOptions>, Operation)> {
+    let (cli_options, cli_check_options, operation) = match operation {
+        ClapOperation::Run(b) => (b, None, Operation::Run(RunKind::Run)),
+        ClapOperation::Build(b) => (b, None, Operation::Run(RunKind::Build)),
+        ClapOperation::Release(b) => (b, None, Operation::Run(RunKind::Release)),
+        ClapOperation::Test(b) => (b, None, Operation::Run(RunKind::Test)),
+        ClapOperation::Check(b) => (CliOptions::default(), Some(b), Operation::Check),
         ClapOperation::Clean(co) => (
             CliOptions {
                 output_folder: co.output_folder,
                 ..Default::default()
             },
-            CheckOptions::default(),
+            None,
             Operation::Clean,
         ),
     };
 
     // write them cli_options down!
     cli_options.write_to_options(&mut runtime_options);
+
+    if let (Some(cli_check_options), Some(check_options)) = (cli_check_options, &mut check_options)
+    {
+        cli_check_options.write_to_options(check_options);
+    }
 
     // check if we can make a user data raw...
     load_user_data(&mut runtime_options)?;

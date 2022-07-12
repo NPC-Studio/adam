@@ -1,7 +1,7 @@
 use camino::Utf8PathBuf;
 use clap::Parser;
 
-use crate::{RunOptions, DEFAULT_PLATFORM_DATA};
+use crate::{runner::CheckOptions, RunOptions, DEFAULT_PLATFORM_DATA};
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
 #[derive(Parser, Debug)]
@@ -57,6 +57,13 @@ pub struct CliCheckOptions {
     /// This path is relative to the current working directory.
     #[clap(long, short)]
     pub directory_to_use: Option<Utf8PathBuf>,
+}
+
+impl CliCheckOptions {
+    pub fn write_to_options(self, check_options: &mut CheckOptions) {
+        check_options.path_to_run = self.path_to_run;
+        check_options.directory_to_use = self.directory_to_use;
+    }
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Default)]

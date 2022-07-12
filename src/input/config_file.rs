@@ -111,7 +111,11 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
-    pub fn write_to_options(self, run_options: &mut crate::RunOptions) {
+    pub fn write_to_options(
+        self,
+        run_options: &mut crate::RunOptions,
+        check_options: &mut Option<crate::CheckOptions>,
+    ) {
         let Self {
             configuration,
             verbosity,
@@ -131,8 +135,6 @@ impl ConfigFile {
             path_to_run_nix,
             directory_to_use,
         } = self;
-
-        
 
         if let Some(o) = configuration {
             run_options.task.config = o;
@@ -191,6 +193,42 @@ impl ConfigFile {
         run_options.task.test_env_variables = test_env_variables;
         if let Some(o) = test_success_code {
             run_options.task.test_success_needle = o;
+        }
+
+        #[cfg(target_os = "windows")]
+        if let Some(windows_path) = path_to_run_windows {
+            let _ = path_to_run_nix;
+            let co = match check_options.as_mut() {
+                Some(v) => v,
+                None => {
+                    *check_options = Some(Default::default());
+                    check_options.as_mut().unwrap()
+                }
+            };
+
+            co.path_to_run = windows_path;
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        if let Some(nix_path) = path_to_run_nix {
+            let _ = path_to_run_windows;
+            let co = match check_options.as_mut() {
+                Some(v) => v,
+                None => {
+                    *check_options = Some(Default::default());
+                    check_options.as_mut().unwrap()
+                }
+            };
+
+            co.path_to_run = nix_path;
+        }
+
+        if let Some(directory_to_use) = directory_to_use {
+            if let Some(check_options) = check_options.as_mut() {
+                check_options.directory_to_use = Some(directory_to_use);
+            } else {
+                println!("WARNING: directory_to_use specified in config file without a shell script specified doesn't make any sense. ignored");
+            }
         }
     }
 }

@@ -1,21 +1,42 @@
-name: Build
+name: Rust
 
 on: [push]
 
 jobs:
-  build-pc:
+  build-mac:
+    runs-on: macos-latest
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Build the Application
+      - name: Build
         run: cargo build --release
 
-      - name: zip
-        run: Compress-Archive ./target/release/adam.exe adam-x86_64-pc-windows-msvc.zip
+      - name: Compress
+        run: ditto -c -k --sequesterRsrc --keepParent ./target/release/adam adam-x86_64-apple-darwin.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: adam-x86_64-apple-darwin.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-pc:
+    runs-on: windows-2019
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Compress
+        run: Compress-Archive target/release/adam.exe -DestinationPath "adam-x86_64-pc-windows-msvc.zip"
 
       - name: Release
         uses: softprops/action-gh-release@v1

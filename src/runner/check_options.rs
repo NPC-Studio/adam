@@ -32,25 +32,24 @@ pub fn run_check(check_options: CheckOptions) -> Result<(), Output> {
 /// Run the check option
 #[cfg(target_os = "windows")]
 pub fn run_check(check_options: CheckOptions) -> Result<(), Output> {
-    Ok(())
-    // let current_dir = Utf8PathBuf::from_path_buf(std::env::current_dir().unwrap()).unwrap();
-    // let path = current_dir.join(&check_options.path_to_run);
-    // let cmd = format!(
-    //     r#"powershell -ExecutionPolicy RemoteSigned -File "{}"#,
-    //     path
-    // );
-    // let mut cmd = Command::new(&cmd);
+    let current_dir = Utf8PathBuf::from_path_buf(std::env::current_dir().unwrap()).unwrap();
 
-    // if let Some(d2u) = check_options.directory_to_use {
-    //     let dir_to_use = current_dir.join(&d2u);
-    //     cmd.current_dir(dir_to_use);
-    // }
+    let mut cmd = Command::new("powershell");
+    cmd.arg("-ExecutionPolicy")
+        .arg("RemoteSigned")
+        .arg("-File")
+        .arg(current_dir.join(&check_options.path_to_run));
 
-    // let output = cmd.output().expect("Failed to execute command");
+    if let Some(d2u) = check_options.directory_to_use {
+        let dir_to_use = current_dir.join(&d2u);
+        cmd.current_dir(dir_to_use);
+    }
 
-    // if output.status.success() {
-    //     Ok(())
-    // } else {
-    //     Err(output)
-    // }
+    let output = cmd.output().expect("Failed to execute command");
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(output)
+    }
 }

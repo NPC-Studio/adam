@@ -13,7 +13,7 @@ mod input {
     mod cli;
     mod config_file;
     mod get_input;
-    pub use cli::InputOpts;
+    pub use cli::{ClapOperation, InputOpts, UserConfigOptions};
     pub use config_file::ConfigFile;
     pub use get_input::{parse_inputs, Operation, RunKind};
 }
@@ -30,13 +30,41 @@ use clap::Parser;
 pub use gm_artifacts::{DefaultPlatformData, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
 
 mod runner;
+use input::{ClapOperation, UserConfigOptions};
 use runner::CheckOptions;
 pub use runner::{PlatformOptions, RunOptions, TaskOptions};
 
 fn main() -> AnyResult {
     color_eyre::install()?;
     let inputs = input::InputOpts::parse();
-    let config = input::ConfigFile::find_config(inputs.config.as_ref()).unwrap_or_default();
+
+    if let Some(ClapOperation::UserConfig(v)) = inputs.subcmd {
+        match v {
+            UserConfigOptions::View => {
+                let config: input::ConfigFile = confy::load("adam").unwrap();
+
+                println!(
+                    "{}: user configuration:\n{:#?}",
+                    console::style("sucess").green().bright(),
+                    config
+                );
+                return Ok(());
+            }
+            UserConfigOptions::SavePath(path_opts) => {
+                let config: input::ConfigFile = confy::load_path(path_opts.path).unwrap();
+                confy::store("adam", config).unwrap();
+                println!(
+                    "{}: user configuration has been saved.",
+                    console::style("success").green().bright(),
+                );
+                return Ok(());
+            }
+        }
+    }
+
+    let mut config: input::ConfigFile = confy::load("adam").unwrap();
+    let patch_config = input::ConfigFile::find_config(inputs.config.as_ref()).unwrap_or_default();
+    patch_config.apply_on(&mut config);
 
     if inputs.runtime {
         println!(

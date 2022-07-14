@@ -1,10 +1,10 @@
 use camino::Utf8PathBuf;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 use crate::DEFAULT_PLATFORM_DATA;
 
-#[derive(Debug, PartialEq, Eq, Deserialize, Default)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct ConfigFile {
     /// the Gms2 configuration to use. If blank, will use "Default".
     pub configuration: Option<String>,
@@ -130,7 +130,7 @@ impl ConfigFile {
             visual_studio_path,
             user_license_folder,
             test_env_variables,
-            test_success_keyword: test_success_code,
+            test_success_keyword,
             path_to_run_windows,
             path_to_run_nix,
             directory_to_use,
@@ -191,7 +191,7 @@ impl ConfigFile {
         }
         run_options.task.no_user_folder = no_user_folder;
         run_options.task.test_env_variables = test_env_variables;
-        if let Some(o) = test_success_code {
+        if let Some(o) = test_success_keyword {
             run_options.task.test_success_needle = o;
         }
 
@@ -229,6 +229,95 @@ impl ConfigFile {
             } else {
                 println!("WARNING: directory_to_use specified in config file without a shell script specified doesn't make any sense. ignored");
             }
+        }
+    }
+
+    /// Applies personal config onto another config
+    pub fn apply_on(self, target_config: &mut Self) {
+        let Self {
+            configuration,
+            verbosity,
+            output_folder,
+            ignore_cache,
+            gms2_install_location,
+            beta,
+            runtime,
+            x64_windows,
+            no_user_folder,
+            runtime_location_override,
+            visual_studio_path,
+            user_license_folder,
+            mut test_env_variables,
+            test_success_keyword,
+            path_to_run_windows,
+            path_to_run_nix,
+            directory_to_use,
+        } = self;
+
+        if let Some(o) = configuration {
+            target_config.configuration = Some(o);
+        }
+
+        if let Some(verb) = verbosity {
+            target_config.verbosity = Some(verb);
+        }
+
+        if let Some(output_folder) = output_folder {
+            target_config.output_folder = Some(output_folder);
+        }
+
+        if let Some(gms2_install_location) = gms2_install_location {
+            target_config.gms2_install_location = Some(gms2_install_location);
+        }
+
+        if let Some(ignore_cache) = ignore_cache {
+            target_config.ignore_cache = Some(ignore_cache);
+        }
+
+        if beta {
+            target_config.beta = true;
+        }
+
+        if let Some(runtime) = runtime {
+            target_config.runtime = Some(runtime);
+        }
+
+        if x64_windows {
+            target_config.x64_windows = true;
+        }
+
+        if let Some(o) = runtime_location_override {
+            target_config.runtime_location_override = Some(o);
+        }
+
+        if let Some(o) = visual_studio_path {
+            target_config.visual_studio_path = Some(o);
+        }
+
+        if let Some(o) = user_license_folder {
+            target_config.user_license_folder = Some(o);
+        }
+        if no_user_folder {
+            target_config.no_user_folder = true;
+        }
+        target_config
+            .test_env_variables
+            .append(&mut test_env_variables);
+
+        if let Some(o) = test_success_keyword {
+            target_config.test_success_keyword = Some(o);
+        }
+
+        if let Some(windows_path) = path_to_run_windows {
+            target_config.path_to_run_windows = Some(windows_path);
+        }
+
+        if let Some(nix_path) = path_to_run_nix {
+            target_config.path_to_run_nix = Some(nix_path);
+        }
+
+        if let Some(directory_to_use) = directory_to_use {
+            target_config.directory_to_use = Some(directory_to_use);
         }
     }
 }

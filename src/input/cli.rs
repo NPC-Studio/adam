@@ -42,6 +42,24 @@ pub enum ClapOperation {
 
     /// Cleans a project target directory.
     Clean(CleanOptions),
+
+    /// Edits the user's personal configuration file
+    #[clap(subcommand)]
+    UserConfig(UserConfigOptions),
+}
+
+#[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
+pub enum UserConfigOptions {
+    /// Prints out the User Configuration file. If one does not exist, it is created.
+    View,
+
+    /// Saves a given path as a user config.
+    SavePath(SavePathOptions),
+}
+
+#[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
+pub struct SavePathOptions {
+    pub path: Utf8PathBuf,
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Default, Ord, PartialOrd)]

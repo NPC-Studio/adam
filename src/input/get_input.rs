@@ -62,6 +62,9 @@ pub fn parse_inputs(
             None,
             Operation::Clean,
         ),
+        ClapOperation::UserConfig(_) => {
+            unimplemented!()
+        }
     };
 
     // write them cli_options down!

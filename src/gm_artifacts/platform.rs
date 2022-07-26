@@ -33,7 +33,7 @@ pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
             DEFAULT_RUNTIME_NAME
         ),
         stable_application_path: "/Applications/GameMaker.app/Contents",
-        beta_application_path: "/Applications/GameMaker-Beta.app/Contents",
+        beta_application_path: "/Applications/GameMaker Beta.app/Contents",
 
         target_mask: 2,
         stable_cached_data: Lazy::new(|| home_dir().join(".config/GameMakerStudio2")),

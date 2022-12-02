@@ -67,7 +67,7 @@ pub struct CliCheckOptions {
     /// This is the shell script which we will run.
     ///
     /// This path is relative to the current working directory.
-    pub path_to_run: Utf8PathBuf,
+    pub path_to_run: Option<Utf8PathBuf>,
 
     /// This is the path the shell script will be executed in. If not given, defaults to use
     /// the current working directory.
@@ -79,8 +79,12 @@ pub struct CliCheckOptions {
 
 impl CliCheckOptions {
     pub fn write_to_options(self, check_options: &mut CheckOptions) {
-        check_options.path_to_run = self.path_to_run;
-        check_options.directory_to_use = self.directory_to_use;
+        if let Some(v) = self.path_to_run {
+            check_options.path_to_run = v;
+        }
+        if let Some(v) = self.directory_to_use {
+            check_options.directory_to_use = Some(v);
+        }
     }
 }
 

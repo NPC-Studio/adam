@@ -5,6 +5,8 @@
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
 compile_error!("we only support `windows` and `macos` targets!");
 
+use std::process::ExitCode;
+
 use crate::igor::{OutputKind, TargetFolders};
 
 type AnyResult<T = ()> = color_eyre::eyre::Result<T>;
@@ -34,8 +36,8 @@ use input::{ClapOperation, UserConfigOptions};
 use runner::CheckOptions;
 pub use runner::{PlatformOptions, RunOptions, TaskOptions};
 
-fn main() -> AnyResult {
-    color_eyre::install()?;
+fn main() -> ExitCode {
+    color_eyre::install().unwrap();
     let inputs = input::InputOpts::parse();
 
     if let Some(ClapOperation::UserConfig(v)) = inputs.subcmd {
@@ -48,7 +50,7 @@ fn main() -> AnyResult {
                     console::style("sucess").green().bright(),
                     config
                 );
-                return Ok(());
+                return ExitCode::SUCCESS;
             }
             UserConfigOptions::SavePath(path_opts) => {
                 let config: input::ConfigFile = confy::load_path(path_opts.path).unwrap();
@@ -57,7 +59,7 @@ fn main() -> AnyResult {
                     "{}: user configuration has been saved.",
                     console::style("success").green().bright(),
                 );
-                return Ok(());
+                return ExitCode::SUCCESS;
             }
         }
     }
@@ -74,7 +76,7 @@ fn main() -> AnyResult {
                 .as_ref()
                 .unwrap_or(&DEFAULT_RUNTIME_NAME.into())
         );
-        return Ok(());
+        return ExitCode::SUCCESS;
     }
 
     let mut runtime_options = {
@@ -96,11 +98,21 @@ fn main() -> AnyResult {
     let operation = if let Some(operation) = inputs.subcmd {
         operation
     } else {
-        return Ok(());
+        return ExitCode::SUCCESS;
     };
 
     let (mut options, check_options, operation) =
-        input::parse_inputs(operation, runtime_options, check_options)?;
+        match input::parse_inputs(operation, runtime_options, check_options) {
+            Ok(v) => v,
+            Err(e) => {
+                println!(
+                    "{} parsing inputs: {}",
+                    console::style("error").bright().red(),
+                    e
+                );
+                return ExitCode::FAILURE;
+            }
+        };
 
     if let Err(e) = options.platform.canonicalize() {
         println!(
@@ -109,7 +121,7 @@ fn main() -> AnyResult {
             console::style(e).bold()
         );
 
-        return Ok(());
+        return ExitCode::FAILURE;
     }
 
     if options.task.yyc {
@@ -120,7 +132,7 @@ fn main() -> AnyResult {
                 console::style(e).bold()
             );
 
-            return Ok(());
+            return ExitCode::FAILURE;
         }
     }
 
@@ -133,7 +145,7 @@ fn main() -> AnyResult {
                 console::style(e).bold()
             );
 
-            return Ok(());
+            return ExitCode::FAILURE;
         }
     };
 
@@ -156,7 +168,7 @@ fn main() -> AnyResult {
                         println!("{}", value);
                     }
 
-                    return Ok(());
+                    return ExitCode::FAILURE;
                 }
             }
 
@@ -181,7 +193,7 @@ fn main() -> AnyResult {
                 }
             }
 
-            return Ok(());
+            return ExitCode::FAILURE;
         }
         input::Operation::Clean => {
             // clean up the output folder...
@@ -192,7 +204,7 @@ fn main() -> AnyResult {
             ) {
                 println!("{} on clean: {}", console::style("error").bright().red(), e);
             }
-            return Ok(());
+            return ExitCode::FAILURE;
         }
     };
 
@@ -211,7 +223,7 @@ fn main() -> AnyResult {
                 console::style("adam error",).bright().red(),
                 console::style("adam does not support macOS YYC compilation, yet.").bold(),
             );
-            return Ok(());
+            return ExitCode::FAILURE;
         }
 
         if options.platform.visual_studio_path.exists() == false {
@@ -227,7 +239,7 @@ fn main() -> AnyResult {
                 options.platform.visual_studio_path,
             );
 
-            return Ok(());
+            return ExitCode::FAILURE;
         }
     }
 
@@ -237,13 +249,25 @@ fn main() -> AnyResult {
         igor::OutputKind::Vm
     };
 
+    let folders = match TargetFolders::new(
+        &application_data.current_directory,
+        options.task.output_folder.as_std_path(),
+        output_kind,
+        &application_data.project_name,
+    ) {
+        Ok(v) => v,
+        Err(e) => {
+            println!(
+                "{} on creating output folders: {}",
+                console::style("error").bright().red(),
+                e
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+
     let build_data = igor::BuildData {
-        folders: TargetFolders::new(
-            &application_data.current_directory,
-            options.task.output_folder.as_std_path(),
-            output_kind,
-            &application_data.project_name,
-        )?,
+        folders,
         output_kind,
         project_filename: application_data.project_name,
         project_directory: application_data.current_directory,
@@ -271,7 +295,14 @@ fn main() -> AnyResult {
     let visual_studio_path = options.platform.visual_studio_path.clone();
 
     // clear the temp files...
-    build_data.folders.clear_tmp()?;
+    if let Err(e) = build_data.folders.clear_tmp() {
+        println!(
+            "{} creating temp folder: {}",
+            console::style("error").bright().red(),
+            e
+        );
+        return ExitCode::FAILURE;
+    }
 
     let build_location = build_data.folders.cache.join("build.bff");
 
@@ -328,7 +359,7 @@ fn main() -> AnyResult {
             println!("adam {}", console::style("complete").green().bright());
         }
 
-        std::process::exit(0);
+        ExitCode::SUCCESS
     } else {
         if run_kind.is_test() {
             println!(
@@ -339,6 +370,6 @@ fn main() -> AnyResult {
             println!("adam {}", console::style("FAILED").red().bright());
         }
 
-        std::process::exit(1);
+        ExitCode::FAILURE
     }
 }

@@ -146,7 +146,7 @@ pub fn load_user_data(options: &mut RunOptions) -> AnyResult {
             options
                 .platform
                 .compiler_cache
-                .join(&format!("{}_{}/local_settings.json", user_name, user_id)),
+                .join(format!("{}_{}/local_settings.json", user_name, user_id)),
         )
         .ok()
         .and_then(|data| {

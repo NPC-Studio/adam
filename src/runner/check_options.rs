@@ -13,10 +13,10 @@ pub struct CheckOptions {
 pub fn run_check(check_options: CheckOptions) -> Result<(), Output> {
     let current_dir = std::env::current_dir().unwrap();
     let path = current_dir.join(&check_options.path_to_run);
-    let mut cmd = Command::new(&path);
+    let mut cmd = Command::new(path);
 
     if let Some(d2u) = check_options.directory_to_use {
-        let dir_to_use = current_dir.join(&d2u);
+        let dir_to_use = current_dir.join(d2u);
         cmd.current_dir(dir_to_use);
     }
 

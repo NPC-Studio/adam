@@ -343,7 +343,7 @@ impl ConfigFile {
             }
         };
 
-        let config = std::fs::read_to_string(&config_path).ok().and_then(|txt| {
+        let config = std::fs::read_to_string(config_path).ok().and_then(|txt| {
             toml::from_str(&txt)
                 .or_else(|_| serde_json::from_str(&txt))
                 .ok()

@@ -191,9 +191,11 @@ fn main() -> ExitCode {
                     println!("---stderr of check command---");
                     println!("{}", value);
                 }
-            }
 
-            return ExitCode::FAILURE;
+                return ExitCode::FAILURE;
+            } else {
+                return ExitCode::SUCCESS;
+            }
         }
         input::Operation::Clean => {
             // clean up the output folder...
@@ -203,8 +205,9 @@ fn main() -> ExitCode {
                     .join(&options.task.output_folder),
             ) {
                 println!("{} on clean: {}", console::style("error").bright().red(), e);
+                return ExitCode::FAILURE;
             }
-            return ExitCode::FAILURE;
+            return ExitCode::SUCCESS;
         }
     };
 

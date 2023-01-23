@@ -12,14 +12,14 @@ pub struct CheckOptions {
 fn harness_check(check_options: CheckOptions) -> Command {
     let current_dir = Utf8PathBuf::from_path_buf(std::env::current_dir().unwrap()).unwrap();
 
-    let cmd = Command::new("powershell");
+    let mut cmd = Command::new("powershell");
     cmd.arg("-ExecutionPolicy")
         .arg("RemoteSigned")
         .arg("-File")
         .arg(current_dir.join(&check_options.path_to_run));
 
     if let Some(d2u) = check_options.directory_to_use {
-        let dir_to_use = current_dir.join(&d2u);
+        let dir_to_use = current_dir.join(d2u);
         cmd.current_dir(dir_to_use);
     }
 
@@ -30,10 +30,10 @@ fn harness_check(check_options: CheckOptions) -> Command {
 fn harness_check(check_options: CheckOptions) -> Command {
     let current_dir = std::env::current_dir().unwrap();
     let path = current_dir.join(&check_options.path_to_run);
-    let mut cmd = Command::new(&path);
+    let mut cmd = Command::new(path);
 
     if let Some(d2u) = check_options.directory_to_use {
-        let dir_to_use = current_dir.join(&d2u);
+        let dir_to_use = current_dir.join(d2u);
         cmd.current_dir(dir_to_use);
     }
 
@@ -51,6 +51,7 @@ pub fn run_check(check_options: CheckOptions) -> Result<(), ()> {
     if let Ok(value) = String::from_utf8(output.stdout) {
         println!("{value}");
     }
+
     if output.status.success() {
         Ok(())
     } else {
@@ -59,6 +60,7 @@ pub fn run_check(check_options: CheckOptions) -> Result<(), ()> {
             console::style("adam error").bright().red(),
             output.status
         );
+
         Err(())
     }
 }

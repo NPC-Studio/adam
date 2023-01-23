@@ -46,10 +46,12 @@ pub fn run_check(check_options: CheckOptions) -> Result<(), ()> {
     let output = cmd.output().expect("Failed to execute command");
 
     if let Ok(value) = String::from_utf8(output.stderr) {
-        println!("{value}");
+        if !value.is_empty() {
+            println!("{value}");
+        }
     }
     if let Ok(value) = String::from_utf8(output.stdout) {
-        println!("{value}");
+        print!("{value}");
     }
 
     if output.status.success() {

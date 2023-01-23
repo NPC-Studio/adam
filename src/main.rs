@@ -153,48 +153,18 @@ fn main() -> ExitCode {
     let run_kind = match operation {
         input::Operation::Run(inner) => {
             if let Some(check_options) = check_options {
-                if let Err(output) = runner::run_check(check_options) {
-                    println!(
-                        "{}: check FAILED with {}",
-                        console::style("adam error").bright().red(),
-                        output.status
-                    );
-                    if let Ok(value) = String::from_utf8(output.stdout) {
-                        println!("---stdout of check command---");
-                        println!("{}", value);
-                    }
-                    if let Ok(value) = String::from_utf8(output.stderr) {
-                        println!("---stderr of check command---");
-                        println!("{}", value);
-                    }
-
+                if runner::run_check(check_options).is_err() {
                     return ExitCode::FAILURE;
                 }
             }
-
             inner
         }
         input::Operation::Check => {
             let check_options = check_options.unwrap();
-            // run the check!
-            if let Err(output) = runner::run_check(check_options) {
-                println!(
-                    "{}: check FAILED with {}",
-                    console::style("adam error").bright().red(),
-                    output.status
-                );
-                if let Ok(value) = String::from_utf8(output.stdout) {
-                    println!("---stdout of check command---");
-                    println!("{}", value);
-                }
-                if let Ok(value) = String::from_utf8(output.stderr) {
-                    println!("---stderr of check command---");
-                    println!("{}", value);
-                }
-
-                return ExitCode::FAILURE;
-            } else {
+            if runner::run_check(check_options).is_ok() {
                 return ExitCode::SUCCESS;
+            } else {
+                return ExitCode::FAILURE;
             }
         }
         input::Operation::Clean => {

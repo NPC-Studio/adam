@@ -47,11 +47,13 @@ pub fn run_check(check_options: CheckOptions) -> Result<(), ()> {
 
     if let Ok(value) = String::from_utf8(output.stderr) {
         if !value.is_empty() {
-            println!("{value}");
+            print!("{value}");
         }
     }
     if let Ok(value) = String::from_utf8(output.stdout) {
-        print!("{value}");
+        if !value.is_empty() {
+            print!("{value}");
+        }
     }
 
     if output.status.success() {

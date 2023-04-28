@@ -34,3 +34,6 @@ const_format = "0.2.22"
 sysinfo = "0.24"
 
 ctrlc = { version = "3.2", features = ["termination"] }
+
+[target.'cfg(not(windows))'.dependencies]
+interprocess = "1.2.1"

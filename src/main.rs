@@ -322,7 +322,44 @@ fn main() -> ExitCode {
     )
     .unwrap();
 
-    if runner::run_command(&build_location, macros, options, run_kind) {
+    // on macos, we don't have a good way to debug out, so this is the best we got.
+    #[cfg(not(target_os = "windows"))]
+    {
+        use interprocess::local_socket::LocalSocketListener;
+
+        let socket_name = gm_build.temp_folder.join("ipc_log.log");
+        let socket_name = socket_name.to_str().unwrap();
+        std::env::set_var("ADAM_IPC_SOCKET", socket_name);
+
+        if let Ok(listener) = LocalSocketListener::bind(socket_name) {
+            std::thread::Builder::new()
+                .name("adam-ipc".into())
+                .spawn(move || {
+                    for mut stream in listener.incoming().filter_map(|v| v.ok()) {
+                        loop {
+                            use std::io::Read;
+
+                            let mut size: [u8; 8] = [0; 8];
+                            let Ok(_) = stream.read_exact(&mut size) else { break; };
+                            let size = u64::from_ne_bytes(size);
+                            if size == 0 {
+                                continue;
+                            }
+
+                            let mut bytes = vec![0; size as usize];
+                            let Ok(_) = stream.read_exact(&mut bytes) else { break };
+
+                            let str = std::str::from_utf8(&bytes).unwrap();
+                            print!("{}", str);
+                        }
+                    }
+                })
+                .unwrap();
+        }
+    }
+
+    let success = runner::run_command(&build_location, macros, options, run_kind);
+    if success {
         if run_kind.is_test() {
             println!(
                 "adam test result: {}",

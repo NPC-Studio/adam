@@ -130,8 +130,9 @@ impl CompilerHandler {
                     }
                 }
                 CompilerState::PreRunToMainLoop(startup_msgs) => {
-                    const FINAL_EMITS: [&str; 10] = [
+                    const FINAL_EMITS: [&str; 11] = [
                         "Run_Start",
+                        "CreateColPairs",
                         "[Run]",
                         "MainOptions.json",
                         "gamepadcount",

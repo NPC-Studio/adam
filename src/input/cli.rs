@@ -11,7 +11,7 @@ pub struct InputOpts {
     pub subcmd: Option<ClapOperation>,
 
     /// The path to a non-standard named configuration file. Possible names are .adam, .adam.json, and adam.toml
-    #[clap(short, long, parse(from_os_str))]
+    #[clap(short, long, value_hint = clap::ValueHint::DirPath)]
     pub config: Option<std::path::PathBuf>,
 
     /// Prints version information
@@ -59,6 +59,7 @@ pub enum UserConfigOptions {
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub struct SavePathOptions {
+    #[clap(value_hint = clap::ValueHint::DirPath)]
     pub path: Utf8PathBuf,
 }
 
@@ -67,6 +68,7 @@ pub struct CliCheckOptions {
     /// This is the shell script which we will run.
     ///
     /// This path is relative to the current working directory.
+    #[clap(value_hint = clap::ValueHint::DirPath)]
     pub path_to_run: Option<Utf8PathBuf>,
 
     /// This is the path the shell script will be executed in. If not given, defaults to use
@@ -126,7 +128,7 @@ pub struct CliOptions {
     pub yyp: Option<String>,
 
     /// Verbosity level. Can use multiple times, like '-vv'. >0 disables pretty compiles, >1 enables igor verbosity, >2 enables gmac verbosity
-    #[clap(short, long, parse(from_occurrences))]
+    #[arg(short, long, action = clap::ArgAction::Count)]
     pub verbosity: usize,
 
     /// The relative path to the output folder. Defaults to `target`.
@@ -134,7 +136,7 @@ pub struct CliOptions {
     pub output_folder: Option<Utf8PathBuf>,
 
     /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
-    #[clap(short, long, parse(from_occurrences))]
+    #[arg(short, long, action = clap::ArgAction::Count)]
     pub ignore_cache: usize,
 
     /// The path to your Gms2 installation. Defaults to C drive on Windows and Applications on macOS. If you use Steam, you will need to pass in that fullpath to the .exe, or the .app on macOS.

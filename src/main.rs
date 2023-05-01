@@ -43,7 +43,7 @@ fn main() -> ExitCode {
     if let Some(ClapOperation::UserConfig(v)) = inputs.subcmd {
         match v {
             UserConfigOptions::View => {
-                let config: input::ConfigFile = confy::load("adam").unwrap();
+                let config: input::ConfigFile = confy::load("adam", None).unwrap();
 
                 println!(
                     "{}: user configuration:\n{:#?}",
@@ -54,7 +54,7 @@ fn main() -> ExitCode {
             }
             UserConfigOptions::SavePath(path_opts) => {
                 let config: input::ConfigFile = confy::load_path(path_opts.path).unwrap();
-                confy::store("adam", config).unwrap();
+                confy::store("adam", None, config).unwrap();
                 println!(
                     "{}: user configuration has been saved.",
                     console::style("success").green().bright(),
@@ -64,7 +64,7 @@ fn main() -> ExitCode {
         }
     }
 
-    let mut config: input::ConfigFile = confy::load("adam").unwrap();
+    let mut config: input::ConfigFile = confy::load("adam", None).unwrap();
     let patch_config = input::ConfigFile::find_config(inputs.config.as_ref()).unwrap_or_default();
     patch_config.apply_on(&mut config);
 

@@ -44,9 +44,9 @@ impl CompilerHandler {
         progress_bar.set_style(
             indicatif::ProgressStyle::default_bar()
                 .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {msg}")
+                .unwrap()
                 .progress_chars("#> "),
         );
-        progress_bar.enable_steady_tick(100);
         progress_bar.println(format!(
             "{} {} ({})",
             console::style("Compiling").green().bright(),
@@ -146,6 +146,7 @@ impl CompilerHandler {
 
                     if line == "Entering main loop." || line == "Igor complete." {
                         progress_bar.finish_and_clear();
+
                         println!(
                             "{} {} {} {}:{} in {}",
                             console::style("Completed").green().bright(),
@@ -162,8 +163,8 @@ impl CompilerHandler {
                         if FINAL_EMITS.iter().any(|&v| line.contains(v)) == false {
                             startup_msgs.push(line);
                         } else {
-                            progress_bar.set_message(line);
-                            progress_bar.inc(25);
+                            // progress_bar.set_message(line);
+                            progress_bar.inc(15);
                         }
                     }
                 }

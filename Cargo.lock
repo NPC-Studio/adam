@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "adam"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "aho-corasick 0.7.20",
  "camino",

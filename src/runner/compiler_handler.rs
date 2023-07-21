@@ -57,7 +57,7 @@ impl CompilerHandler {
         let start_time = std::time::Instant::now();
         let lines = BufReader::new(child.stdout.as_mut().unwrap()).lines();
 
-        for line in lines.filter_map(|v| v.ok()) {
+        for line in lines.map_while(|v| v.ok()) {
             let max_size = line.len().min(30);
 
             match &mut self.state {

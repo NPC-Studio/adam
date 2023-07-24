@@ -53,8 +53,8 @@ pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
             "C:/ProgramData/GameMakerStudio2-Beta/Cache/runtimes/runtime-",
             DEFAULT_RUNTIME_NAME
         ),
-        stable_application_path: "C:/Program Files/GameMaker Studio 2/GameMaker.exe",
-        beta_application_path: "C:/Program Files/GameMaker Studio 2-Beta/GameMaker-Beta.exe",
+        stable_application_path: "C:/Program Files/GameMaker/GameMaker.exe",
+        beta_application_path: "C:/Program Files/GameMaker-Beta/GameMaker-Beta.exe",
 
         target_mask: 64,
         stable_cached_data: Lazy::new(|| home_dir().join("AppData/Roaming/GameMakerStudio2")),

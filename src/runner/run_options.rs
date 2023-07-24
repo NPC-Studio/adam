@@ -85,31 +85,22 @@ pub struct PlatformOptions {
 }
 
 impl PlatformOptions {
-    pub fn canonicalize(&mut self) -> AnyResult {
-        use color_eyre::Help;
-
+    pub fn canonicalize(&mut self) -> Result<(), CanonicalizationErr> {
         self.runtime_location = dunce::canonicalize(&self.runtime_location)
-            .with_note(|| format!("runtime-overide ({:?}) is invalid", self.runtime_location,))?
-            .try_into()?;
+            .map_err(|_| CanonicalizationErr::Runtime)?
+            .try_into()
+            .expect("failed to convert runtime-location path to utf8");
 
         self.gms2_application_location = dunce::canonicalize(&self.gms2_application_location)
-            .with_note(|| {
-                format!(
-                    "install-location ({:?}) is invalid",
-                    self.gms2_application_location
-                )
-            })?
-            .try_into()?;
+            .map_err(|_| CanonicalizationErr::Installation)?
+            .try_into()
+            .expect("failed to convert installation path to utf8");
 
         if self.user_license_folder.as_str().is_empty() == false {
             self.user_license_folder = dunce::canonicalize(&self.user_license_folder)
-                .with_note(|| {
-                    format!(
-                        "user-license-folder ({:?}) is invalid",
-                        self.user_license_folder
-                    )
-                })?
-                .try_into()?;
+                .map_err(|_| CanonicalizationErr::UserLicense)?
+                .try_into()
+                .expect("failed to convert user-license path to utf8");
         }
 
         Ok(())
@@ -147,5 +138,24 @@ impl Default for TaskOptions {
             test_success_needle: "RUN_SUCCESS".to_string(),
             close_on_sig_kill: false,
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum CanonicalizationErr {
+    Runtime,
+    Installation,
+    UserLicense,
+}
+
+impl std::fmt::Display for CanonicalizationErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let w = match self {
+            CanonicalizationErr::Runtime => "runtime",
+            CanonicalizationErr::Installation => "installation",
+            CanonicalizationErr::UserLicense => "user license",
+        };
+
+        f.pad(w)
     }
 }

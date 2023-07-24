@@ -116,7 +116,7 @@ fn main() -> ExitCode {
 
     if let Err(e) = options.platform.canonicalize() {
         println!(
-            "{}: {:?}",
+            "{}: invalid {} path (file does not exist). Is everything installed correctly?",
             console::style("adam error").bright().red(),
             console::style(e).bold()
         );
@@ -340,14 +340,18 @@ fn main() -> ExitCode {
                             use std::io::Read;
 
                             let mut size: [u8; 8] = [0; 8];
-                            let Ok(_) = stream.read_exact(&mut size) else { break; };
+                            let Ok(_) = stream.read_exact(&mut size) else {
+                                break;
+                            };
                             let size = u64::from_ne_bytes(size);
                             if size == 0 {
                                 continue;
                             }
 
                             let mut bytes = vec![0; size as usize];
-                            let Ok(_) = stream.read_exact(&mut bytes) else { break };
+                            let Ok(_) = stream.read_exact(&mut bytes) else {
+                                break;
+                            };
 
                             let str = std::str::from_utf8(&bytes).unwrap();
                             print!("{}", str);

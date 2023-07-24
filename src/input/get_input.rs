@@ -121,7 +121,13 @@ pub fn load_user_data(options: &mut RunOptions) -> AnyResult {
     )
     .with_note(|| "Couldn't parse `um.json` file.")?;
 
-    let user_id: usize = um_json.get("userID").unwrap().as_str().unwrap().parse()?;
+    let user_id: usize = um_json
+        .get("userID")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .parse()
+        .with_note(|| "Parsing user id -- are you logged in via the IDE?")?;
     let user_name = um_json
         .get("login")
         .unwrap()

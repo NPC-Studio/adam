@@ -125,11 +125,11 @@ fn main() -> ExitCode {
     }
 
     if options.task.yyc {
-        if let Err(e) = options.platform.canonicalize_yyc() {
+        if let Err(_e) = options.platform.canonicalize_yyc() {
             println!(
-                "{}: {}",
+                "{}: invalid yyc path `{}` (file does not exist). Is everything installed correctly?",
                 console::style("adam error").bright().red(),
-                console::style(e).bold()
+                console::style(options.platform.visual_studio_path).bold()
             );
 
             return ExitCode::FAILURE;

@@ -45,15 +45,83 @@ fn main() -> ExitCode {
             UserConfigOptions::View => {
                 let config: input::ConfigFile = confy::load("adam", None).unwrap();
 
+                println!("{}", toml::to_string_pretty(&config).unwrap());
+                return ExitCode::SUCCESS;
+            }
+            UserConfigOptions::Path => {
                 println!(
-                    "{}: user configuration:\n{:#?}",
-                    console::style("sucess").green().bright(),
-                    config
+                    "{}",
+                    confy::get_configuration_file_path("adam", None)
+                        .unwrap()
+                        .display()
                 );
                 return ExitCode::SUCCESS;
             }
-            UserConfigOptions::SavePath(path_opts) => {
-                let config: input::ConfigFile = confy::load_path(path_opts.path).unwrap();
+
+            UserConfigOptions::Edit { name, value } => {
+                let value = match name.as_str() {
+                    "verbosity" | "ignore_cache" => {
+                        let v: usize = match value.parse() {
+                            Ok(v) => v,
+                            Err(e) => {
+                                println!(
+                                    "{} invalid value: {:?}",
+                                    console::style("error").bright().red(),
+                                    e
+                                );
+
+                                return ExitCode::FAILURE;
+                            }
+                        };
+
+                        serde_json::Value::Number(v.into())
+                    }
+                    "beta" | "no_user_folder" => {
+                        let v: bool = match value.parse() {
+                            Ok(v) => v,
+                            Err(e) => {
+                                println!(
+                                    "{} invalid value: {:?}",
+                                    console::style("error").bright().red(),
+                                    e
+                                );
+
+                                return ExitCode::FAILURE;
+                            }
+                        };
+
+                        serde_json::Value::Bool(v)
+                    }
+                    "test_env_variables" => {
+                        serde_json::Value::Array(vec![serde_json::Value::String(value)])
+                    }
+                    "x64_windows" => {
+                        println!(
+                            "{}: `x64_windows` is deprecated",
+                            console::style("error").bright().red(),
+                        );
+
+                        return ExitCode::FAILURE;
+                    }
+                    _ => serde_json::Value::String(value),
+                };
+
+                let mut config: input::ConfigFile = confy::load("adam", None).unwrap();
+
+                let json_flash = serde_json::json!({ name: value });
+                let edit = match serde_json::from_value::<input::ConfigFile>(json_flash) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        println!(
+                            "{}: invalid input: {:?}",
+                            console::style("error").bright().red(),
+                            e
+                        );
+                        return ExitCode::FAILURE;
+                    }
+                };
+                edit.apply_on(&mut config);
+
                 confy::store("adam", None, config).unwrap();
                 println!(
                     "{}: user configuration has been saved.",

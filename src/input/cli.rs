@@ -53,8 +53,16 @@ pub enum UserConfigOptions {
     /// Prints out the User Configuration file. If one does not exist, it is created.
     View,
 
-    /// Saves a given path as a user config.
-    SavePath(SavePathOptions),
+    /// Prints out the full path to the user configuration file. If one does not exist, it is created.
+    Path,
+
+    /// Saves a given key value pair in the user config.
+    Edit {
+        /// The name of the property.
+        name: String,
+        /// The value of the property.
+        value: String,
+    },
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]

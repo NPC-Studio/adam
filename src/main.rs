@@ -40,8 +40,10 @@ fn main() -> ExitCode {
     color_eyre::install().unwrap();
     let inputs = input::InputOpts::parse();
 
-    if let Some(ClapOperation::UserConfig(v)) = inputs.subcmd {
-        match v {
+    // we have a few things that aren't really about building projects,
+    // because this app has grown!
+    match inputs.subcmd {
+        Some(ClapOperation::UserConfig(v)) => match v {
             UserConfigOptions::View => {
                 let config: input::ConfigFile = confy::load("adam", None).unwrap();
 
@@ -129,7 +131,11 @@ fn main() -> ExitCode {
                 );
                 return ExitCode::SUCCESS;
             }
+        },
+        Some(ClapOperation::Vfs { root }) => {
+            todo!()
         }
+        _ => {}
     }
 
     let mut config: input::ConfigFile = confy::load("adam", None).unwrap();
@@ -163,9 +169,7 @@ fn main() -> ExitCode {
     let mut check_options = None;
     config.write_to_options(&mut runtime_options, &mut check_options);
 
-    let operation = if let Some(operation) = inputs.subcmd {
-        operation
-    } else {
+    let Some(operation) = inputs.subcmd else {
         return ExitCode::SUCCESS;
     };
 

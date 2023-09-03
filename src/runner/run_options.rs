@@ -14,15 +14,6 @@ pub struct TaskOptions {
     /// your Visual Studio path on Windows.
     pub yyc: bool,
 
-    /// Whether or not to use the x64 variant on windows.
-    ///
-    /// On non-Windows platforms, this option is meaningless. We do a best effort to detect x64 usage by reading
-    /// your options.yy, but we don't currently parse configs deeply, which means that a special config set up
-    /// to use x64 won't be discovered. For such a circumstance, use this flag to build correctly.
-    ///
-    /// In general, it's easiest if you don't use override x64 with certain configs in Gms2.
-    pub x64_windows: bool,
-
     /// If this option is set, then we will not read your `~/.config/GameMakerStudio2` or `%APPDATA%/GameMakerStudio2` folders
     /// at all. If you pass this, then you MUST pass in a `user-license-folder` and (on Windows) a `visual-studio-path`. Otherwise,
     /// adam will exit out with an error.
@@ -128,7 +119,6 @@ impl Default for TaskOptions {
     fn default() -> Self {
         TaskOptions {
             yyc: false,
-            x64_windows: true,
             no_user_folder: false,
             config: "Default".to_string(),
             verbosity: 0,

@@ -37,6 +37,9 @@ pub enum ClapOperation {
     /// Creates a release executable, running `clean` first.
     Release(CliOptions),
 
+    /// View the virtual file system from a given root.
+    Vfs { root: Option<String> },
+
     /// Runs the project, enabling any `test_env_variables` and searches for the `test_success_code`, set in the config.
     Test(CliOptions),
 
@@ -223,9 +226,6 @@ impl CliOptions {
             run_options.platform.visual_studio_path = Default::default();
         }
 
-        if self.x64_windows {
-            run_options.task.x64_windows = true;
-        }
         if self.no_user_folder {
             run_options.task.no_user_folder = true;
         }

@@ -19,7 +19,7 @@ pub struct DefaultPlatformData {
     pub stable_cached_data: Lazy<Utf8PathBuf>,
     pub beta_cached_data: Lazy<Utf8PathBuf>,
 }
-pub const DEFAULT_RUNTIME_NAME: &str = "2022.3.0.496";
+pub const DEFAULT_RUNTIME_NAME: &str = "2023.6.0.139";
 
 #[cfg(not(target_os = "windows"))]
 pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {

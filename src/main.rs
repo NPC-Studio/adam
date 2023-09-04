@@ -133,7 +133,76 @@ fn main() -> ExitCode {
             }
         },
         Some(ClapOperation::Vfs { root }) => {
-            todo!()
+            let application_data = match igor::ApplicationData::new() {
+                Ok(v) => v,
+                Err(e) => {
+                    println!(
+                        "{}: {}",
+                        console::style("adam error").bright().red(),
+                        console::style(e).bold()
+                    );
+
+                    return ExitCode::FAILURE;
+                }
+            };
+
+            let yyp_boss = match yy_boss::YypBoss::with_startup_injest(
+                application_data
+                    .current_directory
+                    .join(format!("{}.yyp", application_data.project_name)),
+                &[],
+            ) {
+                Ok(v) => v,
+                Err(e) => {
+                    println!(
+                        "{}: couldn't read yyp {}",
+                        console::style("adam error").bright().red(),
+                        console::style(e).bold()
+                    );
+                    return ExitCode::FAILURE;
+                }
+            };
+
+            let root_folder = match root {
+                Some(root) => {
+                    match yyp_boss
+                        .vfs
+                        .get_folder(&yy_boss::yy_typings::ViewPathLocation::new(format!(
+                            "folders/{}.yy",
+                            root
+                        ))) {
+                        Some(v) => v,
+                        None => {
+                            println!(
+                                "{}: provided folder does not exist",
+                                console::style("adam error").bright().red(),
+                            );
+                            return ExitCode::FAILURE;
+                        }
+                    }
+                }
+                None => yyp_boss.vfs.get_root_folder(),
+            };
+
+            fn display(folder: &yy_boss::FolderGraph, indent: usize) {
+                let mut buf = String::with_capacity(indent);
+                for _ in 0..indent {
+                    buf.push('.');
+                }
+                for sub_folder in folder.folders.iter() {
+                    println!("{}{}/", buf, sub_folder.name);
+
+                    display(sub_folder, indent + 2);
+                }
+
+                for file in folder.files.inner().iter() {
+                    println!("{}{}", buf, file.name);
+                }
+            }
+
+            display(root_folder, 0);
+
+            return ExitCode::SUCCESS;
         }
         _ => {}
     }

@@ -22,7 +22,7 @@ impl ApplicationData {
                 if ext == "yyp" {
                     let stem = file.file_stem().unwrap().to_string_lossy().to_string();
                     if project_name.is_some() {
-                        color_eyre::eyre::bail!("multiple yyps discovered, must have only one",);
+                        color_eyre::eyre::bail!("multiple yyps discovered",);
                     }
 
                     project_name = Some(stem);
@@ -36,7 +36,7 @@ impl ApplicationData {
                 project_name,
             })
         } else {
-            color_eyre::eyre::bail!("could not find a .yyp in {}", current_directory.display())
+            color_eyre::eyre::bail!("could not find a .yyp in current directory")
         }
     }
 }

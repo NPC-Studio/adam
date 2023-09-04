@@ -5,36 +5,25 @@
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
 compile_error!("we only support `windows` and `macos` targets!");
 
+use clap::Parser;
 use std::process::ExitCode;
-
-use crate::igor::{OutputKind, TargetFolders};
 
 type AnyResult<T = ()> = color_eyre::eyre::Result<T>;
 
-mod input {
-    mod cli;
-    mod config_file;
-    mod get_input;
-    pub use cli::{ClapOperation, InputOpts, UserConfigOptions};
-    pub use config_file::ConfigFile;
-    pub use get_input::{parse_inputs, Operation, RunKind};
-}
-mod igor {
-    mod application_data;
-    pub use application_data::*;
+mod igor;
+use igor::{OutputKind, TargetFolders};
 
-    mod build;
-    pub use build::*;
-}
+mod input;
+use input::{ClapOperation, UserConfigOptions};
 
 mod gm_artifacts;
-use clap::Parser;
-pub use gm_artifacts::{DefaultPlatformData, DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
+use gm_artifacts::{DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
+
+mod edit;
+pub use edit::{handle_add_request, handle_vfs_request};
 
 mod runner;
-use input::{ClapOperation, UserConfigOptions};
-use runner::CheckOptions;
-pub use runner::{PlatformOptions, RunOptions, TaskOptions};
+use runner::{CheckOptions, PlatformOptions, RunOptions, TaskOptions};
 
 fn main() -> ExitCode {
     color_eyre::install().unwrap();
@@ -132,77 +121,11 @@ fn main() -> ExitCode {
                 return ExitCode::SUCCESS;
             }
         },
-        Some(ClapOperation::Vfs { root }) => {
-            let application_data = match igor::ApplicationData::new() {
-                Ok(v) => v,
-                Err(e) => {
-                    println!(
-                        "{}: {}",
-                        console::style("adam error").bright().red(),
-                        console::style(e).bold()
-                    );
-
-                    return ExitCode::FAILURE;
-                }
-            };
-
-            let yyp_boss = match yy_boss::YypBoss::with_startup_injest(
-                application_data
-                    .current_directory
-                    .join(format!("{}.yyp", application_data.project_name)),
-                &[],
-            ) {
-                Ok(v) => v,
-                Err(e) => {
-                    println!(
-                        "{}: couldn't read yyp {}",
-                        console::style("adam error").bright().red(),
-                        console::style(e).bold()
-                    );
-                    return ExitCode::FAILURE;
-                }
-            };
-
-            let root_folder = match root {
-                Some(root) => {
-                    match yyp_boss
-                        .vfs
-                        .get_folder(&yy_boss::yy_typings::ViewPathLocation::new(format!(
-                            "folders/{}.yy",
-                            root
-                        ))) {
-                        Some(v) => v,
-                        None => {
-                            println!(
-                                "{}: provided folder does not exist",
-                                console::style("adam error").bright().red(),
-                            );
-                            return ExitCode::FAILURE;
-                        }
-                    }
-                }
-                None => yyp_boss.vfs.get_root_folder(),
-            };
-
-            fn display(folder: &yy_boss::FolderGraph, indent: usize) {
-                let mut buf = String::with_capacity(indent);
-                for _ in 0..indent {
-                    buf.push('.');
-                }
-                for sub_folder in folder.folders.iter() {
-                    println!("{}{}/", buf, sub_folder.name);
-
-                    display(sub_folder, indent + 2);
-                }
-
-                for file in folder.files.inner().iter() {
-                    println!("{}{}", buf, file.name);
-                }
-            }
-
-            display(root_folder, 0);
-
-            return ExitCode::SUCCESS;
+        Some(ClapOperation::Vfs(vfs)) => {
+            return handle_vfs_request(vfs);
+        }
+        Some(ClapOperation::Add(add_op)) => {
+            return handle_add_request(add_op);
         }
         _ => {}
     }

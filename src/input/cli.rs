@@ -37,8 +37,13 @@ pub enum ClapOperation {
     /// Creates a release executable, running `clean` first.
     Release(CliOptions),
 
-    /// View the virtual file system from a given root.
-    Vfs { root: Option<String> },
+    /// Adds certain resources to the project.
+    #[clap(subcommand)]
+    Add(Add),
+
+    /// Virtual File System commands for a project.
+    #[clap(subcommand)]
+    Vfs(Vfs),
 
     /// Runs the project, enabling any `test_env_variables` and searches for the `test_success_code`, set in the config.
     Test(CliOptions),
@@ -66,6 +71,49 @@ pub enum UserConfigOptions {
         /// The value of the property.
         value: String,
     },
+}
+
+/// The kinds of things which can be added to a project.
+#[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
+pub enum Add {
+    Script {
+        /// The name of the script, such as `FileUtilities`. Do not include `gml` in it.
+        name: String,
+
+        /// Where to place the script within the vfs. If not provided, placed at the root.
+        #[clap(short, long)]
+        vfs: Option<String>,
+    },
+
+    Object {
+        /// The name of the object, such as `obj_player`.
+        name: String,
+
+        /// Events to put in the object. Events can be like `create`, `step_0`, or `other_4`. If no number
+        /// is provided, `_0` is assumed where appropriate.
+        #[clap(default_value = "create step draw")]
+        events: Vec<String>,
+
+        /// The parent object to set up some inheritence nonsense, such as `par_npc` or `obj_laser`
+        #[clap(short, long)]
+        parent: Option<String>,
+
+        /// The sprite name to use for this object, such as `spr_player_running`
+        #[clap(short, long)]
+        sprite: Option<String>,
+
+        /// Where to place the script within the vfs. If not provided, placed at the root.
+        #[clap(short, long)]
+        vfs: Option<String>,
+    },
+}
+
+/// The kinds of things which can be added to a project.
+#[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
+pub enum Vfs {
+    /// View a folder and its contents with the given path. Without a path, will
+    /// show the root directory.
+    View { folder: Option<String> },
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]

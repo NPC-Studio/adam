@@ -1791,7 +1791,9 @@ dependencies = [
 
 [[package]]
 name = "yy-boss"
-version = "0.6.4"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f03288857fe0f2545c4441adfabe22806c1479bae084b143d22dfe1afd786770"
 dependencies = [
  "anyhow",
  "camino",
@@ -1816,9 +1818,9 @@ dependencies = [
 
 [[package]]
 name = "yy-typings"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fb53e57e3208f2735bcaaef5d55a430216e36941da4d36f4539ebe6aab4a6ff"
+checksum = "2b2eca76d87cb5da8519db9c4802b5aeef612398710254ad0f6c13706e1a930a"
 dependencies = [
  "num-derive",
  "num-traits",

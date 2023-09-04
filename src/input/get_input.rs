@@ -62,7 +62,7 @@ pub fn parse_inputs(
             None,
             Operation::Clean,
         ),
-        ClapOperation::UserConfig(_) | ClapOperation::Vfs { .. } => {
+        ClapOperation::UserConfig(_) | ClapOperation::Vfs { .. } | ClapOperation::Add(_) => {
             unimplemented!()
         }
     };

@@ -41,7 +41,7 @@ pub struct ConfigFile {
     pub runtime: Option<String>,
 
     #[deprecated]
-    #[serde(skip)]
+    #[serde(skip_serializing)]
     pub x64_windows: bool,
 
     /// If this option is set, then we will not read your `~/.config/GameMakerStudio2` or `%APPDATA%/GameMakerStudio2` folders

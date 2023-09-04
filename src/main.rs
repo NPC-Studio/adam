@@ -130,8 +130,20 @@ fn main() -> ExitCode {
         _ => {}
     }
 
-    let mut config: input::ConfigFile = confy::load("adam", None).unwrap();
+    let mut config: input::ConfigFile = match confy::load("adam", None) {
+        Ok(v) => v,
+        Err(e) => {
+            println!(
+                "{}: user-config was invalid ({}). replacing with default...",
+                e,
+                console::style("warning").green().bright()
+            );
+
+            input::ConfigFile::default()
+        }
+    };
     let patch_config = input::ConfigFile::find_config(inputs.config.as_ref()).unwrap_or_default();
+
     patch_config.apply_on(&mut config);
 
     if inputs.runtime {

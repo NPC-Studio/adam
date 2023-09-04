@@ -41,6 +41,7 @@ pub struct ConfigFile {
     pub runtime: Option<String>,
 
     #[deprecated]
+    #[serde(default)]
     #[serde(skip_serializing)]
     pub x64_windows: bool,
 

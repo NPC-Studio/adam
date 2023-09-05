@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 pub struct GmPreferences {
     #[serde(skip_serializing_if = "Option::is_none")]
     default_packaging_choice: Option<usize>,
-    visual_studio_path: PathBuf,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    visual_studio_path: Option<PathBuf>,
     #[cfg(target_os = "macos")]
     default_team_id: String,
     #[cfg(target_os = "macos")]
@@ -14,27 +15,36 @@ pub struct GmPreferences {
 }
 
 impl GmPreferences {
-    #[allow(clippy::needless_update)]
     pub fn new(visual_studio_path: PathBuf) -> Self {
         Self {
-            default_packaging_choice: Some(1),
-            visual_studio_path,
+            visual_studio_path: Some(visual_studio_path),
             ..Default::default()
         }
     }
 }
 
+#[cfg(target_os = "windows")]
 impl Default for GmPreferences {
     fn default() -> Self {
         Self {
             default_packaging_choice: Some(1),
-            visual_studio_path: Path::new(
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/vcvars32.bat",
-            )
-            .to_owned(),
-            #[cfg(target_os = "macos")]
+            visual_studio_path: Some(
+                Path::new(
+                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/vcvars32.bat",
+                )
+                .to_owned(),
+            ),
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl Default for GmPreferences {
+    fn default() -> Self {
+        Self {
+            default_packaging_choice: Some(1),
+            visual_studio_path: None,
             default_team_id: String::new(),
-            #[cfg(target_os = "macos")]
             suppress_build: false,
         }
     }

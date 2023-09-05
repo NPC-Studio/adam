@@ -265,16 +265,19 @@ fn main() -> ExitCode {
     }
 
     // check if we have a valid yyc bat
+    #[allow(clippy::collapsible_if)]
     if options.task.yyc {
-        if cfg!(not(target_os = "windows")) {
+        if cfg!(not(target_os = "windows")) && cfg!(not(target_os = "macos")) {
             println!(
                 "{}: {}\nPlease log a feature request at https://github.com/NPC-Studio/adam/issues",
                 console::style("adam error",).bright().red(),
-                console::style("adam does not support macOS YYC compilation, yet.").bold(),
+                console::style("adam does not support YYC compilation on this platform, yet.")
+                    .bold(),
             );
             return ExitCode::FAILURE;
         }
 
+        #[cfg(target_os = "windows")]
         if options.platform.visual_studio_path.exists() == false {
             println!(
                 "{}: {}.\n\
@@ -320,7 +323,6 @@ fn main() -> ExitCode {
         output_kind,
         project_filename: application_data.project_name,
         project_directory: application_data.current_directory,
-        // user_dir: options.platform.user_data.clone(),
         user_dir: Default::default(),
         license_folder: options
             .platform
@@ -340,8 +342,6 @@ fn main() -> ExitCode {
 
     let gm_build = gm_artifacts::GmBuild::new(&build_data);
     let macros = gm_artifacts::GmMacros::new(&build_data);
-
-    let visual_studio_path = options.platform.visual_studio_path.clone();
 
     // clear the temp files...
     if let Err(e) = build_data.folders.clear_tmp() {
@@ -364,7 +364,9 @@ fn main() -> ExitCode {
 
     // write in the preferences
     let preferences = if build_data.output_kind == OutputKind::Yyc {
-        gm_artifacts::GmPreferences::new(visual_studio_path.as_std_path().to_owned())
+        gm_artifacts::GmPreferences::new(
+            options.platform.visual_studio_path.as_std_path().to_owned(),
+        )
     } else {
         gm_artifacts::GmPreferences::default()
     };
@@ -399,7 +401,7 @@ fn main() -> ExitCode {
     .unwrap();
 
     // on macos, we don't have a good way to debug out, so this is the best we got.
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
     {
         use interprocess::local_socket::LocalSocketListener;
 
@@ -439,27 +441,30 @@ fn main() -> ExitCode {
     }
 
     let success = runner::run_command(&build_location, macros, options, run_kind);
-    if success {
-        if run_kind.is_test() {
+    match (run_kind.is_test(), success) {
+        (true, true) => {
             println!(
                 "adam test result: {}",
                 console::style("ok").green().bright()
             );
-        } else {
-            println!("adam {}", console::style("complete").green().bright());
         }
-
-        ExitCode::SUCCESS
-    } else {
-        if run_kind.is_test() {
+        (true, false) => {
             println!(
                 "adam test result: {}",
                 console::style("FAILED").red().bright()
             );
-        } else {
+        }
+        (false, true) => {
+            println!("adam {}", console::style("complete").green().bright());
+        }
+        (false, false) => {
             println!("adam {}", console::style("FAILED").red().bright());
         }
+    }
 
+    if success {
+        ExitCode::SUCCESS
+    } else {
         ExitCode::FAILURE
     }
 }

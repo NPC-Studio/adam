@@ -237,12 +237,9 @@ pub fn handle_vfs_request(vfs: Vfs) -> ExitCode {
 }
 
 pub fn handle_remove_request(name: String) -> ExitCode {
-    let Some(mut yyp_boss) = create_yyp_boss() else {
+    let Some(mut yyp_boss) = create_yyp_boss_with_data() else {
         return ExitCode::FAILURE;
     };
-    yyp_boss
-        .quick_name()
-        .expect("bad yyp entry -- couldn't add.");
 
     let resource_kind = match yyp_boss.vfs.get_resource_type(&name) {
         Some(v) => v,
@@ -350,6 +347,38 @@ fn create_yyp_boss() -> Option<yy_boss::YypBoss> {
         application_data
             .current_directory
             .join(format!("{}.yyp", application_data.project_name)),
+    ) {
+        Ok(v) => Some(v),
+        Err(e) => {
+            println!(
+                "{}: couldn't read yyp {}",
+                console::style("adam error").bright().red(),
+                console::style(e).bold()
+            );
+            None
+        }
+    }
+}
+
+fn create_yyp_boss_with_data() -> Option<yy_boss::YypBoss> {
+    let application_data = match igor::ApplicationData::new() {
+        Ok(v) => v,
+        Err(e) => {
+            println!(
+                "{}: {}",
+                console::style("adam error").bright().red(),
+                console::style(e).bold()
+            );
+
+            return None;
+        }
+    };
+
+    match yy_boss::YypBoss::new(
+        application_data
+            .current_directory
+            .join(format!("{}.yyp", application_data.project_name)),
+        &[],
     ) {
         Ok(v) => Some(v),
         Err(e) => {

@@ -1,5 +1,6 @@
 use std::{collections::HashMap, process::ExitCode};
 
+use colored::Colorize;
 use yy_boss::{
     yy_typings::{
         self,
@@ -7,7 +8,7 @@ use yy_boss::{
         script::Script,
         CommonData, ViewPath, ViewPathLocation,
     },
-    YypBoss,
+    Resource, YypBoss,
 };
 
 use crate::{
@@ -197,6 +198,11 @@ pub fn handle_vfs_request(vfs: Vfs) -> ExitCode {
 
     match vfs {
         Vfs::View { folder } => {
+            let starter = folder
+                .as_ref()
+                .map(|v| format!("{}/", v).bright_blue())
+                .unwrap_or_default();
+
             let root_folder = match folder {
                 Some(root) => {
                     match yyp_boss
@@ -219,14 +225,85 @@ pub fn handle_vfs_request(vfs: Vfs) -> ExitCode {
             };
 
             for sub_folder in root_folder.folders.iter() {
-                println!("{}", console::style(&sub_folder.name).bright().blue());
+                println!("{}{}", starter, &sub_folder.name.bright_blue());
             }
 
             for file in root_folder.files.inner().iter() {
-                println!("{}", file.name);
+                println!("{}{}", starter, &file.name);
             }
         }
     }
+    ExitCode::SUCCESS
+}
+
+pub fn handle_remove_request(name: String) -> ExitCode {
+    let Some(mut yyp_boss) = create_yyp_boss() else {
+        return ExitCode::FAILURE;
+    };
+    yyp_boss
+        .quick_name()
+        .expect("bad yyp entry -- couldn't add.");
+
+    let resource_kind = match yyp_boss.vfs.get_resource_type(&name) {
+        Some(v) => v,
+        None => {
+            println!("{}: `{}` does not exist", "error".bright_red(), name);
+            return ExitCode::FAILURE;
+        }
+    };
+
+    let e = match resource_kind {
+        Resource::Sprite => yyp_boss
+            .remove_resource::<yy_typings::sprite_yy::Sprite>(&name)
+            .err(),
+        Resource::Script => yyp_boss.remove_resource::<Script>(&name).err(),
+        Resource::Object => yyp_boss.remove_resource::<Object>(&name).err(),
+        Resource::Note => yyp_boss.remove_resource::<yy_typings::Note>(&name).err(),
+        Resource::Shader => yyp_boss
+            .remove_resource::<yy_typings::shader::Shader>(&name)
+            .err(),
+        Resource::Sound => yyp_boss
+            .remove_resource::<yy_typings::sound::Sound>(&name)
+            .err(),
+        Resource::Room => yyp_boss.remove_resource::<yy_typings::Room>(&name).err(),
+        Resource::TileSet => yyp_boss.remove_resource::<yy_typings::TileSet>(&name).err(),
+        Resource::AnimationCurve => yyp_boss
+            .remove_resource::<yy_typings::AnimationCurve>(&name)
+            .err(),
+        Resource::Extension => yyp_boss
+            .remove_resource::<yy_typings::Extension>(&name)
+            .err(),
+        Resource::Font => yyp_boss.remove_resource::<yy_typings::Font>(&name).err(),
+        Resource::Path => yyp_boss.remove_resource::<yy_typings::Path>(&name).err(),
+        Resource::Sequence => yyp_boss
+            .remove_resource::<yy_typings::Sequence>(&name)
+            .err(),
+        Resource::Timeline => yyp_boss
+            .remove_resource::<yy_typings::Timeline>(&name)
+            .err(),
+    };
+
+    if let Some(e) = e {
+        println!(
+            "{}: failed to remove `{}`, {}",
+            "error".bright_red(),
+            name,
+            e
+        );
+
+        return ExitCode::FAILURE;
+    }
+
+    if let Err(e) = yyp_boss.serialize() {
+        println!("{}: couldn't serialize {}", "error".bright_red(), e);
+        return ExitCode::FAILURE;
+    }
+
+    println!(
+        "{}: removed `{}`",
+        "success".bright_green(),
+        name.bright_green()
+    );
     ExitCode::SUCCESS
 }
 
@@ -236,7 +313,11 @@ fn find_vfs_path(yyp_boss: &YypBoss, input: Option<String>) -> Option<ViewPath> 
             let path = ViewPathLocation(format!("folders/{}.yy", vfs));
 
             if yyp_boss.vfs.get_folder(&path).is_some() {
-                yy_typings::ViewPath { name: vfs, path }
+                // this is just a fancy way of getting the folder name basically.
+                let utf8_path = camino::Utf8Path::new(path.0.as_str());
+                let name = utf8_path.file_stem().unwrap().to_owned();
+
+                yy_typings::ViewPath { name, path }
             } else {
                 println!(
                     "{}: provided folder does not exist",

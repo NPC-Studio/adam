@@ -41,6 +41,12 @@ pub enum ClapOperation {
     #[clap(subcommand)]
     Add(Add),
 
+    /// Removes an asset of the given name from the project.
+    Remove {
+        /// The name of the asset to remove, like `spr_player` or `obj_bullet`
+        name: String,
+    },
+
     /// Virtual File System commands for a project.
     #[clap(subcommand)]
     Vfs(Vfs),
@@ -76,6 +82,7 @@ pub enum UserConfigOptions {
 /// The kinds of things which can be added to a project.
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub enum Add {
+    /// Add a script to the project.
     Script {
         /// The name of the script, such as `FileUtilities`. Do not include `gml` in it.
         name: String,
@@ -85,6 +92,7 @@ pub enum Add {
         vfs: Option<String>,
     },
 
+    /// Add an Object to the project.
     Object {
         /// The name of the object, such as `obj_player`.
         name: String,

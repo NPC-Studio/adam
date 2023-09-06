@@ -20,7 +20,7 @@ mod gm_artifacts;
 use gm_artifacts::{DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
 
 mod edit;
-pub use edit::{handle_add_request, handle_vfs_request};
+pub use edit::{handle_add_request, handle_remove_request, handle_vfs_request};
 
 mod runner;
 use runner::{CheckOptions, PlatformOptions, RunOptions, TaskOptions};
@@ -126,6 +126,9 @@ fn main() -> ExitCode {
         }
         Some(ClapOperation::Add(add_op)) => {
             return handle_add_request(add_op);
+        }
+        Some(ClapOperation::Remove { name }) => {
+            return handle_remove_request(name);
         }
         _ => {}
     }

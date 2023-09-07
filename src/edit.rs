@@ -296,11 +296,106 @@ pub fn handle_remove_request(name: String) -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    println!(
-        "{}: removed `{}`",
-        "success".bright_green(),
-        name.bright_green()
-    );
+    println!("{}: removed `{}`", "success".bright_green(), name,);
+    ExitCode::SUCCESS
+}
+
+pub fn handle_rename_request(original_name: String, new_name: String) -> ExitCode {
+    let Some(mut yyp_boss) = create_yyp_boss_with_data() else {
+        return ExitCode::FAILURE;
+    };
+
+    let resource_kind = match yyp_boss.vfs.get_resource_type(&original_name) {
+        Some(v) => v,
+        None => {
+            println!(
+                "{}: `{}` does not exist",
+                "error".bright_red(),
+                original_name
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+
+    let to_boss = new_name.clone();
+
+    let e = match resource_kind {
+        Resource::Sprite => yyp_boss
+            .rename_resource::<yy_typings::sprite_yy::Sprite>(&original_name, to_boss)
+            .err(),
+        Resource::Script => yyp_boss
+            .rename_resource::<Script>(&original_name, to_boss)
+            .err(),
+        Resource::Object => yyp_boss
+            .rename_resource::<Object>(&original_name, to_boss)
+            .err(),
+        Resource::Note => yyp_boss
+            .rename_resource::<yy_typings::Note>(&original_name, to_boss)
+            .err(),
+        Resource::Shader => yyp_boss
+            .rename_resource::<yy_typings::shader::Shader>(&original_name, to_boss)
+            .err(),
+        Resource::Sound => yyp_boss
+            .rename_resource::<yy_typings::sound::Sound>(&original_name, to_boss)
+            .err(),
+        Resource::Room => yyp_boss
+            .rename_resource::<yy_typings::Room>(&original_name, to_boss)
+            .err(),
+        Resource::TileSet => yyp_boss
+            .rename_resource::<yy_typings::TileSet>(&original_name, to_boss)
+            .err(),
+        Resource::AnimationCurve => yyp_boss
+            .rename_resource::<yy_typings::AnimationCurve>(&original_name, to_boss)
+            .err(),
+        Resource::Extension => yyp_boss
+            .rename_resource::<yy_typings::Extension>(&original_name, to_boss)
+            .err(),
+        Resource::Font => yyp_boss
+            .rename_resource::<yy_typings::Font>(&original_name, to_boss)
+            .err(),
+        Resource::Path => yyp_boss
+            .rename_resource::<yy_typings::Path>(&original_name, to_boss)
+            .err(),
+        Resource::Sequence => yyp_boss
+            .rename_resource::<yy_typings::Sequence>(&original_name, to_boss)
+            .err(),
+        Resource::Timeline => yyp_boss
+            .rename_resource::<yy_typings::Timeline>(&original_name, to_boss)
+            .err(),
+    };
+
+    if let Some(e) = e {
+        println!(
+            "{}: failed to rename `{}`, {}",
+            "error".bright_red(),
+            original_name,
+            e
+        );
+
+        return ExitCode::FAILURE;
+    }
+
+    if let Err(e) = yyp_boss.serialize() {
+        println!("{}: couldn't serialize {}", "error".bright_red(), e);
+        return ExitCode::FAILURE;
+    }
+
+    if resource_kind == Resource::Script {
+        println!(
+            "{}: renamed `{}` to `./scripts/{}.gml`",
+            "success".bright_green(),
+            format!("./scripts/{}.gml", original_name).dimmed(),
+            new_name,
+        );
+    } else {
+        println!(
+            "{}: renamed `{}` to `{}`",
+            "success".bright_green(),
+            original_name.dimmed(),
+            new_name,
+        );
+    }
+
     ExitCode::SUCCESS
 }
 

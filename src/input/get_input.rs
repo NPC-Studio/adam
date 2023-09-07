@@ -65,7 +65,8 @@ pub fn parse_inputs(
         ClapOperation::UserConfig(_)
         | ClapOperation::Vfs { .. }
         | ClapOperation::Add(_)
-        | ClapOperation::Remove { .. } => {
+        | ClapOperation::Remove { .. }
+        | ClapOperation::Rename { .. } => {
             unimplemented!()
         }
     };

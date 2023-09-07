@@ -47,6 +47,15 @@ pub enum ClapOperation {
         name: String,
     },
 
+    /// Renames an asset from one name to another name.
+    Rename {
+        /// The current name, such as `obj_player`
+        current_name: String,
+
+        /// The new name, such as `objPlayer`
+        new_name: String,
+    },
+
     /// Virtual File System commands for a project.
     #[clap(subcommand)]
     Vfs(Vfs),

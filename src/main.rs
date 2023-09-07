@@ -20,7 +20,6 @@ mod gm_artifacts;
 use gm_artifacts::{DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
 
 mod edit;
-pub use edit::{handle_add_request, handle_remove_request, handle_vfs_request};
 
 mod runner;
 use runner::{CheckOptions, PlatformOptions, RunOptions, TaskOptions};
@@ -122,14 +121,21 @@ fn main() -> ExitCode {
             }
         },
         Some(ClapOperation::Vfs(vfs)) => {
-            return handle_vfs_request(vfs);
+            return edit::handle_vfs_request(vfs);
         }
         Some(ClapOperation::Add(add_op)) => {
-            return handle_add_request(add_op);
+            return edit::handle_add_request(add_op);
         }
         Some(ClapOperation::Remove { name }) => {
-            return handle_remove_request(name);
+            return edit::handle_remove_request(name);
         }
+        Some(ClapOperation::Rename {
+            current_name,
+            new_name,
+        }) => {
+            return edit::handle_rename_request(current_name, new_name);
+        }
+
         _ => {}
     }
 

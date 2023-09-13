@@ -42,6 +42,7 @@ pub enum ClapOperation {
     Add(Add),
 
     /// Removes an asset of the given name from the project.
+    #[clap(visible_alias = "rm")]
     Remove {
         /// The name of the asset to remove, like `spr_player` or `obj_bullet`
         name: String,
@@ -133,6 +134,15 @@ pub enum Vfs {
     View {
         /// A root directory to look at. If not passed, we use the project root.
         folder: Option<String>,
+    },
+
+    /// Moves a file to a new directory.
+    #[clap(visible_alias = "mv")]
+    Move {
+        /// This is the file, such as `obj_player` or `spr_bullet`.
+        target: String,
+        /// This is the new directory to move it to, such as `Scripts/Player/Data`.
+        new_directory: String,
     },
 }
 

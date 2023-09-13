@@ -44,7 +44,7 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             }
             if let Err(e) = yyp_boss.serialize() {
                 println!(
-                    "{}: couldn't serialize {}",
+                    "{}: could not serialize {}",
                     console::style("error").bright().red(),
                     e
                 );
@@ -160,7 +160,7 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             }
             if let Err(e) = yyp_boss.serialize() {
                 println!(
-                    "{}: couldn't serialize {}",
+                    "{}: could not serialize {}",
                     console::style("error").bright().red(),
                     e
                 );
@@ -192,7 +192,7 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
 }
 
 pub fn handle_vfs_request(vfs: Vfs) -> ExitCode {
-    let Some(yyp_boss) = create_yyp_boss(|path_to_yyp| YypBoss::new(path_to_yyp, &[])) else {
+    let Some(mut yyp_boss) = create_yyp_boss(|path_to_yyp| YypBoss::new(path_to_yyp, &[])) else {
         return ExitCode::FAILURE;
     };
 
@@ -230,6 +230,39 @@ pub fn handle_vfs_request(vfs: Vfs) -> ExitCode {
 
             for file in root_folder.files.inner().iter() {
                 println!("{}{}", starter, &file.name);
+            }
+        }
+        Vfs::Move {
+            target,
+            new_directory,
+        } => {
+            let resource_kind = match yyp_boss.vfs.get_resource_type(&target) {
+                Some(v) => v,
+                None => {
+                    println!("{}: `{}` does not exist", "error".bright_red(), target);
+                    return ExitCode::FAILURE;
+                }
+            };
+
+            match yyp_boss.vfs.move_resource(
+                &target,
+                resource_kind,
+                &ViewPathLocation(new_directory),
+            ) {
+                Ok(()) => {}
+                Err(e) => {
+                    println!("{}: could not move file: {}", "error".bright_red(), e);
+                    return ExitCode::FAILURE;
+                }
+            }
+
+            if let Err(e) = yyp_boss.serialize() {
+                println!(
+                    "{}: could not serialize {}",
+                    console::style("error").bright().red(),
+                    e
+                );
+                return ExitCode::FAILURE;
             }
         }
     }
@@ -292,7 +325,7 @@ pub fn handle_remove_request(name: String) -> ExitCode {
     }
 
     if let Err(e) = yyp_boss.serialize() {
-        println!("{}: couldn't serialize {}", "error".bright_red(), e);
+        println!("{}: could not serialize {}", "error".bright_red(), e);
         return ExitCode::FAILURE;
     }
 
@@ -376,7 +409,7 @@ pub fn handle_rename_request(original_name: String, new_name: String) -> ExitCod
     }
 
     if let Err(e) = yyp_boss.serialize() {
-        println!("{}: couldn't serialize {}", "error".bright_red(), e);
+        println!("{}: could not serialize {}", "error".bright_red(), e);
         return ExitCode::FAILURE;
     }
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, process::ExitCode};
+use std::{collections::HashMap, path::PathBuf, process::ExitCode};
 
 use colored::Colorize;
 use yy_boss::{
@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub fn handle_add_request(kind: Add) -> ExitCode {
-    let Some(mut yyp_boss) = create_yyp_boss() else {
+    let Some(mut yyp_boss) = create_yyp_boss(YypBoss::without_resources) else {
         return ExitCode::FAILURE;
     };
     yyp_boss
@@ -192,7 +192,7 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
 }
 
 pub fn handle_vfs_request(vfs: Vfs) -> ExitCode {
-    let Some(yyp_boss) = create_yyp_boss() else {
+    let Some(yyp_boss) = create_yyp_boss(|path_to_yyp| YypBoss::new(path_to_yyp, &[])) else {
         return ExitCode::FAILURE;
     };
 
@@ -424,7 +424,9 @@ fn find_vfs_path(yyp_boss: &YypBoss, input: Option<String>) -> Option<ViewPath> 
     Some(parent)
 }
 
-fn create_yyp_boss() -> Option<yy_boss::YypBoss> {
+fn create_yyp_boss(
+    mut make_yyp_boss: impl FnMut(PathBuf) -> Result<YypBoss, yy_boss::StartupError>,
+) -> Option<yy_boss::YypBoss> {
     let application_data = match igor::ApplicationData::new() {
         Ok(v) => v,
         Err(e) => {
@@ -438,11 +440,13 @@ fn create_yyp_boss() -> Option<yy_boss::YypBoss> {
         }
     };
 
-    match yy_boss::YypBoss::without_resources(
+    let output = make_yyp_boss(
         application_data
             .current_directory
             .join(format!("{}.yyp", application_data.project_name)),
-    ) {
+    );
+
+    match output {
         Ok(v) => Some(v),
         Err(e) => {
             println!(

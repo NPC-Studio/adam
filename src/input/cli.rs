@@ -130,7 +130,10 @@ pub enum Add {
 pub enum Vfs {
     /// View a folder and its contents with the given path. Without a path, will
     /// show the root directory.
-    View { folder: Option<String> },
+    View {
+        /// A root directory to look at. If not passed, we use the project root.
+        folder: Option<String>,
+    },
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]

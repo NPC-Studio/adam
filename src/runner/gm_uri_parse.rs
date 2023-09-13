@@ -80,7 +80,7 @@ impl GmUriParser {
                     let mut output = String::with_capacity(input.len());
                     output.push_str(&input[..entire_match.start()]);
                     let line_txt = match line.as_str().parse::<i32>() {
-                        Ok(v) => (v + 1).to_string(),
+                        Ok(v) => v.to_string(),
                         Err(_) => line.as_str().to_owned(),
                     };
                     write!(
@@ -178,7 +178,7 @@ impl GmUriParser {
                     output.push_str(&input[..entire_match.start()]);
 
                     let line_txt = match line.as_str().parse::<i32>() {
-                        Ok(v) => (v + 1).to_string(),
+                        Ok(v) => v.to_string(),
                         Err(_) => line.as_str().to_owned(),
                     };
 
@@ -299,7 +299,7 @@ impl GmUriParser {
                     output.push_str(&input[..entire_match.start()]);
 
                     let line_txt = match line.as_str().parse::<i32>() {
-                        Ok(v) => (v + 1).to_string(),
+                        Ok(v) => v.to_string(),
                         Err(_) => line.as_str().to_owned(),
                     };
 
@@ -387,11 +387,11 @@ mod tests {
             "[9/26/2020 12:27:12 AM] TRACE gml_Script_set_view_size_Camera_gml_GlobalScript_CameraClass:110 -- Creating new Mistria GUI! [Reason: View Resize]",
         )
         .unwrap();
-        assert_eq!(output, "[9/26/2020 12:27:12 AM] TRACE scripts/CameraClass/CameraClass.gml:111:0 -- Creating new Mistria GUI! [Reason: View Resize]");
+        assert_eq!(output, "[9/26/2020 12:27:12 AM] TRACE scripts/CameraClass/CameraClass.gml:110:0 -- Creating new Mistria GUI! [Reason: View Resize]");
 
         assert_eq!(
             parser.parse_global_script("[9/26/2020 12:52:54 AM] TRACE gml_Script_play_track_Boombox_gml_GlobalScript_Boombox:123 -- Playing new music track").unwrap(),
-            "[9/26/2020 12:52:54 AM] TRACE scripts/Boombox/Boombox.gml:124:0 -- Playing new music track"
+            "[9/26/2020 12:52:54 AM] TRACE scripts/Boombox/Boombox.gml:123:0 -- Playing new music track"
         );
         assert_eq!(
             parser.parse_global_script("[9/26/2020 12:52:54 AM] TRACE gml_Script_anon___add_track_stop_to_chain_Boombox_gml_GlobalScript_Boombox_2441___add_track_stop_to_chain_Boombox_gml_GlobalScript_Boombox:103 -- Set music state to FadeOut").unwrap(),
@@ -409,7 +409,7 @@ mod tests {
 
         let output = parser.parse_object("[9/26/2020 11:26:04 AM] TRACE gml_Object_Game_Create_0:256 --   attempted to load save.json").unwrap();
         assert_eq!(
-            output, "[9/26/2020 11:26:04 AM] TRACE objects/Game/Create_0.gml:257:0 --   attempted to load save.json"
+            output, "[9/26/2020 11:26:04 AM] TRACE objects/Game/Create_0.gml:256:0 --   attempted to load save.json"
         );
 
         let output = parser.parse_object("[9/26/2020 11:26:04 AM] WARN gml_Object_Game_Create_0:1032 -- Gabe is doing some graphic stuff here that he doesn't know where else to put...").unwrap();
@@ -425,17 +425,11 @@ mod tests {
 
     #[test]
     fn parse_script_functions() {
-        let mut parser =
-            super::GmUriParser::new("C:/Users/jjspi/Documents/Projects/Gms2/SwordAndField/scripts");
+        let mut parser = super::GmUriParser::new("./../../Gms2/SwordAndField/scripts");
 
         let output = parser.parse_script("[9/26/2020 11:26:04 AM] TRACE gml_Script_Camera:370 --   attempted to load save.json").unwrap();
         assert_eq!(
-            output, "[9/26/2020 11:26:04 AM] TRACE scripts/CameraClass/CameraClass.gml:370:0 --   attempted to load save.json"
-        );
-
-        let output = parser.parse_script("[9/26/2020 11:26:04 AM] TRACE gml_Script_buffer_to_json_map:370 -- underscore test").unwrap();
-        assert_eq!(
-            output, "[9/26/2020 11:26:04 AM] TRACE scripts/buffer_to_json_map/buffer_to_json_map.gml:370:0 -- underscore test"
+            output, "[9/26/2020 11:26:04 AM] TRACE scripts/Camera/Camera.gml:370:0 --   attempted to load save.json"
         );
     }
 

@@ -7,9 +7,6 @@ use crate::{RunOptions, DEFAULT_PLATFORM_DATA};
 #[derive(Parser, Debug)]
 #[clap(version, author)]
 pub struct InputOpts {
-    #[clap(flatten)]
-    pub build_options: BuildOptions,
-
     #[clap(subcommand)]
     pub subcmd: ClapOperation,
 
@@ -22,14 +19,14 @@ pub struct InputOpts {
 pub enum ClapOperation {
     /// Builds a project *without* running it.
     #[clap(alias = "b")]
-    Build,
+    Build(BuildOptions),
 
     /// Compiles, if necessary, and then runs a project.
     #[clap(alias = "r")]
-    Run,
+    Run(BuildOptions),
 
     /// Creates a release executable, running `clean` first.
-    Release,
+    Release(BuildOptions),
 
     /// Runs some presumably shorter "check" script
     #[clap(alias = "c")]
@@ -38,6 +35,9 @@ pub enum ClapOperation {
         ///
         /// This path is relative to the current working directory.
         path_to_run: Option<Utf8PathBuf>,
+
+        #[clap(flatten)]
+        build_options: BuildOptions,
     },
 
     /// Runs the project, enabling any `test_env_variables` and searches for the `test_success_code`, set in the config.
@@ -47,10 +47,13 @@ pub enum ClapOperation {
         #[clap(default_value = "")]
         #[arg(hide_default_value = true)]
         adam_test: String,
+
+        #[clap(flatten)]
+        build_options: BuildOptions,
     },
 
     /// Cleans a project target directory.
-    Clean,
+    Clean(BuildOptions),
 
     /// Adds certain resources to the project.
     #[clap(subcommand)]

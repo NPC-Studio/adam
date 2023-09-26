@@ -172,7 +172,7 @@ fn main() -> ExitCode {
     config.write_to_options(&mut runtime_options, &mut check_options);
 
     let (mut options, operation) =
-        match input::parse_inputs(inputs, runtime_options, &mut check_options) {
+        match input::parse_inputs(inputs.subcmd, runtime_options, &mut check_options) {
             Ok(v) => v,
             Err(e) => {
                 println!(

@@ -5,7 +5,7 @@ use color_eyre::Help;
 
 use crate::{AnyResult, RunOptions};
 
-use super::{cli::ClapOperation, InputOpts};
+use super::cli::ClapOperation;
 
 #[derive(Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub enum Operation {
@@ -50,25 +50,32 @@ impl fmt::Display for RunKind {
 }
 
 pub fn parse_inputs(
-    cli: InputOpts,
+    clap_op: ClapOperation,
     mut runtime_options: RunOptions,
     check_options: &mut Option<Utf8PathBuf>,
 ) -> AnyResult<(RunOptions, Operation)> {
-    let build_options = cli.build_options;
-    let operation = match cli.subcmd {
-        ClapOperation::Run => Operation::Run(RunKind::Run),
-        ClapOperation::Build => Operation::Run(RunKind::Build),
-        ClapOperation::Release => Operation::Run(RunKind::Release),
+    let (build_options, operation) = match clap_op {
+        ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
+        ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
+        ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),
         ClapOperation::Test {
             adam_test: adam_test_value,
-        } => Operation::Run(RunKind::Test(adam_test_value)),
-        ClapOperation::Check { path_to_run } => {
+            build_options,
+        } => (
+            build_options,
+            Operation::Run(RunKind::Test(adam_test_value)),
+        ),
+        ClapOperation::Check {
+            path_to_run,
+            build_options,
+        } => {
             if let Some(path_to_run) = path_to_run {
                 *check_options = Some(path_to_run);
             }
-            Operation::Check
+            (build_options, Operation::Check)
         }
-        ClapOperation::Clean => Operation::Clean,
+        ClapOperation::Clean(b) => (b, Operation::Clean),
+
         // we won't get here for these
         ClapOperation::UserConfig(_)
         | ClapOperation::Vfs { .. }

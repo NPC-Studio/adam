@@ -1,41 +1,56 @@
 use camino::Utf8PathBuf;
 use clap::Parser;
 
-use crate::{runner::CheckOptions, RunOptions, DEFAULT_PLATFORM_DATA};
+use crate::{RunOptions, DEFAULT_PLATFORM_DATA};
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
 #[derive(Parser, Debug)]
 #[clap(version, author)]
 pub struct InputOpts {
+    #[clap(flatten)]
+    pub build_options: BuildOptions,
+
     #[clap(subcommand)]
-    pub subcmd: Option<ClapOperation>,
+    pub subcmd: ClapOperation,
 
-    /// The path to a non-standard named configuration file. Possible names are .adam, .adam.json, and adam.toml
-    #[clap(short, long, parse(from_os_str))]
-    pub config: Option<std::path::PathBuf>,
-
-    /// Prints version information
+    /// The path to a non-standard named manifest file. Possible names are .adam, .adam.json, and adam.toml
     #[clap(short, long)]
-    pub version: bool,
-
-    /// Prints the GM runtime this directory is set up to use.
-    #[clap(short, long)]
-    pub runtime: bool,
+    pub manifest: Option<std::path::PathBuf>,
 }
 
 #[derive(Parser, Debug)]
 pub enum ClapOperation {
-    /// Runs some presumably shorter "check" script
-    Check(CliCheckOptions),
-
     /// Builds a project *without* running it.
-    Build(CliOptions),
+    #[clap(alias = "b")]
+    Build,
 
     /// Compiles, if necessary, and then runs a project.
-    Run(CliOptions),
+    #[clap(alias = "r")]
+    Run,
 
     /// Creates a release executable, running `clean` first.
-    Release(CliOptions),
+    Release,
+
+    /// Runs some presumably shorter "check" script
+    #[clap(alias = "c")]
+    Check {
+        /// This is the shell script which we will run.
+        ///
+        /// This path is relative to the current working directory.
+        path_to_run: Option<Utf8PathBuf>,
+    },
+
+    /// Runs the project, enabling any `test_env_variables` and searches for the `test_success_code`, set in the config.
+    #[clap(alias = "t")]
+    Test {
+        /// We set `ADAM_TEST` to this value, or an empty string if not provided.
+        #[clap(default_value = "")]
+        #[arg(hide_default_value = true)]
+        adam_test: String,
+    },
+
+    /// Cleans a project target directory.
+    Clean,
 
     /// Adds certain resources to the project.
     #[clap(subcommand)]
@@ -60,12 +75,6 @@ pub enum ClapOperation {
     /// Virtual File System commands for a project.
     #[clap(subcommand)]
     Vfs(Vfs),
-
-    /// Runs the project, enabling any `test_env_variables` and searches for the `test_success_code`, set in the config.
-    Test(CliOptions),
-
-    /// Cleans a project target directory.
-    Clean(CleanOptions),
 
     /// Edits the user's personal configuration file
     #[clap(subcommand)]
@@ -151,34 +160,8 @@ pub struct SavePathOptions {
     pub path: Utf8PathBuf,
 }
 
-#[derive(Parser, Debug, PartialEq, Eq, Clone, Default, Ord, PartialOrd)]
-pub struct CliCheckOptions {
-    /// This is the shell script which we will run.
-    ///
-    /// This path is relative to the current working directory.
-    pub path_to_run: Option<Utf8PathBuf>,
-
-    /// This is the path the shell script will be executed in. If not given, defaults to use
-    /// the current working directory.
-    ///
-    /// This path is relative to the current working directory.
-    #[clap(long, short)]
-    pub directory_to_use: Option<Utf8PathBuf>,
-}
-
-impl CliCheckOptions {
-    pub fn write_to_options(self, check_options: &mut CheckOptions) {
-        if let Some(v) = self.path_to_run {
-            check_options.path_to_run = v;
-        }
-        if let Some(v) = self.directory_to_use {
-            check_options.directory_to_use = Some(v);
-        }
-    }
-}
-
-#[derive(Parser, Debug, PartialEq, Eq, Clone, Default)]
-pub struct CliOptions {
+#[derive(clap::Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct BuildOptions {
     /// Uses the YYC instead of the default VM. If this is the case, then we'll need to check
     /// your Visual Studio path on Windows.
     #[clap(long, short)]
@@ -215,16 +198,18 @@ pub struct CliOptions {
     pub yyp: Option<String>,
 
     /// Verbosity level. Can use multiple times, like '-vv'. >0 disables pretty compiles, >1 enables igor verbosity, >2 enables gmac verbosity
-    #[clap(short, long, parse(from_occurrences))]
-    pub verbosity: usize,
+    #[clap(short, long)]
+    #[arg(action(clap::ArgAction::Count))]
+    pub verbosity: u8,
 
     /// The relative path to the output folder. Defaults to `target`.
     #[clap(short, long)]
     pub output_folder: Option<Utf8PathBuf>,
 
     /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
-    #[clap(short, long, parse(from_occurrences))]
-    pub ignore_cache: usize,
+    #[clap(short, long)]
+    #[arg(action(clap::ArgAction::Count))]
+    pub ignore_cache: u8,
 
     /// The path to your Gms2 installation. Defaults to C drive on Windows and Applications on macOS. If you use Steam, you will need to pass in that fullpath to the .exe, or the .app on macOS.
     #[clap(long)]
@@ -267,7 +252,7 @@ pub struct CliOptions {
     pub close_on_sig_kill: bool,
 }
 
-impl CliOptions {
+impl BuildOptions {
     pub fn write_to_options(self, run_options: &mut RunOptions) {
         if let Some(cfg) = self.config {
             run_options.task.config = cfg;
@@ -337,11 +322,4 @@ impl CliOptions {
             run_options.task.close_on_sig_kill = self.close_on_sig_kill;
         }
     }
-}
-
-#[derive(Parser, Debug)]
-pub struct CleanOptions {
-    /// The relative path to the output folder. Defaults to `target`.
-    #[clap(short, long)]
-    pub output_folder: Option<Utf8PathBuf>,
 }

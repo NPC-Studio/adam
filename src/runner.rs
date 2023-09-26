@@ -2,7 +2,7 @@ mod run;
 pub use run::run_command;
 
 mod check_options;
-pub use check_options::{run_check, CheckOptions};
+pub use check_options::run_check;
 
 #[cfg(not(target_os = "windows"))]
 mod invoke_nix;
@@ -20,3 +20,6 @@ mod printer;
 mod run_options;
 
 pub use run_options::*;
+
+mod cache;
+pub use cache::Cache;

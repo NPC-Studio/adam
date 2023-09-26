@@ -23,13 +23,13 @@ pub struct TaskOptions {
     pub config: String,
 
     /// Verbosity level. Can use multiple times, like '-vv'. >0 disables pretty compiles, >1 enables igor verbosity, >2 enables gmac verbosity
-    pub verbosity: usize,
+    pub verbosity: u8,
 
     /// The relative path to the output folder. Defaults to `target`.
     pub output_folder: Utf8PathBuf,
 
     /// Ignore cache. Can use multiples times, like `-ii`. >0 disables quick recompiles, >1 disables all caching.
-    pub ignore_cache: usize,
+    pub ignore_cache: u8,
 
     /// A list of environment variable names that will be set to "1" if running `adam test`.
     pub test_env_variables: Vec<String>,

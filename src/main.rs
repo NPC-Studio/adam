@@ -17,12 +17,12 @@ mod input;
 use input::{ClapOperation, UserConfigOptions};
 
 mod gm_artifacts;
-use gm_artifacts::{DEFAULT_PLATFORM_DATA, DEFAULT_RUNTIME_NAME};
+use gm_artifacts::DEFAULT_PLATFORM_DATA;
 
 mod edit;
 
 mod runner;
-use runner::{CheckOptions, PlatformOptions, RunOptions, TaskOptions};
+use runner::{PlatformOptions, RunOptions, TaskOptions};
 
 fn main() -> ExitCode {
     color_eyre::install().unwrap();
@@ -31,9 +31,9 @@ fn main() -> ExitCode {
     // we have a few things that aren't really about building projects,
     // because this app has grown!
     match inputs.subcmd {
-        Some(ClapOperation::UserConfig(v)) => match v {
+        ClapOperation::UserConfig(v) => match v {
             UserConfigOptions::View => {
-                let config: input::ConfigFile = confy::load("adam", None).unwrap();
+                let config: input::Manifest = confy::load("adam", None).unwrap();
 
                 println!("{}", toml::to_string_pretty(&config).unwrap());
                 return ExitCode::SUCCESS;
@@ -96,10 +96,10 @@ fn main() -> ExitCode {
                     _ => serde_json::Value::String(value),
                 };
 
-                let mut config: input::ConfigFile = confy::load("adam", None).unwrap();
+                let mut config: input::Manifest = confy::load("adam", None).unwrap();
 
                 let json_flash = serde_json::json!({ name: value });
-                let edit = match serde_json::from_value::<input::ConfigFile>(json_flash) {
+                let edit = match serde_json::from_value::<input::Manifest>(json_flash) {
                     Ok(v) => v,
                     Err(e) => {
                         println!(
@@ -120,26 +120,26 @@ fn main() -> ExitCode {
                 return ExitCode::SUCCESS;
             }
         },
-        Some(ClapOperation::Vfs(vfs)) => {
+        ClapOperation::Vfs(vfs) => {
             return edit::handle_vfs_request(vfs);
         }
-        Some(ClapOperation::Add(add_op)) => {
+        ClapOperation::Add(add_op) => {
             return edit::handle_add_request(add_op);
         }
-        Some(ClapOperation::Remove { name }) => {
+        ClapOperation::Remove { name } => {
             return edit::handle_remove_request(name);
         }
-        Some(ClapOperation::Rename {
+        ClapOperation::Rename {
             current_name,
             new_name,
-        }) => {
+        } => {
             return edit::handle_rename_request(current_name, new_name);
         }
 
         _ => {}
     }
 
-    let mut config: input::ConfigFile = match confy::load("adam", None) {
+    let mut config: input::Manifest = match confy::load("adam", None) {
         Ok(v) => v,
         Err(e) => {
             println!(
@@ -148,23 +148,12 @@ fn main() -> ExitCode {
                 console::style("warning").green().bright()
             );
 
-            input::ConfigFile::default()
+            input::Manifest::default()
         }
     };
-    let patch_config = input::ConfigFile::find_config(inputs.config.as_ref()).unwrap_or_default();
+    let patch_config = input::Manifest::find_manifest(inputs.manifest.as_ref()).unwrap_or_default();
 
     patch_config.apply_on(&mut config);
-
-    if inputs.runtime {
-        println!(
-            "{}",
-            config
-                .runtime
-                .as_ref()
-                .unwrap_or(&DEFAULT_RUNTIME_NAME.into())
-        );
-        return ExitCode::SUCCESS;
-    }
 
     let mut runtime_options = {
         let platform: PlatformOptions = PlatformOptions {
@@ -182,12 +171,8 @@ fn main() -> ExitCode {
     let mut check_options = None;
     config.write_to_options(&mut runtime_options, &mut check_options);
 
-    let Some(operation) = inputs.subcmd else {
-        return ExitCode::SUCCESS;
-    };
-
-    let (mut options, check_options, operation) =
-        match input::parse_inputs(operation, runtime_options, check_options) {
+    let (mut options, operation) =
+        match input::parse_inputs(inputs, runtime_options, &mut check_options) {
             Ok(v) => v,
             Err(e) => {
                 println!(
@@ -245,7 +230,17 @@ fn main() -> ExitCode {
             inner
         }
         input::Operation::Check => {
-            let check_options = check_options.unwrap();
+            let check_options = match check_options {
+                Some(v) => v,
+                None => {
+                    println!(
+                        "{}: no script given to run via CLI or config",
+                        console::style("error").bright().red()
+                    );
+
+                    return ExitCode::FAILURE;
+                }
+            };
             if runner::run_check(check_options).is_ok() {
                 return ExitCode::SUCCESS;
             } else {
@@ -267,10 +262,13 @@ fn main() -> ExitCode {
     };
 
     // fire any specific behavior to this run kind
-    if run_kind == input::RunKind::Test {
+    if let input::RunKind::Test(value) = &run_kind {
         for var in options.task.test_env_variables.iter() {
             std::env::set_var(var, "1");
         }
+
+        // we set this fella every time too
+        std::env::set_var("ADAM_TEST", value);
     }
 
     // check if we have a valid yyc bat
@@ -447,7 +445,7 @@ fn main() -> ExitCode {
         }
     }
 
-    let success = runner::run_command(&build_location, macros, options, run_kind);
+    let success = runner::run_command(&build_location, macros, options, &run_kind);
     if success {
         if run_kind.is_test() {
             println!(

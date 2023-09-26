@@ -4,6 +4,8 @@ use heck::ToTitleCase;
 use indicatif::ProgressBar;
 use std::{io::BufRead, io::BufReader, path::Path, process::Child};
 
+use super::Cache;
+
 pub struct CompilerHandler {
     state: CompilerState,
     is_build: bool,
@@ -36,11 +38,11 @@ impl CompilerHandler {
         child: &mut Child,
         project_name: &str,
         project_path: &Path,
-        run_kind: RunKind,
-        run_command: &RunOptions,
+        run_kind: &RunKind,
+        run_options: &RunOptions,
+        cache: &Cache,
     ) -> CompilerOutput {
-        let progress_bar = ProgressBar::new(1000);
-        progress_bar.set_draw_target(indicatif::ProgressDrawTarget::stdout());
+        let progress_bar = ProgressBar::new(cache.time.as_secs());
         progress_bar.set_style(
             indicatif::ProgressStyle::default_bar()
                 .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {msg}")
@@ -54,6 +56,22 @@ impl CompilerHandler {
             project_path.display()
         ));
 
+        // make a lil thread guy!
+        let our_progress_bar = progress_bar.clone();
+        std::thread::spawn(move || {
+            let t = std::time::Instant::now();
+            loop {
+                if our_progress_bar.is_finished() {
+                    return;
+                }
+
+                our_progress_bar.tick();
+                our_progress_bar.set_position(t.elapsed().as_secs());
+
+                std::thread::sleep(std::time::Duration::new(0, 16666666));
+            }
+        });
+
         let start_time = std::time::Instant::now();
         let lines = BufReader::new(child.stdout.as_mut().unwrap()).lines();
 
@@ -66,9 +84,6 @@ impl CompilerHandler {
 
                     if line.contains("[Compile]") {
                         self.state = CompilerState::Compile(vec![]);
-                        progress_bar.set_position(progress_bar.position().max(250));
-                    } else {
-                        progress_bar.inc(20);
                     }
                 }
                 CompilerState::Compile(e_msgs) => {
@@ -76,7 +91,6 @@ impl CompilerHandler {
                         e_msgs.push(line);
                         progress_bar.set_message("Collecting errors...");
                     } else if line.contains("Final Compile...finished") {
-                        progress_bar.set_position(progress_bar.position().max(500));
                         if e_msgs.is_empty() {
                             self.state = CompilerState::ChunkBuilder;
                         } else {
@@ -84,8 +98,6 @@ impl CompilerHandler {
                         }
                     } else if e_msgs.is_empty() {
                         progress_bar.set_message(line[..max_size].to_string());
-                    } else {
-                        progress_bar.inc(20);
                     }
                 }
                 CompilerState::ChunkBuilder => {
@@ -113,20 +125,18 @@ impl CompilerHandler {
                                 "{} {} {} {}:{} in {}",
                                 console::style("Completed").green().bright(),
                                 gm_artifacts::PLATFORM_KIND,
-                                if run_command.task.yyc { "yyc" } else { "vm" },
+                                if run_options.task.yyc { "yyc" } else { "vm" },
                                 run_kind,
-                                console::style(&run_command.task.config).yellow().bright(),
-                                indicatif::HumanDuration(std::time::Instant::now() - start_time)
+                                console::style(&run_options.task.config).yellow().bright(),
+                                indicatif::HumanDuration(start_time.elapsed())
                             );
 
                             return CompilerOutput::SuccessAndBuild;
                         } else {
-                            progress_bar.set_position(progress_bar.position().max(750));
                             self.state = CompilerState::PreRunToMainLoop(vec![]);
                         }
                     } else {
                         progress_bar.set_message(line[..max_size].to_string());
-                        progress_bar.inc(10);
                     }
                 }
                 CompilerState::PreRunToMainLoop(startup_msgs) => {
@@ -151,9 +161,9 @@ impl CompilerHandler {
                             "{} {} {} {}:{} in {}",
                             console::style("Completed").green().bright(),
                             gm_artifacts::PLATFORM_KIND,
-                            if run_command.task.yyc { "yyc" } else { "vm" },
+                            if run_options.task.yyc { "yyc" } else { "vm" },
                             run_kind,
-                            console::style(&run_command.task.config).yellow().bright(),
+                            console::style(&run_options.task.config).yellow().bright(),
                             indicatif::HumanDuration(std::time::Instant::now() - start_time)
                         );
 
@@ -162,9 +172,6 @@ impl CompilerHandler {
                         // we're in the final stage...
                         if FINAL_EMITS.iter().any(|&v| line.contains(v)) == false {
                             startup_msgs.push(line);
-                        } else {
-                            // progress_bar.set_message(line);
-                            progress_bar.inc(15);
                         }
                     }
                 }

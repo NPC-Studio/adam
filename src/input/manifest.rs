@@ -6,7 +6,7 @@ use crate::DEFAULT_PLATFORM_DATA;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-pub struct ConfigFile {
+pub struct Manifest {
     /// the Gms2 configuration to use. If blank, will use "Default".
     pub configuration: Option<String>,
 
@@ -14,7 +14,7 @@ pub struct ConfigFile {
     /// >0 disable the pretty compile widget
     /// >1 adds verbose logging for the initial stages of compilation
     /// >2 enables all verbosity
-    pub verbosity: Option<usize>,
+    pub verbosity: Option<u8>,
 
     /// The output folder, relative to the current working directory. Defaults to `target`
     pub output_folder: Option<Utf8PathBuf>,
@@ -22,7 +22,7 @@ pub struct ConfigFile {
     /// Ignore cache.
     /// >0 disables the quick run when no files have been changed.
     /// >1 disables caching entirely.
-    pub ignore_cache: Option<usize>,
+    pub ignore_cache: Option<u8>,
 
     /// An absolute path to the Gms2 install location on the system.
     ///
@@ -101,20 +101,13 @@ pub struct ConfigFile {
     /// This path is relative to the current working directory.
     #[serde(default)]
     pub path_to_run_nix: Option<Utf8PathBuf>,
-
-    /// This is the path the shell script will be executed in. If not given, defaults to use
-    /// the current working directory.
-    ///
-    /// This path is relative to the current working directory.
-    #[serde(default)]
-    pub directory_to_use: Option<Utf8PathBuf>,
 }
 
-impl ConfigFile {
+impl Manifest {
     pub fn write_to_options(
         self,
         run_options: &mut crate::RunOptions,
-        check_options: &mut Option<crate::CheckOptions>,
+        check_options: &mut Option<Utf8PathBuf>,
     ) {
         #[allow(deprecated)]
         let Self {
@@ -133,7 +126,6 @@ impl ConfigFile {
             test_success_keyword,
             path_to_run_windows,
             path_to_run_nix,
-            directory_to_use,
             x64_windows: _,
         } = self;
 
@@ -193,41 +185,13 @@ impl ConfigFile {
         if let Some(o) = test_success_keyword {
             run_options.task.test_success_needle = o;
         }
-
-        #[cfg(target_os = "windows")]
-        if let Some(windows_path) = path_to_run_windows {
-            let _ = path_to_run_nix;
-            let co = match check_options.as_mut() {
-                Some(v) => v,
-                None => {
-                    *check_options = Some(Default::default());
-                    check_options.as_mut().unwrap()
-                }
-            };
-
-            co.path_to_run = windows_path;
-        }
-
-        #[cfg(not(target_os = "windows"))]
-        if let Some(nix_path) = path_to_run_nix {
-            let _ = path_to_run_windows;
-            let co = match check_options.as_mut() {
-                Some(v) => v,
-                None => {
-                    *check_options = Some(Default::default());
-                    check_options.as_mut().unwrap()
-                }
-            };
-
-            co.path_to_run = nix_path;
-        }
-
-        if let Some(directory_to_use) = directory_to_use {
-            if let Some(check_options) = check_options.as_mut() {
-                check_options.directory_to_use = Some(directory_to_use);
-            } else {
-                println!("WARNING: directory_to_use specified in config file without a shell script specified doesn't make any sense. ignored");
-            }
+        let target = if cfg!(target_os = "windows") {
+            path_to_run_windows
+        } else {
+            path_to_run_nix
+        };
+        if let Some(target) = target {
+            *check_options = Some(target);
         }
     }
 
@@ -250,7 +214,6 @@ impl ConfigFile {
             test_success_keyword,
             path_to_run_windows,
             path_to_run_nix,
-            directory_to_use,
             x64_windows: _,
         } = self;
 
@@ -311,15 +274,11 @@ impl ConfigFile {
         if let Some(nix_path) = path_to_run_nix {
             target_config.path_to_run_nix = Some(nix_path);
         }
-
-        if let Some(directory_to_use) = directory_to_use {
-            target_config.directory_to_use = Some(directory_to_use);
-        }
     }
 }
 
-impl ConfigFile {
-    pub fn find_config(user_supplied_path: Option<&PathBuf>) -> Option<ConfigFile> {
+impl Manifest {
+    pub fn find_manifest(user_supplied_path: Option<&PathBuf>) -> Option<Manifest> {
         let config_path = match user_supplied_path {
             Some(path) => path.to_path_buf(),
             None => {

@@ -1,25 +1,25 @@
 use std::fmt;
 
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use color_eyre::Help;
 
-use crate::{runner::CheckOptions, AnyResult, RunOptions};
+use crate::{AnyResult, RunOptions};
 
-use super::cli::{ClapOperation, CliOptions};
+use super::{cli::ClapOperation, InputOpts};
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Ord, PartialOrd)]
+#[derive(Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub enum Operation {
     Run(RunKind),
     Check,
     Clean,
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Ord, PartialOrd)]
+#[derive(Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub enum RunKind {
     Run,
     Build,
     Release,
-    Test,
+    Test(String),
 }
 
 impl RunKind {
@@ -27,7 +27,7 @@ impl RunKind {
     ///
     /// [`Test`]: RunKind::Test
     pub fn is_test(&self) -> bool {
-        matches!(self, Self::Test)
+        matches!(self, Self::Test(_))
     }
 }
 
@@ -36,7 +36,13 @@ impl fmt::Display for RunKind {
         let word = match self {
             RunKind::Run | RunKind::Build => "compile",
             RunKind::Release => "release",
-            RunKind::Test => "test",
+            RunKind::Test(test_word) => {
+                if test_word.is_empty() {
+                    "test"
+                } else {
+                    return write!(f, "test:{}", test_word);
+                }
+            }
         };
 
         f.pad(word)
@@ -44,24 +50,26 @@ impl fmt::Display for RunKind {
 }
 
 pub fn parse_inputs(
-    operation: ClapOperation,
+    cli: InputOpts,
     mut runtime_options: RunOptions,
-    mut check_options: Option<CheckOptions>,
-) -> AnyResult<(RunOptions, Option<CheckOptions>, Operation)> {
-    let (cli_options, cli_check_options, operation) = match operation {
-        ClapOperation::Run(b) => (b, None, Operation::Run(RunKind::Run)),
-        ClapOperation::Build(b) => (b, None, Operation::Run(RunKind::Build)),
-        ClapOperation::Release(b) => (b, None, Operation::Run(RunKind::Release)),
-        ClapOperation::Test(b) => (b, None, Operation::Run(RunKind::Test)),
-        ClapOperation::Check(b) => (CliOptions::default(), Some(b), Operation::Check),
-        ClapOperation::Clean(co) => (
-            CliOptions {
-                output_folder: co.output_folder,
-                ..Default::default()
-            },
-            None,
-            Operation::Clean,
-        ),
+    check_options: &mut Option<Utf8PathBuf>,
+) -> AnyResult<(RunOptions, Operation)> {
+    let build_options = cli.build_options;
+    let operation = match cli.subcmd {
+        ClapOperation::Run => Operation::Run(RunKind::Run),
+        ClapOperation::Build => Operation::Run(RunKind::Build),
+        ClapOperation::Release => Operation::Run(RunKind::Release),
+        ClapOperation::Test {
+            adam_test: adam_test_value,
+        } => Operation::Run(RunKind::Test(adam_test_value)),
+        ClapOperation::Check { path_to_run } => {
+            if let Some(path_to_run) = path_to_run {
+                *check_options = Some(path_to_run);
+            }
+            Operation::Check
+        }
+        ClapOperation::Clean => Operation::Clean,
+        // we won't get here for these
         ClapOperation::UserConfig(_)
         | ClapOperation::Vfs { .. }
         | ClapOperation::Add(_)
@@ -72,24 +80,12 @@ pub fn parse_inputs(
     };
 
     // write them cli_options down!
-    cli_options.write_to_options(&mut runtime_options);
-
-    if let Some(cli_check_options) = cli_check_options {
-        let check_options = match check_options.as_mut() {
-            Some(v) => v,
-            None => {
-                check_options = Some(Default::default());
-                check_options.as_mut().unwrap()
-            }
-        };
-
-        cli_check_options.write_to_options(check_options);
-    }
+    build_options.write_to_options(&mut runtime_options);
 
     // check if we can make a user data raw...
     load_user_data(&mut runtime_options)?;
 
-    Ok((runtime_options, check_options, operation))
+    Ok((runtime_options, operation))
 }
 
 /// Loads in the license folder path and the visual studio path.

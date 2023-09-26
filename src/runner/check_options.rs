@@ -10,7 +10,7 @@ fn harness_check(path_to_run: Utf8PathBuf) -> Command {
     cmd.arg("-ExecutionPolicy")
         .arg("RemoteSigned")
         .arg("-File")
-        .arg(current_dir.join(&path_to_run));
+        .arg(current_dir.join(path_to_run));
 
     cmd
 }

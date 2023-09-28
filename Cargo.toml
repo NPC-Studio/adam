@@ -15,7 +15,8 @@ toml = "0.7.3"
 confy = "0.5.1"
 yy-boss = "0.7.0"
 
-clap = { version = "4.2.0", features = ["derive", "cargo"] }
+clap = { version = "4.4", features = ["derive", "cargo"] }
+
 directories = "5.0.0"
 color-eyre = "0.6.2"
 camino = { version = "1.1.4", features = ["serde1"] }

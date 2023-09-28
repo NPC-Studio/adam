@@ -265,6 +265,14 @@ pub fn handle_vfs_request(vfs: Vfs) -> ExitCode {
                 return ExitCode::FAILURE;
             }
         }
+        Vfs::Where { asset_name } => match yyp_boss.vfs.get_folder_by_fname(&asset_name) {
+            Ok(v) => {
+                println!("{}", v.view_path_location());
+            }
+            Err(_) => {
+                println!("{}: `{}` does not exist", "error".bright_red(), asset_name);
+            }
+        },
     }
     ExitCode::SUCCESS
 }

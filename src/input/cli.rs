@@ -156,6 +156,13 @@ pub enum Vfs {
         /// This is the new directory to move it to, such as `Scripts/Player/Data`.
         new_directory: String,
     },
+
+    /// Tries to find the VFS path of the given asset.
+    #[clap(alias = "w")]
+    Where {
+        /// The asset name to find.
+        asset_name: String,
+    },
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]

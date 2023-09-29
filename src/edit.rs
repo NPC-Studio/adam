@@ -4,8 +4,9 @@ use colored::Colorize;
 use yy_boss::{
     yy_typings::{
         self,
-        object_yy::{EventType, EventTypeConvertErrors, Object, ObjectEvent},
+        object_yy::{EventType, EventTypeConvertErrors, Object},
         script::Script,
+        utils::TrailingCommaUtility,
         CommonData, ViewPath, ViewPathLocation,
     },
     Resource, YypBoss,
@@ -17,16 +18,16 @@ use crate::{
 };
 
 pub fn handle_add_request(kind: Add) -> ExitCode {
-    let Some(mut yyp_boss) = create_yyp_boss(YypBoss::without_resources) else {
-        return ExitCode::FAILURE;
-    };
-    yyp_boss
-        .quick_name()
-        .expect("bad yyp entry -- couldn't add.");
-
     match kind {
         Add::Script { name, vfs } => {
-            let Some(parent) = find_vfs_path(&yyp_boss, vfs) else {
+            let Some(mut yyp_boss) = create_yyp_boss(YypBoss::without_resources) else {
+                return ExitCode::FAILURE;
+            };
+            yyp_boss
+                .quick_name()
+                .expect("bad yyp entry -- couldn't add.");
+
+            let Some(parent) = maybe_find_vfs_path(&yyp_boss, vfs) else {
                 return ExitCode::FAILURE;
             };
 
@@ -64,9 +65,21 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             parent,
             sprite,
         } => {
-            let Some(vfs) = find_vfs_path(&yyp_boss, vfs) else {
+            let Some(mut yyp_boss) = create_yyp_boss(|p| YypBoss::new(p, &[Resource::Object]))
+            else {
                 return ExitCode::FAILURE;
             };
+            yyp_boss
+                .quick_name()
+                .expect("bad yyp entry -- couldn't add.");
+
+            let vfs = vfs.map(|v| match find_vfs_path(&yyp_boss, v) {
+                Some(v) => v,
+                None => {
+                    // we're OUTTA here!!
+                    std::process::exit(1);
+                }
+            });
 
             let sprite_id = if let Some(sprite) = sprite {
                 if let Some(sprite) = yyp_boss
@@ -109,18 +122,9 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             };
 
             // okay now we transform the event list...
-            let event_result: Result<Vec<ObjectEvent>, EventTypeConvertErrors> = events
+            let event_result: Result<Vec<EventType>, EventTypeConvertErrors> = events
                 .into_iter()
-                .map(|event_name| {
-                    let event_type = EventType::parse_filename_simple(&event_name)?;
-
-                    Ok(ObjectEvent {
-                        common_data: CommonData::default(),
-                        event_type,
-                        collision_object_id: None,
-                        is_dn_d: false,
-                    })
-                })
+                .map(|event_name| EventType::parse_filename_simple(&event_name))
                 .collect();
 
             let event_list = match event_result {
@@ -136,28 +140,54 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
                 }
             };
 
-            let event_data: HashMap<_, _> = event_list
-                .iter()
-                .map(|v| (v.event_type, String::new()))
-                .collect();
+            let is_new = yyp_boss.objects.get(&name).is_none();
 
-            if let Err(e) = yyp_boss.add_resource(
-                Object {
-                    common_data: CommonData::new(name.clone()),
-                    parent: vfs,
-                    sprite_id,
-                    parent_object_id,
-                    managed: true,
-                    persistent: false,
-                    event_list,
-                    visible: true,
-                    ..Default::default()
-                },
-                event_data.clone(),
-            ) {
-                println!("{}: {}", console::style("error").bright().red(), e);
-                return ExitCode::FAILURE;
+            if is_new {
+                if let Err(e) = yyp_boss.add_resource(
+                    Object {
+                        common_data: CommonData::new(name.clone()),
+                        managed: true,
+                        persistent: false,
+                        visible: true,
+                        parent: yyp_boss.project_metadata().root_file.clone(),
+                        ..Default::default()
+                    },
+                    HashMap::new(),
+                ) {
+                    println!("{}: {}", console::style("error").bright().red(), e);
+                    return ExitCode::FAILURE;
+                }
+            } else {
+                yyp_boss
+                    .objects
+                    .load_resource_associated_data(
+                        &name,
+                        yyp_boss.directory_manager.root_directory(),
+                        &TrailingCommaUtility::new(),
+                    )
+                    .unwrap();
             }
+
+            let obj_data = unsafe { yyp_boss.objects.get_mut(&name).unwrap() };
+
+            if let Some(vfs) = &vfs {
+                obj_data.yy_resource.parent = vfs.clone();
+            }
+
+            if let Some(sprite_id) = &sprite_id {
+                obj_data.yy_resource.sprite_id = Some(sprite_id.clone());
+            }
+            if let Some(parent_object_id) = &parent_object_id {
+                obj_data.yy_resource.parent_object_id = Some(parent_object_id.clone());
+            }
+
+            for event in event_list.iter().copied() {
+                yyp_boss.objects.add_event(&name, event);
+            }
+
+            // and finally mark it for serialization
+            yyp_boss.objects.mark_for_serialization(&name).unwrap();
+
             if let Err(e) = yyp_boss.serialize() {
                 println!(
                     "{}: could not serialize {}",
@@ -167,23 +197,33 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
                 return ExitCode::FAILURE;
             }
 
-            if event_data.is_empty() {
+            println!(
+                "{}: {} {}",
+                "success".bright_green(),
+                if is_new { "created" } else { "edited" },
+                name
+            );
+
+            if let Some(vfs) = &vfs {
+                println!("vfs_parent: `{}`", vfs.name.bold());
+            }
+
+            if let Some(sprite_id) = &sprite_id {
+                println!("sprite: `{}`", sprite_id.name.bold());
+            }
+            if let Some(parent_object_id) = &parent_object_id {
+                println!("parent: `{}`", parent_object_id.name.bold());
+            }
+
+            for event in event_list {
+                let (ev_name, ev_num) = event.filename();
                 println!(
-                    "{}: ./objects/{OBJECT_NAME}/{OBJECT_NAME}",
-                    console::style("success").green().bright(),
-                    OBJECT_NAME = name
+                    "{}: ./objects/{}/{}_{}.gml",
+                    "created".bright_green(),
+                    name,
+                    ev_name,
+                    ev_num
                 );
-            } else {
-                for event in event_data.into_keys() {
-                    let (ev_name, ev_num) = event.filename();
-                    println!(
-                        "{}: ./objects/{}/{}_{}.gml",
-                        console::style("success").green().bright(),
-                        name,
-                        ev_name,
-                        ev_num
-                    );
-                }
             }
         }
     }
@@ -440,29 +480,30 @@ pub fn handle_rename_request(original_name: String, new_name: String) -> ExitCod
     ExitCode::SUCCESS
 }
 
-fn find_vfs_path(yyp_boss: &YypBoss, input: Option<String>) -> Option<ViewPath> {
-    let parent = match input {
-        Some(vfs) => {
-            let path = ViewPathLocation(format!("folders/{}.yy", vfs));
+fn maybe_find_vfs_path(yyp_boss: &YypBoss, input: Option<String>) -> Option<ViewPath> {
+    match input {
+        Some(vfs) => find_vfs_path(yyp_boss, vfs),
+        None => Some(yyp_boss.project_metadata().root_file),
+    }
+}
 
-            if yyp_boss.vfs.get_folder(&path).is_some() {
-                // this is just a fancy way of getting the folder name basically.
-                let utf8_path = camino::Utf8Path::new(path.0.as_str());
-                let name = utf8_path.file_stem().unwrap().to_owned();
+fn find_vfs_path(yyp_boss: &YypBoss, vfs: String) -> Option<ViewPath> {
+    let path = ViewPathLocation(format!("folders/{}.yy", vfs));
 
-                yy_typings::ViewPath { name, path }
-            } else {
-                println!(
-                    "{}: provided folder does not exist",
-                    console::style("adam error").bright().red(),
-                );
-                return None;
-            }
-        }
-        None => yyp_boss.project_metadata().root_file,
-    };
+    if yyp_boss.vfs.get_folder(&path).is_some() {
+        // this is just a fancy way of getting the folder name basically.
+        let utf8_path = camino::Utf8Path::new(path.0.as_str());
+        let name = utf8_path.file_stem().unwrap().to_owned();
 
-    Some(parent)
+        Some(yy_typings::ViewPath { name, path })
+    } else {
+        println!(
+            "{}: folder `{}` does not exist",
+            "adam error".bright_red(),
+            path.to_string().bold(),
+        );
+        None
+    }
 }
 
 fn create_yyp_boss(

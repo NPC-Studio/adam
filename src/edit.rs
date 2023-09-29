@@ -65,6 +65,7 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             parent,
             sprite,
             visible,
+            tags,
         } => {
             let Some(mut yyp_boss) = create_yyp_boss(|p| YypBoss::new(p, &[Resource::Object]))
             else {
@@ -125,7 +126,7 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             // okay now we transform the event list...
             let event_result: Result<Vec<EventType>, EventTypeConvertErrors> = events
                 .into_iter()
-                .map(|event_name| EventType::parse_filename_simple(&event_name))
+                .map(|event_name| EventType::parse_filename_heuristic(&event_name))
                 .collect();
 
             let event_list = match event_result {
@@ -183,6 +184,9 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             }
             if let Some(vis) = visible {
                 obj_data.yy_resource.visible = vis;
+            }
+            if let Some(tags) = &tags {
+                obj_data.yy_resource.tags = tags.clone();
             }
 
             for event in event_list.iter().copied() {

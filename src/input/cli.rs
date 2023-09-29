@@ -105,6 +105,7 @@ pub enum UserConfigOptions {
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub enum Add {
     /// Add a script to the project.
+    #[clap(alias = "s")]
     Script {
         /// The name of the script, such as `FileUtilities`. Do not include `gml` in it.
         name: String,
@@ -139,6 +140,10 @@ pub enum Add {
         /// Marks visibility on the object.
         #[clap(long)]
         visible: Option<bool>,
+
+        /// Sets the tags on an object. This replaces all the tags on the object if it already exists.
+        #[clap(long)]
+        tags: Option<Vec<String>>,
     },
 }
 

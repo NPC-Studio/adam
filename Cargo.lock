@@ -1877,9 +1877,7 @@ dependencies = [
 
 [[package]]
 name = "yy-boss"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f03288857fe0f2545c4441adfabe22806c1479bae084b143d22dfe1afd786770"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "camino",
@@ -1905,8 +1903,6 @@ dependencies = [
 [[package]]
 name = "yy-typings"
 version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b2eca76d87cb5da8519db9c4802b5aeef612398710254ad0f6c13706e1a930a"
 dependencies = [
  "num-derive",
  "num-traits",
@@ -1916,5 +1912,6 @@ dependencies = [
  "serde_repr",
  "serde_with",
  "smart-default",
+ "thiserror",
  "uuid",
 ]

@@ -14,228 +14,229 @@ use yy_boss::{
 
 use crate::{
     igor,
-    input::{Add, Vfs},
+    input::{ObjectEditRequest, ScriptEditRequest, Vfs},
 };
 
-pub fn handle_add_request(kind: Add) -> ExitCode {
-    match kind {
-        Add::Script { name, vfs } => {
-            let Some(mut yyp_boss) = create_yyp_boss(YypBoss::without_resources) else {
-                return ExitCode::FAILURE;
-            };
-            yyp_boss
-                .quick_name()
-                .expect("bad yyp entry -- couldn't add.");
+pub fn handle_script(script: ScriptEditRequest) -> ExitCode {
+    let Some(mut yyp_boss) = create_yyp_boss(YypBoss::without_resources) else {
+        return ExitCode::FAILURE;
+    };
+    yyp_boss
+        .quick_name()
+        .expect("bad yyp entry -- couldn't add.");
 
-            let Some(parent) = maybe_find_vfs_path(&yyp_boss, vfs) else {
-                return ExitCode::FAILURE;
-            };
+    let Some(parent) = maybe_find_vfs_path(&yyp_boss, script.vfs) else {
+        return ExitCode::FAILURE;
+    };
 
-            if let Err(e) = yyp_boss.add_resource(
-                Script {
-                    common_data: CommonData::new(name.clone()),
-                    is_compatibility: false,
-                    is_dn_d: false,
-                    parent,
-                },
-                String::new(),
-            ) {
-                println!("{}: {}", console::style("error").bright().red(), e);
-                return ExitCode::FAILURE;
-            }
-            if let Err(e) = yyp_boss.serialize() {
-                println!(
-                    "{}: could not serialize {}",
-                    console::style("error").bright().red(),
-                    e
-                );
-                return ExitCode::FAILURE;
-            }
-
-            println!(
-                "{}: ./scripts/{SCRIPT_NAME}/{SCRIPT_NAME}.gml",
-                console::style("success").green().bright(),
-                SCRIPT_NAME = name
-            );
-        }
-        Add::Object {
-            name,
-            events,
-            vfs,
+    if let Err(e) = yyp_boss.add_resource(
+        Script {
+            common_data: CommonData::new(script.name.clone()),
+            is_compatibility: false,
+            is_dn_d: false,
             parent,
-            sprite,
-            visible,
-            tags,
-        } => {
-            let Some(mut yyp_boss) = create_yyp_boss(|p| YypBoss::new(p, &[Resource::Object]))
-            else {
-                return ExitCode::FAILURE;
-            };
-            yyp_boss
-                .quick_name()
-                .expect("bad yyp entry -- couldn't add.");
+        },
+        String::new(),
+    ) {
+        println!("{}: {}", console::style("error").bright().red(), e);
+        return ExitCode::FAILURE;
+    }
+    if let Err(e) = yyp_boss.serialize() {
+        println!(
+            "{}: could not serialize {}",
+            console::style("error").bright().red(),
+            e
+        );
+        return ExitCode::FAILURE;
+    }
 
-            let vfs = vfs.map(|v| match find_vfs_path(&yyp_boss, v) {
-                Some(v) => v,
-                None => {
-                    // we're OUTTA here!!
-                    std::process::exit(1);
-                }
-            });
+    println!(
+        "{}: ./scripts/{SCRIPT_NAME}/{SCRIPT_NAME}.gml",
+        console::style("success").green().bright(),
+        SCRIPT_NAME = script.name
+    );
 
-            let sprite_id = if let Some(sprite) = sprite {
-                if let Some(sprite) = yyp_boss
-                    .yyp()
-                    .resources
-                    .iter()
-                    .find(|v| v.id.name == sprite)
-                {
-                    Some(sprite.id.clone())
-                } else {
-                    println!(
-                        "{}: no sprite named `{}` found",
-                        console::style("error").bright().red(),
-                        sprite
-                    );
-                    return ExitCode::FAILURE;
-                }
-            } else {
-                None
-            };
+    ExitCode::SUCCESS
+}
 
-            let parent_object_id = if let Some(parent_object_id) = parent {
-                if let Some(parent_object_id) = yyp_boss
-                    .yyp()
-                    .resources
-                    .iter()
-                    .find(|v| v.id.name == parent_object_id)
-                {
-                    Some(parent_object_id.id.clone())
-                } else {
-                    println!(
-                        "{}: no object named `{}` found",
-                        console::style("error").bright().red(),
-                        parent_object_id
-                    );
-                    return ExitCode::FAILURE;
-                }
-            } else {
-                None
-            };
+pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
+    let Some(mut yyp_boss) = create_yyp_boss(|p| YypBoss::new(p, &[Resource::Object])) else {
+        return ExitCode::FAILURE;
+    };
 
-            // okay now we transform the event list...
-            let event_result: Result<Vec<EventType>, EventTypeConvertErrors> = events
-                .into_iter()
-                .map(|event_name| EventType::parse_filename_heuristic(&event_name))
-                .collect();
+    let ObjectEditRequest {
+        name,
+        events,
+        parent,
+        sprite,
+        vfs,
+        visible,
+        tags,
+    } = object;
 
-            let event_list = match event_result {
-                Ok(v) => v,
-                Err(e) => {
-                    println!(
-                        "{}: failed to parse event_name {}",
-                        console::style("error").bright().red(),
-                        e
-                    );
+    yyp_boss
+        .quick_name()
+        .expect("bad yyp entry -- couldn't add.");
 
-                    return ExitCode::FAILURE;
-                }
-            };
+    let vfs = vfs.map(|v| match find_vfs_path(&yyp_boss, v) {
+        Some(v) => v,
+        None => {
+            // we're OUTTA here!!
+            std::process::exit(1);
+        }
+    });
 
-            let is_new = yyp_boss.objects.get(&name).is_none();
-
-            if is_new {
-                if let Err(e) = yyp_boss.add_resource(
-                    Object {
-                        common_data: CommonData::new(name.clone()),
-                        managed: true,
-                        persistent: false,
-                        visible: true,
-                        parent: yyp_boss.project_metadata().root_file.clone(),
-                        ..Default::default()
-                    },
-                    HashMap::new(),
-                ) {
-                    println!("{}: {}", console::style("error").bright().red(), e);
-                    return ExitCode::FAILURE;
-                }
-            } else {
-                yyp_boss
-                    .objects
-                    .load_resource_associated_data(
-                        &name,
-                        yyp_boss.directory_manager.root_directory(),
-                        &TrailingCommaUtility::new(),
-                    )
-                    .unwrap();
-            }
-
-            let obj_data = unsafe { yyp_boss.objects.get_mut(&name).unwrap() };
-
-            if let Some(vfs) = &vfs {
-                obj_data.yy_resource.parent = vfs.clone();
-            }
-
-            if let Some(sprite_id) = &sprite_id {
-                obj_data.yy_resource.sprite_id = Some(sprite_id.clone());
-            }
-            if let Some(parent_object_id) = &parent_object_id {
-                obj_data.yy_resource.parent_object_id = Some(parent_object_id.clone());
-            }
-            if let Some(vis) = visible {
-                obj_data.yy_resource.visible = vis;
-            }
-            if let Some(tags) = &tags {
-                obj_data.yy_resource.tags = tags.clone();
-            }
-
-            for event in event_list.iter().copied() {
-                yyp_boss.objects.add_event(&name, event);
-            }
-
-            // and finally mark it for serialization
-            yyp_boss.objects.mark_for_serialization(&name).unwrap();
-
-            if let Err(e) = yyp_boss.serialize() {
-                println!(
-                    "{}: could not serialize {}",
-                    console::style("error").bright().red(),
-                    e
-                );
-                return ExitCode::FAILURE;
-            }
-
+    let sprite_id = if let Some(sprite) = sprite {
+        if let Some(sprite) = yyp_boss
+            .yyp()
+            .resources
+            .iter()
+            .find(|v| v.id.name == sprite)
+        {
+            Some(sprite.id.clone())
+        } else {
             println!(
-                "{}: {}",
-                if is_new { "created" } else { "edited" }.bright_green(),
-                name
+                "{}: no sprite named `{}` found",
+                console::style("error").bright().red(),
+                sprite
+            );
+            return ExitCode::FAILURE;
+        }
+    } else {
+        None
+    };
+
+    let parent_object_id = if let Some(parent_object_id) = parent {
+        if let Some(parent_object_id) = yyp_boss
+            .yyp()
+            .resources
+            .iter()
+            .find(|v| v.id.name == parent_object_id)
+        {
+            Some(parent_object_id.id.clone())
+        } else {
+            println!(
+                "{}: no object named `{}` found",
+                console::style("error").bright().red(),
+                parent_object_id
+            );
+            return ExitCode::FAILURE;
+        }
+    } else {
+        None
+    };
+
+    // okay now we transform the event list...
+    let event_result: Result<Vec<EventType>, EventTypeConvertErrors> = events
+        .into_iter()
+        .map(|event_name| EventType::parse_filename_heuristic(&event_name))
+        .collect();
+
+    let event_list = match event_result {
+        Ok(v) => v,
+        Err(e) => {
+            println!(
+                "{}: failed to parse event_name {}",
+                console::style("error").bright().red(),
+                e
             );
 
-            if let Some(vfs) = &vfs {
-                println!("vfs_parent: `{}`", vfs.name.bold());
-            }
-
-            if let Some(sprite_id) = &sprite_id {
-                println!("sprite: `{}`", sprite_id.name.bold());
-            }
-            if let Some(parent_object_id) = &parent_object_id {
-                println!("parent: `{}`", parent_object_id.name.bold());
-            }
-            if let Some(vis) = visible {
-                println!("visible: {}", vis.to_string().bold());
-            }
-
-            for event in event_list {
-                let (ev_name, ev_num) = event.filename();
-                println!(
-                    "{}: ./objects/{}/{}_{}.gml",
-                    "created".bright_green(),
-                    name,
-                    ev_name,
-                    ev_num
-                );
-            }
+            return ExitCode::FAILURE;
         }
+    };
+
+    let is_new = yyp_boss.objects.get(&name).is_none();
+
+    if is_new {
+        if let Err(e) = yyp_boss.add_resource(
+            Object {
+                common_data: CommonData::new(name.clone()),
+                managed: true,
+                persistent: false,
+                visible: true,
+                parent: yyp_boss.project_metadata().root_file.clone(),
+                ..Default::default()
+            },
+            HashMap::new(),
+        ) {
+            println!("{}: {}", console::style("error").bright().red(), e);
+            return ExitCode::FAILURE;
+        }
+    } else {
+        yyp_boss
+            .objects
+            .load_resource_associated_data(
+                &name,
+                yyp_boss.directory_manager.root_directory(),
+                &TrailingCommaUtility::new(),
+            )
+            .unwrap();
+    }
+
+    let obj_data = unsafe { yyp_boss.objects.get_mut(&name).unwrap() };
+
+    if let Some(vfs) = &vfs {
+        obj_data.yy_resource.parent = vfs.clone();
+    }
+
+    if let Some(sprite_id) = &sprite_id {
+        obj_data.yy_resource.sprite_id = Some(sprite_id.clone());
+    }
+    if let Some(parent_object_id) = &parent_object_id {
+        obj_data.yy_resource.parent_object_id = Some(parent_object_id.clone());
+    }
+    if let Some(vis) = visible {
+        obj_data.yy_resource.visible = vis;
+    }
+    if let Some(tags) = &tags {
+        obj_data.yy_resource.tags = tags.clone();
+    }
+
+    for event in event_list.iter().copied() {
+        yyp_boss.objects.add_event(&name, event);
+    }
+
+    // and finally mark it for serialization
+    yyp_boss.objects.mark_for_serialization(&name).unwrap();
+
+    if let Err(e) = yyp_boss.serialize() {
+        println!(
+            "{}: could not serialize {}",
+            console::style("error").bright().red(),
+            e
+        );
+        return ExitCode::FAILURE;
+    }
+
+    println!(
+        "{}: {}",
+        if is_new { "created" } else { "edited" }.bright_green(),
+        name
+    );
+
+    if let Some(vfs) = &vfs {
+        println!("vfs_parent: `{}`", vfs.name.bold());
+    }
+
+    if let Some(sprite_id) = &sprite_id {
+        println!("sprite: `{}`", sprite_id.name.bold());
+    }
+    if let Some(parent_object_id) = &parent_object_id {
+        println!("parent: `{}`", parent_object_id.name.bold());
+    }
+    if let Some(vis) = visible {
+        println!("visible: {}", vis.to_string().bold());
+    }
+
+    for event in event_list {
+        let (ev_name, ev_num) = event.filename();
+        println!(
+            "{}: ./objects/{}/{}_{}.gml",
+            "created".bright_green(),
+            name,
+            ev_name,
+            ev_num
+        );
     }
 
     ExitCode::SUCCESS

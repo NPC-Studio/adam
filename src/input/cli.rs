@@ -55,9 +55,13 @@ pub enum ClapOperation {
     /// Cleans a project target directory.
     Clean(BuildOptions),
 
-    /// Adds certain resources to the project.
-    #[clap(subcommand)]
-    Add(Add),
+    /// Adds or edits a script to the project.
+    #[clap(alias = "s")]
+    Script(ScriptEditRequest),
+
+    /// Adds or Edits an Object.
+    #[clap(alias = "o", alias = "objects")]
+    Object(ObjectEditRequest),
 
     /// Removes an asset of the given name from the project.
     #[clap(visible_alias = "rm")]
@@ -84,6 +88,46 @@ pub enum ClapOperation {
     UserConfig(UserConfigOptions),
 }
 
+#[derive(Debug, Parser)]
+pub struct ScriptEditRequest {
+    /// The name of the script, such as `FileUtilities`. Do not include `gml` in it.
+    pub name: String,
+
+    /// Where to place the script within the vfs. If not provided, placed at the root.
+    #[clap(short, long)]
+    pub vfs: Option<String>,
+}
+
+#[derive(Debug, Parser)]
+pub struct ObjectEditRequest {
+    /// The name of the object, such as `obj_player`.
+    pub name: String,
+
+    /// Events to put in the object. Events can be like `create`, `step_0`, or `other_4`. If no number
+    /// is provided, `_0` is assumed where appropriate.
+    pub events: Vec<String>,
+
+    /// The parent object to set up some inheritence nonsense, such as `par_npc` or `obj_laser`
+    #[clap(short, long)]
+    pub parent: Option<String>,
+
+    /// The sprite name to use for this object, such as `spr_player_running`
+    #[clap(short, long)]
+    pub sprite: Option<String>,
+
+    /// Where to place the script within the vfs. If not provided, placed at the root.
+    #[clap(long)]
+    pub vfs: Option<String>,
+
+    /// Marks visibility on the object.
+    #[clap(long)]
+    pub visible: Option<bool>,
+
+    /// Sets the tags on an object. This replaces all the tags on the object if it already exists.
+    #[clap(long)]
+    pub tags: Option<Vec<String>>,
+}
+
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
 pub enum UserConfigOptions {
     /// Prints out the User Configuration file. If one does not exist, it is created.
@@ -98,52 +142,6 @@ pub enum UserConfigOptions {
         name: String,
         /// The value of the property.
         value: String,
-    },
-}
-
-/// The kinds of things which can be added to a project.
-#[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
-pub enum Add {
-    /// Add a script to the project.
-    #[clap(alias = "s")]
-    Script {
-        /// The name of the script, such as `FileUtilities`. Do not include `gml` in it.
-        name: String,
-
-        /// Where to place the script within the vfs. If not provided, placed at the root.
-        #[clap(short, long)]
-        vfs: Option<String>,
-    },
-
-    /// Add an Object to the project.
-    #[clap(alias = "o", alias = "objects")]
-    Object {
-        /// The name of the object, such as `obj_player`.
-        name: String,
-
-        /// Events to put in the object. Events can be like `create`, `step_0`, or `other_4`. If no number
-        /// is provided, `_0` is assumed where appropriate.
-        events: Vec<String>,
-
-        /// The parent object to set up some inheritence nonsense, such as `par_npc` or `obj_laser`
-        #[clap(short, long)]
-        parent: Option<String>,
-
-        /// The sprite name to use for this object, such as `spr_player_running`
-        #[clap(short, long)]
-        sprite: Option<String>,
-
-        /// Where to place the script within the vfs. If not provided, placed at the root.
-        #[clap(long)]
-        vfs: Option<String>,
-
-        /// Marks visibility on the object.
-        #[clap(long)]
-        visible: Option<bool>,
-
-        /// Sets the tags on an object. This replaces all the tags on the object if it already exists.
-        #[clap(long)]
-        tags: Option<Vec<String>>,
     },
 }
 

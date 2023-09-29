@@ -123,8 +123,11 @@ fn main() -> ExitCode {
         ClapOperation::Vfs(vfs) => {
             return edit::handle_vfs_request(vfs);
         }
-        ClapOperation::Add(add_op) => {
-            return edit::handle_add_request(add_op);
+        ClapOperation::Script(data) => {
+            return edit::handle_script(data);
+        }
+        ClapOperation::Object(data) => {
+            return edit::handle_object(data);
         }
         ClapOperation::Remove { name } => {
             return edit::handle_remove_request(name);

@@ -115,6 +115,7 @@ pub enum Add {
     },
 
     /// Add an Object to the project.
+    #[clap(alias = "o", alias = "objects")]
     Object {
         /// The name of the object, such as `obj_player`.
         name: String,
@@ -132,8 +133,12 @@ pub enum Add {
         sprite: Option<String>,
 
         /// Where to place the script within the vfs. If not provided, placed at the root.
-        #[clap(short, long)]
+        #[clap(long)]
         vfs: Option<String>,
+
+        /// Marks visibility on the object.
+        #[clap(long)]
+        visible: Option<bool>,
     },
 }
 

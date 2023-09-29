@@ -64,6 +64,7 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             vfs,
             parent,
             sprite,
+            visible,
         } => {
             let Some(mut yyp_boss) = create_yyp_boss(|p| YypBoss::new(p, &[Resource::Object]))
             else {
@@ -180,6 +181,9 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             if let Some(parent_object_id) = &parent_object_id {
                 obj_data.yy_resource.parent_object_id = Some(parent_object_id.clone());
             }
+            if let Some(vis) = visible {
+                obj_data.yy_resource.visible = vis;
+            }
 
             for event in event_list.iter().copied() {
                 yyp_boss.objects.add_event(&name, event);
@@ -212,6 +216,9 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             }
             if let Some(parent_object_id) = &parent_object_id {
                 println!("parent: `{}`", parent_object_id.name.bold());
+            }
+            if let Some(vis) = visible {
+                println!("visible: {}", vis.to_string().bold());
             }
 
             for event in event_list {

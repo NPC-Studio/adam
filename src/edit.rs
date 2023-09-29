@@ -198,9 +198,8 @@ pub fn handle_add_request(kind: Add) -> ExitCode {
             }
 
             println!(
-                "{}: {} {}",
-                "success".bright_green(),
-                if is_new { "created" } else { "edited" },
+                "{}: {}",
+                if is_new { "created" } else { "edited" }.bright_green(),
                 name
             );
 

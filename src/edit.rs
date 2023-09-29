@@ -59,26 +59,16 @@ pub fn handle_script(script: ScriptEditRequest) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
+pub fn handle_object(request: ObjectEditRequest) -> ExitCode {
     let Some(mut yyp_boss) = create_yyp_boss(|p| YypBoss::new(p, &[Resource::Object])) else {
         return ExitCode::FAILURE;
     };
-
-    let ObjectEditRequest {
-        name,
-        events,
-        parent,
-        sprite,
-        vfs,
-        visible,
-        tags,
-    } = object;
 
     yyp_boss
         .quick_name()
         .expect("bad yyp entry -- couldn't add.");
 
-    let vfs = vfs.map(|v| match find_vfs_path(&yyp_boss, v) {
+    let vfs = request.vfs.map(|v| match find_vfs_path(&yyp_boss, v) {
         Some(v) => v,
         None => {
             // we're OUTTA here!!
@@ -86,7 +76,7 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
         }
     });
 
-    let sprite_id = if let Some(sprite) = sprite {
+    let sprite_id = if let Some(sprite) = request.sprite {
         if let Some(sprite) = yyp_boss
             .yyp()
             .resources
@@ -106,7 +96,7 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
         None
     };
 
-    let parent_object_id = if let Some(parent_object_id) = parent {
+    let parent_object_id = if let Some(parent_object_id) = request.parent {
         if let Some(parent_object_id) = yyp_boss
             .yyp()
             .resources
@@ -127,7 +117,8 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
     };
 
     // okay now we transform the event list...
-    let event_result: Result<Vec<EventType>, EventTypeConvertErrors> = events
+    let event_result: Result<Vec<EventType>, EventTypeConvertErrors> = request
+        .events
         .into_iter()
         .map(|event_name| EventType::parse_filename_heuristic(&event_name))
         .collect();
@@ -145,12 +136,12 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
         }
     };
 
-    let is_new = yyp_boss.objects.get(&name).is_none();
+    let is_new = yyp_boss.objects.get(&request.name).is_none();
 
     if is_new {
         if let Err(e) = yyp_boss.add_resource(
             Object {
-                common_data: CommonData::new(name.clone()),
+                common_data: CommonData::new(request.name.clone()),
                 managed: true,
                 persistent: false,
                 visible: true,
@@ -166,14 +157,14 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
         yyp_boss
             .objects
             .load_resource_associated_data(
-                &name,
+                &request.name,
                 yyp_boss.directory_manager.root_directory(),
                 &TrailingCommaUtility::new(),
             )
             .unwrap();
     }
 
-    let obj_data = unsafe { yyp_boss.objects.get_mut(&name).unwrap() };
+    let obj_data = unsafe { yyp_boss.objects.get_mut(&request.name).unwrap() };
 
     if let Some(vfs) = &vfs {
         obj_data.yy_resource.parent = vfs.clone();
@@ -185,19 +176,22 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
     if let Some(parent_object_id) = &parent_object_id {
         obj_data.yy_resource.parent_object_id = Some(parent_object_id.clone());
     }
-    if let Some(vis) = visible {
+    if let Some(vis) = request.visible {
         obj_data.yy_resource.visible = vis;
     }
-    if let Some(tags) = &tags {
+    if let Some(tags) = &request.tags {
         obj_data.yy_resource.tags = tags.clone();
     }
 
     for event in event_list.iter().copied() {
-        yyp_boss.objects.add_event(&name, event);
+        yyp_boss.objects.add_event(&request.name, event);
     }
 
     // and finally mark it for serialization
-    yyp_boss.objects.mark_for_serialization(&name).unwrap();
+    yyp_boss
+        .objects
+        .mark_for_serialization(&request.name)
+        .unwrap();
 
     if let Err(e) = yyp_boss.serialize() {
         println!(
@@ -211,7 +205,7 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
     println!(
         "{}: {}",
         if is_new { "created" } else { "edited" }.bright_green(),
-        name
+        request.name
     );
 
     if let Some(vfs) = &vfs {
@@ -224,7 +218,7 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
     if let Some(parent_object_id) = &parent_object_id {
         println!("parent: `{}`", parent_object_id.name.bold());
     }
-    if let Some(vis) = visible {
+    if let Some(vis) = request.visible {
         println!("visible: {}", vis.to_string().bold());
     }
 
@@ -233,7 +227,7 @@ pub fn handle_object(object: ObjectEditRequest) -> ExitCode {
         println!(
             "{}: ./objects/{}/{}_{}.gml",
             "created".bright_green(),
-            name,
+            request.name,
             ev_name,
             ev_num
         );

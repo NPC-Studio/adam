@@ -121,7 +121,6 @@ pub enum Add {
 
         /// Events to put in the object. Events can be like `create`, `step_0`, or `other_4`. If no number
         /// is provided, `_0` is assumed where appropriate.
-        #[clap(default_value = "create step draw")]
         events: Vec<String>,
 
         /// The parent object to set up some inheritence nonsense, such as `par_npc` or `obj_laser`

@@ -1,9 +1,8 @@
 # This is a configuration file for an Object.
 # EDIT and then CLOSE this document, and adam will continue.
 
-# the name of the object. You can change this field
-# to rename the object
-name = "__DEFAULT_NAME__"
+# the name of the object. You can change this field to rename the object
+name = "obj_name"
 
 # these are the events of the object. comment out the events you do want.
 # there are other events not placed in this document for brevity,
@@ -29,18 +28,17 @@ events = [
 ]
 
 # the parent object reference. Comment out for none.
-parent = "__DEFAULT_PARENT__"
+parent = "obj_parent"
 
 # the sprite assigned. Comment out for none.
-sprite = "__DEFAULT_SPRITE__"
+sprite = "spr_sprite"
 
 # where to place the object within the virtual file system.
 # comment out to place at the room.
-folder = "__DEFAULT_FOLDER__"
+folder = "Objects/ParentFolder"
 
 # whether the object is visible or not.
 visible = true
 
-# what tags are given on the object. comment out or make a blank array
-# to remove all tags.
+# what tags are given on the object.
 tags = []

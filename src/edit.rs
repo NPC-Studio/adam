@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf, process::ExitCode};
+use std::{collections::HashMap, fs, path::PathBuf, process::ExitCode};
 
 use camino::Utf8Path;
 use colored::Colorize;
@@ -69,7 +69,7 @@ pub fn handle_object(request: ObjectEditRequest) -> ExitCode {
         .quick_name()
         .expect("bad yyp entry -- couldn't add.");
 
-    let vfs = request.folder.map(|v| match find_vfs_path(&yyp_boss, v) {
+    let vfs = request.folder.map(|v| match find_vfs_path(&yyp_boss, &v) {
         Some(v) => v,
         None => {
             // we're OUTTA here!!
@@ -506,52 +506,276 @@ pub fn edit(name: String, view: bool, target_folder: &Utf8Path) -> ExitCode {
         }
     }
 
-    if view {
-        let Some(object_data) = yyp_boss.objects.get(&name) else {
-            println!(
-                "{}: cannot view `{}`: object not found.",
-                "error".bright_red(),
-                name.bold()
-            );
+    let is_new = yyp_boss.objects.get(&name).is_some();
+
+    // view requires `is_new == false`, since otherwise, you're viewing nothing
+    if view && is_new == false {
+        println!(
+            "{}: cannot view `{}`: object not found.",
+            "error".bright_red(),
+            name.bold()
+        );
+
+        return ExitCode::FAILURE;
+    }
+
+    let configuration = match yyp_boss.objects.get(&name) {
+        Some(object_data) => gm_object_to_object_configuration(&object_data.yy_resource),
+        None => ObjectEditRequest {
+            name: name.clone(),
+            ..Default::default()
+        },
+    };
+
+    let inc = if view {
+        include_str!("../assets/object_view_manifest.toml")
+    } else {
+        include_str!("../assets/object_edit_manifest.toml")
+    };
+
+    let mut doc = inc.parse().unwrap();
+    manifest_maker(&configuration, &mut doc);
+
+    if is_new == false {
+        let arr = toml_edit::Array::from_iter(configuration.events);
+        doc["events"] = toml_edit::value(arr);
+    }
+
+    if target_folder.exists() == false && std::fs::create_dir_all(target_folder).is_err() {
+        println!("{}: couldn't make target folder", "error".bright_red());
+    }
+
+    let path = target_folder.join("object_manifest.toml");
+    std::fs::write(&path, doc.to_string()).unwrap();
+
+    if view == false {
+        println!("opening in editor...close editor window to proceed");
+    }
+
+    let o = {
+        let mut process_builder = std::process::Command::new("code");
+        process_builder.arg(&path);
+
+        if view == false {
+            process_builder.arg("--wait");
+        }
+
+        process_builder.output()
+    };
+
+    if o.is_err() {
+        println!("{}: couldn't spawn child process", "error".bright_red());
+    }
+
+    if view == false {
+        let term = console::Term::stdout();
+        term.clear_last_lines(1).unwrap();
+
+        let Ok(Ok(request)) =
+            fs::read_to_string(&path).map(|v| toml::from_str::<ObjectEditRequest>(&v))
+        else {
+            println!("{}: couldn't parse object manifest", "error".bright_red());
 
             return ExitCode::FAILURE;
         };
-        let configuration = gm_object_to_object_configuration(&object_data.yy_resource);
 
-        let txt = manifest_maker(
-            configuration,
-            (include_str!("../assets/object_view_manifest.toml"))
-                .parse()
-                .unwrap(),
+        // first, handle a rename
+        if is_new == false && request.name != name {
+            if let Err(e) = yyp_boss.rename_resource::<Object>(&name, request.name.clone()) {
+                println!("{}: couldn't rename because {}", "error".bright_red(), e)
+            }
+        }
+
+        let root_folder = yyp_boss.project_metadata().root_file.clone();
+
+        if is_new {
+            if let Err(e) = yyp_boss.add_resource(
+                Object {
+                    common_data: CommonData::new(request.name.clone()),
+                    managed: true,
+                    persistent: false,
+                    visible: true,
+                    parent: root_folder.clone(),
+                    ..Default::default()
+                },
+                HashMap::new(),
+            ) {
+                println!("{}: {}", console::style("error").bright().red(), e);
+                return ExitCode::FAILURE;
+            }
+        } else {
+            yyp_boss
+                .objects
+                .load_resource_associated_data(
+                    &request.name,
+                    yyp_boss.directory_manager.root_directory(),
+                    &TrailingCommaUtility::new(),
+                )
+                .unwrap();
+        }
+
+        let ObjectEditRequest {
+            name,
+            events,
+            parent,
+            sprite,
+            folder,
+            visible,
+            tags,
+        } = request;
+
+        // okay now we transform the event list...
+        let event_result: Result<Vec<EventType>, EventTypeConvertErrors> = events
+            .into_iter()
+            .map(|event_name| EventType::from_human_readable(&event_name))
+            .collect();
+
+        let new_events = match event_result {
+            Ok(v) => v,
+            Err(e) => {
+                println!(
+                    "{}: failed to parse event_name {}",
+                    console::style("error").bright().red(),
+                    e
+                );
+
+                return ExitCode::FAILURE;
+            }
+        };
+
+        let vfs = match folder {
+            Some(folder_name) => {
+                let Some(path) = find_vfs_path(&yyp_boss, &folder_name) else {
+                    println!(
+                        "{}: folder `{}` not found.",
+                        "error".bright_red(),
+                        folder_name
+                    );
+
+                    return ExitCode::FAILURE;
+                };
+
+                path
+            }
+            None => root_folder,
+        };
+
+        let sprite = match sprite {
+            Some(sprite) => {
+                let Some(sprite) = yyp_boss
+                    .yyp()
+                    .resources
+                    .iter()
+                    .find(|v| v.id.name == sprite)
+                else {
+                    println!(
+                        "{}: no sprite named `{}` found",
+                        console::style("error").bright().red(),
+                        sprite
+                    );
+                    return ExitCode::FAILURE;
+                };
+
+                Some(sprite.id.clone())
+            }
+            None => None,
+        };
+
+        let parent = match parent {
+            Some(parent) => {
+                let maybe_parent = yyp_boss.yyp().resources.iter().find_map(|v| {
+                    if v.id.name == parent {
+                        Some(v.id.clone())
+                    } else {
+                        None
+                    }
+                });
+
+                let Some(parent) = maybe_parent else {
+                    println!(
+                        "{}: no object named `{}` found",
+                        console::style("error").bright().red(),
+                        parent
+                    );
+                    return ExitCode::FAILURE;
+                };
+
+                Some(parent)
+            }
+            None => None,
+        };
+
+        let obj_data = unsafe { yyp_boss.objects.get_mut(&name).unwrap() };
+
+        obj_data.yy_resource.parent = vfs;
+        obj_data.yy_resource.sprite_id = sprite;
+        obj_data.yy_resource.parent_object_id = parent;
+        obj_data.yy_resource.visible = visible.unwrap_or(true);
+        obj_data.yy_resource.tags = tags.unwrap_or_default();
+
+        let assoc = obj_data.associated_data.as_mut().unwrap();
+        obj_data.yy_resource.event_list.retain(|value| {
+            if new_events.contains(&value.event_type) == false {
+                // farewell!
+                assoc.remove(&value.event_type);
+
+                false
+            } else {
+                true
+            }
+        });
+
+        for event_type in new_events {
+            let exists = obj_data
+                .yy_resource
+                .event_list
+                .iter()
+                .any(|v| v.event_type == event_type);
+
+            if exists {
+                continue;
+            }
+
+            obj_data
+                .yy_resource
+                .event_list
+                .push(yy_typings::object_yy::ObjectEvent {
+                    event_type,
+                    ..Default::default()
+                });
+
+            assoc.insert(event_type, String::new());
+        }
+
+        yyp_boss.objects.mark_for_serialization(&name).unwrap();
+        if let Err(e) = yyp_boss.serialize() {
+            println!(
+                "{}: failed to serialize project because {}",
+                "error".bright_red(),
+                e
+            );
+
+            return ExitCode::FAILURE;
+        }
+
+        println!(
+            "{}: updated object `{}`",
+            "success".bright_green(),
+            name.bold()
         );
-
-        if target_folder.exists() == false && std::fs::create_dir_all(target_folder).is_err() {
-            println!("{}: couldn't make target folder", "error".bright_red());
-        }
-
-        let path = target_folder.join("object_manifest.toml");
-        std::fs::write(&path, txt).unwrap();
-
-        let o = std::process::Command::new("code").arg(path).output();
-
-        if o.is_err() {
-            println!("{}: couldn't spawn child process", "error".bright_red());
-        }
-
-        return ExitCode::SUCCESS;
     }
 
-    todo!()
+    ExitCode::SUCCESS
 }
 
 fn maybe_find_vfs_path(yyp_boss: &YypBoss, input: Option<String>) -> Option<ViewPath> {
     match input {
-        Some(vfs) => find_vfs_path(yyp_boss, vfs),
+        Some(vfs) => find_vfs_path(yyp_boss, &vfs),
         None => Some(yyp_boss.project_metadata().root_file),
     }
 }
 
-fn find_vfs_path(yyp_boss: &YypBoss, vfs: String) -> Option<ViewPath> {
+fn find_vfs_path(yyp_boss: &YypBoss, vfs: &str) -> Option<ViewPath> {
     let path = ViewPathLocation(format!("folders/{}.yy", vfs));
 
     if yyp_boss.vfs.get_folder(&path).is_some() {
@@ -640,13 +864,12 @@ fn create_yyp_boss_with_data() -> Option<yy_boss::YypBoss> {
 fn gm_object_to_object_configuration(
     gm_object: &yy_typings::object_yy::Object,
 ) -> ObjectEditRequest {
+    let mut events: Vec<_> = gm_object.event_list.iter().map(|v| v.event_type).collect();
+    events.sort();
+
     ObjectEditRequest {
         name: gm_object.common_data.name.clone(),
-        events: gm_object
-            .event_list
-            .iter()
-            .map(|v| v.event_type.to_human_readable())
-            .collect(),
+        events: events.into_iter().map(|v| v.to_human_readable()).collect(),
         parent: gm_object.parent_object_id.as_ref().map(|v| v.name.clone()),
         sprite: gm_object.sprite_id.as_ref().map(|v| v.name.clone()),
         folder: if gm_object.parent.path.0.starts_with("folders/") {
@@ -659,52 +882,45 @@ fn gm_object_to_object_configuration(
     }
 }
 
-fn manifest_maker(edit_request: ObjectEditRequest, mut base_doc: toml_edit::Document) -> String {
-    let d = toml::Value::try_from(edit_request.clone()).unwrap();
-    let d_map = d.as_table().unwrap();
+fn manifest_maker(edit_request: &ObjectEditRequest, base_doc: &mut toml_edit::Document) {
+    let ObjectEditRequest {
+        name,
+        parent,
+        sprite,
+        folder,
+        visible,
+        tags,
+        events: _,
+    } = edit_request;
 
-    for (k, v) in d_map {
-        if k == "events" {
-            continue;
+    fn opter<T>(doc: &mut toml_edit::Document, t: &Option<T>, case: &str)
+    where
+        T: Into<toml_edit::Value> + Clone,
+    {
+        match t.as_ref() {
+            Some(v) => {
+                doc[case] = toml_edit::value(v.clone());
+            }
+            None => {
+                doc.remove(case);
+            }
         }
-        let v = toml_value_to_toml_edit_value(v.clone());
-        base_doc[k] = toml_edit::value(v);
     }
 
-    // handling the events is easier with just replace tools
-    let mut base_doc = base_doc.to_string();
+    base_doc["name"] = toml_edit::value(name);
+    opter(base_doc, parent, "parent");
+    opter(base_doc, sprite, "sprite");
+    opter(base_doc, folder, "folder");
+    opter(base_doc, visible, "visible");
 
-    let events = d_map.get("events").unwrap();
-    let events: Vec<&str> = events
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|v| v.as_str().unwrap())
-        .collect();
-
-    for event in events {
-        base_doc = base_doc.replace(&format!("# \"{}\"", event), &format!("\"{}\"", event));
-    }
-
-    base_doc
-}
-
-fn toml_value_to_toml_edit_value(value: toml::Value) -> toml_edit::Value {
-    match value {
-        toml::Value::String(v) => toml_edit::Value::String(toml_edit::Formatted::new(v)),
-        toml::Value::Integer(v) => toml_edit::Value::Integer(toml_edit::Formatted::new(v)),
-        toml::Value::Float(v) => toml_edit::Value::Float(toml_edit::Formatted::new(v)),
-        toml::Value::Boolean(v) => toml_edit::Value::Boolean(toml_edit::Formatted::new(v)),
-        toml::Value::Datetime(v) => toml_edit::Value::Datetime(toml_edit::Formatted::new(v)),
-        toml::Value::Array(v) => {
-            let inner = v.into_iter().map(toml_value_to_toml_edit_value).collect();
-
-            toml_edit::Value::Array(inner)
+    match tags {
+        Some(v) => {
+            let arr = toml_edit::Array::from_iter(v);
+            base_doc["tags"] = toml_edit::value(arr);
         }
-        toml::Value::Table(v) => toml_edit::Value::InlineTable(toml_edit::InlineTable::from_iter(
-            v.into_iter()
-                .map(|(k, v)| (k, toml_value_to_toml_edit_value(v))),
-        )),
+        None => {
+            // actually empty array is fine here!
+        }
     }
 }
 
@@ -737,14 +953,15 @@ mod tests {
             tags: Some(vec!["Dungeon".to_string()]),
         };
 
-        let doc = manifest_maker(
-            edit_request.clone(),
-            (include_str!("../assets/object_edit_manifest.toml"))
-                .parse()
-                .unwrap(),
-        );
+        let mut doc = (include_str!("../assets/object_edit_manifest.toml"))
+            .parse()
+            .unwrap();
+        manifest_maker(&edit_request, &mut doc);
+        // set the events
+        let arr = toml_edit::Array::from_iter(edit_request.events.iter().cloned());
+        doc["events"] = toml_edit::value(arr);
 
-        let obj_edit_request: ObjectEditRequest = toml::from_str(&doc).unwrap();
+        let obj_edit_request: ObjectEditRequest = toml::from_str(&doc.to_string()).unwrap();
 
         assert_eq!(obj_edit_request, edit_request);
     }

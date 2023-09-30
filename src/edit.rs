@@ -68,7 +68,7 @@ pub fn handle_object(request: ObjectEditRequest) -> ExitCode {
         .quick_name()
         .expect("bad yyp entry -- couldn't add.");
 
-    let vfs = request.vfs.map(|v| match find_vfs_path(&yyp_boss, v) {
+    let vfs = request.folder.map(|v| match find_vfs_path(&yyp_boss, v) {
         Some(v) => v,
         None => {
             // we're OUTTA here!!

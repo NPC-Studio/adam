@@ -37,6 +37,7 @@ sysinfo = "0.28.4"
 
 ctrlc = { version = "3.2.5", features = ["termination"] }
 colored = "2.0.4"
+toml_edit = "0.20.1"
 
 [target.'cfg(not(windows))'.dependencies]
 interprocess = "1.2.1"

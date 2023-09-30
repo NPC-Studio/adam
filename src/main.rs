@@ -129,6 +129,22 @@ fn main() -> ExitCode {
         ClapOperation::Object(data) => {
             return edit::handle_object(data);
         }
+        ClapOperation::Edit {
+            asset_name,
+            view,
+            output_folder,
+        } => {
+            let current_dir = std::env::current_dir().unwrap();
+            let target_folder = camino::Utf8PathBuf::from_path_buf(
+                current_dir.join(
+                    output_folder
+                        .as_deref()
+                        .unwrap_or_else(|| camino::Utf8Path::new("target")),
+                ),
+            )
+            .unwrap();
+            return edit::edit(asset_name, view, &target_folder);
+        }
         ClapOperation::Remove { name } => {
             return edit::handle_remove_request(name);
         }

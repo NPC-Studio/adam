@@ -55,6 +55,20 @@ pub enum ClapOperation {
     /// Cleans a project target directory.
     Clean(BuildOptions),
 
+    /// Views the asset's manifest as a toml file.
+    Edit {
+        /// The name of the asset to view. Only objects are currently supported.
+        asset_name: String,
+
+        /// Views the asset only. This will show the manifest and exit.
+        #[clap(short, long)]
+        view: bool,
+
+        /// The relative path to the output folder. Defaults to `target`.
+        #[clap(short, long)]
+        output_folder: Option<Utf8PathBuf>,
+    },
+
     /// Adds or edits a script to the project.
     #[clap(alias = "s")]
     Script(ScriptEditRequest),
@@ -126,11 +140,6 @@ pub struct ObjectEditRequest {
     /// Sets the tags on an object. This replaces all the tags on the object if it already exists.
     #[clap(long)]
     pub tags: Option<Vec<String>>,
-
-    /// Allows viewing an object's manifest. Use `edit` to edit that manifest.
-    #[clap(short, long)]
-    #[serde(skip)]
-    pub view: bool,
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
@@ -343,87 +352,5 @@ impl BuildOptions {
         if self.close_on_sig_kill {
             run_options.task.close_on_sig_kill = self.close_on_sig_kill;
         }
-    }
-}
-
-fn toml_value_to_toml_edit_value(value: toml::Value) -> toml_edit::Value {
-    match value {
-        toml::Value::String(v) => toml_edit::Value::String(toml_edit::Formatted::new(v)),
-        toml::Value::Integer(v) => toml_edit::Value::Integer(toml_edit::Formatted::new(v)),
-        toml::Value::Float(v) => toml_edit::Value::Float(toml_edit::Formatted::new(v)),
-        toml::Value::Boolean(v) => toml_edit::Value::Boolean(toml_edit::Formatted::new(v)),
-        toml::Value::Datetime(v) => toml_edit::Value::Datetime(toml_edit::Formatted::new(v)),
-        toml::Value::Array(v) => {
-            let inner = v.into_iter().map(toml_value_to_toml_edit_value).collect();
-
-            toml_edit::Value::Array(inner)
-        }
-        toml::Value::Table(v) => toml_edit::Value::InlineTable(toml_edit::InlineTable::from_iter(
-            v.into_iter()
-                .map(|(k, v)| (k, toml_value_to_toml_edit_value(v))),
-        )),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn manifest() {
-        let txt = include_str!("../../assets/object_base_manifest.toml");
-        let _: ObjectEditRequest = toml::from_str(txt).unwrap();
-    }
-
-    #[test]
-    fn edit_manifest() {
-        let txt = include_str!("../../assets/object_base_manifest.toml");
-        let mut base_doc: toml_edit::Document = txt.parse().unwrap();
-
-        let edit_request = ObjectEditRequest {
-            name: "obj_player".to_string(),
-            events: vec![
-                "create".to_string(),
-                "animation_end".to_string(),
-                "destroy".to_string(),
-            ],
-            parent: Some("obj_depth".to_string()),
-            sprite: Some("spr_player".to_string()),
-            folder: Some("Objects/Player".to_string()),
-            visible: Some(true),
-            tags: Some(vec!["Dungeon".to_string()]),
-            // doesn'tm atter
-            view: false,
-        };
-
-        let d = toml::Value::try_from(edit_request.clone()).unwrap();
-        let d_map = d.as_table().unwrap();
-
-        for (k, v) in d_map {
-            if k == "events" {
-                continue;
-            }
-            let v = toml_value_to_toml_edit_value(v.clone());
-            base_doc[k] = toml_edit::value(v);
-        }
-
-        // handling the events is easier with just replace tools
-        let mut base_doc = base_doc.to_string();
-
-        let events = d_map.get("events").unwrap();
-        let events: Vec<&str> = events
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|v| v.as_str().unwrap())
-            .collect();
-
-        for event in events {
-            base_doc = base_doc.replace(&format!("# \"{}\"", event), &format!("\"{}\"", event));
-        }
-
-        let obj_edit_request: ObjectEditRequest = toml::from_str(&base_doc).unwrap();
-
-        assert_eq!(obj_edit_request, edit_request);
     }
 }

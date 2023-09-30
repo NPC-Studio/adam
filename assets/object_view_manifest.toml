@@ -1,0 +1,23 @@
+# This is a configuration file for an Object.
+# adam is in VIEW mode, so changes to this document are ignored.
+
+# the name of the object.
+name = "__DEFAULT_NAME__"
+
+# these are the events of the object.
+events = []
+
+# the parent object reference.
+parent = "__DEFAULT_PARENT__"
+
+# the sprite assigned.
+sprite = "__DEFAULT_SPRITE__"
+
+# where to place the object within the virtual file system.
+folder = "__DEFAULT_FOLDER__"
+
+# whether the object is visible or not.
+visible = true
+
+# what tags are given on the object.
+tags = []

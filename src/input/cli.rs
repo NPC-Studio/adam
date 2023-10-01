@@ -95,7 +95,7 @@ pub enum ClapOperation {
 
     /// Virtual File System commands for a project.
     #[clap(subcommand)]
-    Vfs(Vfs),
+    Vfs(VfsRequest),
 
     /// Edits the user's personal configuration file
     #[clap(subcommand)]
@@ -161,7 +161,7 @@ pub enum UserConfigOptions {
 
 /// The kinds of things which can be added to a project.
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
-pub enum Vfs {
+pub enum VfsRequest {
     /// View a folder and its contents with the given path. Without a path, will
     /// show the root directory.
     View {

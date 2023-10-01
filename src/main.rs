@@ -19,7 +19,7 @@ use input::{ClapOperation, UserConfigOptions};
 mod gm_artifacts;
 use gm_artifacts::DEFAULT_PLATFORM_DATA;
 
-mod edit;
+mod project_editing;
 
 mod runner;
 use runner::{PlatformOptions, RunOptions, TaskOptions};
@@ -121,13 +121,13 @@ fn main() -> ExitCode {
             }
         },
         ClapOperation::Vfs(vfs) => {
-            return edit::handle_vfs_request(vfs);
+            return project_editing::vfs_request(vfs);
         }
         ClapOperation::Script(data) => {
-            return edit::handle_script(data);
+            return project_editing::add_script(data);
         }
         ClapOperation::Object(data) => {
-            return edit::handle_object(data);
+            return project_editing::add_object(data);
         }
         ClapOperation::Edit {
             asset_name,
@@ -143,16 +143,16 @@ fn main() -> ExitCode {
                 ),
             )
             .unwrap();
-            return edit::edit(asset_name, view, &target_folder);
+            return project_editing::edit_manifest(asset_name, view, &target_folder);
         }
         ClapOperation::Remove { name } => {
-            return edit::handle_remove_request(name);
+            return project_editing::remove(name);
         }
         ClapOperation::Rename {
             current_name,
             new_name,
         } => {
-            return edit::handle_rename_request(current_name, new_name);
+            return project_editing::rename(current_name, new_name);
         }
 
         _ => {}

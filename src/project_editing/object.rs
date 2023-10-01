@@ -309,22 +309,62 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
     std::fs::write(&path, doc_str).unwrap();
 
     if view == false {
-        println!("opening in editor...close editor window to proceed");
+        println!("opening in editor...close editor window to proceed, or press Q to cancel");
     }
 
-    let o = {
+    #[derive(Debug, Clone, Copy)]
+    enum Message {
+        Closed,
+        Canceled,
+    }
+
+    let (sndr, rcvr) = std::sync::mpsc::channel::<Message>();
+
+    // make the process thread..
+    {
         let mut process_builder = std::process::Command::new("code");
         process_builder.arg(&path);
 
         if view == false {
             process_builder.arg("--wait");
         }
+        let sndr = sndr.clone();
 
-        process_builder.output()
+        std::thread::spawn(move || {
+            // do it!
+            let o = process_builder.output();
+            if o.is_err() {
+                println!("{}: couldn't spawn child process", "error".bright_red());
+                sndr.send(Message::Canceled).unwrap();
+            } else {
+                sndr.send(Message::Closed).unwrap();
+            }
+        });
     };
 
-    if o.is_err() {
-        println!("{}: couldn't spawn child process", "error".bright_red());
+    // clear the last line...
+    let term = console::Term::stdout();
+
+    // make the cancel thread..
+    {
+        let term = term.clone();
+
+        std::thread::spawn(move || loop {
+            if term.read_char().map_or(false, |c| c == 'q') {
+                sndr.send(Message::Canceled).unwrap();
+                break;
+            }
+        });
+    }
+
+    let msg = rcvr.recv().unwrap();
+    term.clear_last_lines(1).unwrap();
+
+    match msg {
+        Message::Closed => {}
+        Message::Canceled => {
+            return ExitCode::SUCCESS;
+        }
     }
 
     if view == false {

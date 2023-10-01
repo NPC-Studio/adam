@@ -94,7 +94,16 @@ pub fn add_object(request: ObjectEditRequest) -> ExitCode {
         },
         HashMap::new(),
     ) {
-        println!("{}: {}", "error".bright_red(), e);
+        if e == yy_boss::ResourceManipulationError::NameCollision {
+            println!(
+                "{}: resource already exists. try `adam edit {}` instead.",
+                "error".bright_red(),
+                request.name
+            );
+        } else {
+            println!("{}: {}", "error".bright_red(), e);
+        }
+
         return ExitCode::FAILURE;
     }
     let obj_data = unsafe { yyp_boss.objects.get_mut(&request.name).unwrap() };

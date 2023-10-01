@@ -9,10 +9,8 @@ pub use object::{add_object, edit_manifest};
 mod vfs;
 use colored::Colorize;
 pub use vfs::{remove, rename, vfs_request};
-use yy_boss::{
-    yy_typings::{self, ViewPath, ViewPathLocation},
-    YypBoss,
-};
+use yy_boss::YypBoss;
+use yy_typings::{ViewPath, ViewPathLocation};
 
 use crate::igor;
 

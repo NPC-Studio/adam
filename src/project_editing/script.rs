@@ -1,9 +1,7 @@
 use std::process::ExitCode;
 
-use yy_boss::{
-    yy_typings::{script::Script, CommonData},
-    YypBoss,
-};
+use yy_boss::YypBoss;
+use yy_typings::{CommonData, Script};
 
 use crate::input::ScriptEditRequest;
 

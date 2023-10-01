@@ -1,13 +1,10 @@
 use std::process::ExitCode;
 
 use colored::Colorize;
-use yy_boss::{
-    yy_typings::{
-        object_yy::Object, script::Script, shader::Shader, sound::Sound, sprite_yy::Sprite,
-        AnimationCurve, Extension, Font, Note, Path, Room, Sequence, TileSet, Timeline,
-        ViewPathLocation,
-    },
-    Resource, YypBoss,
+use yy_boss::{Resource, YypBoss};
+use yy_typings::{
+    AnimationCurve, Extension, Font, Note, Object, Path, Room, Script, Sequence, Shader, Sound,
+    Sprite, TileSet, Timeline, ViewPathLocation,
 };
 
 use crate::input::VfsRequest;

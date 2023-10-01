@@ -31,6 +31,7 @@ dependencies = [
  "toml_edit 0.20.1",
  "walkdir",
  "yy-boss",
+ "yy-typings",
 ]
 
 [[package]]
@@ -1916,6 +1917,7 @@ dependencies = [
 name = "yy-typings"
 version = "0.5.3"
 dependencies = [
+ "heck 0.4.1",
  "num-derive",
  "num-traits",
  "regex",

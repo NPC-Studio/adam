@@ -2,13 +2,9 @@ use std::{collections::HashMap, fs, process::ExitCode};
 
 use camino::Utf8Path;
 use colored::Colorize;
-use yy_boss::{
-    yy_typings::{
-        object_yy::{EventType, EventTypeConvertErrors, Object, ObjectEvent},
-        utils::TrailingCommaUtility,
-        CommonData,
-    },
-    Resource, YypBoss,
+use yy_boss::{Resource, YypBoss};
+use yy_typings::{
+    CommonData, EventType, EventTypeConvertErrors, Object, ObjectEvent, TrailingCommaUtility,
 };
 
 use crate::input::ObjectEditRequest;
@@ -180,13 +176,11 @@ pub fn add_object(request: ObjectEditRequest) -> ExitCode {
     }
 
     for event in event_list {
-        let (ev_name, ev_num) = event.filename();
         println!(
-            "{}: ./objects/{}/{}_{}.gml",
+            "{}: ./objects/{}/{}.gml",
             "created".bright_green(),
             request.name,
-            ev_name,
-            ev_num
+            event.filename()
         );
     }
 
@@ -275,12 +269,14 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
 
         // first, we need to handle events. Do we have any events which AREN'T listed?
         let event_array = doc["events"].as_array_mut().unwrap();
-
         for e in events.iter().cloned() {
             let exists = event_array.iter().any(|v| v.as_str().unwrap() == e);
 
             if exists == false {
-                event_array.push(toml_edit::Value::String(toml_edit::Formatted::new(e)));
+                let mut formatted = toml_edit::Formatted::new(e);
+                formatted.decor_mut().set_prefix("\n    ");
+                formatted.fmt();
+                event_array.push_formatted(toml_edit::Value::String(formatted));
             }
         }
 

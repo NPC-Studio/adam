@@ -491,10 +491,6 @@ pub fn edit(name: String, view: bool, target_folder: &Utf8Path) -> ExitCode {
         return ExitCode::FAILURE;
     };
 
-    yyp_boss
-        .quick_name()
-        .expect("bad yyp entry -- couldn't add.");
-
     if let Some(resource_type) = yyp_boss.vfs.get_resource_type(&name) {
         if resource_type != Resource::Object {
             println!(
@@ -506,12 +502,9 @@ pub fn edit(name: String, view: bool, target_folder: &Utf8Path) -> ExitCode {
         }
     }
 
-    let is_new = yyp_boss.objects.get(&name).is_some();
-
-    // view requires `is_new == false`, since otherwise, you're viewing nothing
-    if view && is_new == false {
+    if yyp_boss.objects.get(&name).is_none() {
         println!(
-            "{}: cannot view `{}`: object not found.",
+            "{}: cannot edit `{}`: object not found.",
             "error".bright_red(),
             name.bold()
         );
@@ -527,26 +520,108 @@ pub fn edit(name: String, view: bool, target_folder: &Utf8Path) -> ExitCode {
         },
     };
 
-    let inc = if view {
-        include_str!("../assets/object_view_manifest.toml")
-    } else {
-        include_str!("../assets/object_edit_manifest.toml")
-    };
-
-    let mut doc = inc.parse().unwrap();
-    manifest_maker(&configuration, &mut doc);
-
-    if is_new == false {
+    let doc_str = if view {
+        let mut doc = include_str!("../assets/object_view_manifest.toml")
+            .parse()
+            .unwrap();
+        manifest_maker(&configuration, &mut doc);
         let arr = toml_edit::Array::from_iter(configuration.events);
         doc["events"] = toml_edit::value(arr);
-    }
+        doc.to_string()
+    } else {
+        let mut doc: toml_edit::Document = include_str!("../assets/object_edit_manifest.toml")
+            .parse()
+            .unwrap();
+
+        let ObjectEditRequest {
+            name,
+            events,
+            parent,
+            sprite,
+            folder,
+            visible,
+            tags,
+        } = configuration;
+
+        // we always override these fields
+        doc["name"] = toml_edit::value(name);
+        doc["visible"] = toml_edit::value(visible.unwrap());
+
+        if let Some(tags) = tags {
+            let arr = toml_edit::Array::from_iter(tags);
+            doc["tags"] = toml_edit::value(arr);
+        }
+
+        // positive assignations...
+        if let Some(parent) = &parent {
+            doc["parent"] = toml_edit::value(parent);
+        }
+        if let Some(sprite) = &sprite {
+            doc["sprite"] = toml_edit::value(sprite);
+        }
+        if let Some(folder) = &folder {
+            doc["folder"] = toml_edit::value(folder);
+        } else {
+            doc["folder"] = toml_edit::value("project_root");
+        }
+
+        // first, we need to handle events. Do we have any events which AREN'T listed?
+        let event_array = doc["events"].as_array_mut().unwrap();
+
+        for e in events.iter().cloned() {
+            let exists = event_array.iter().any(|v| v.as_str().unwrap() == e);
+
+            if exists == false {
+                event_array.push(toml_edit::Value::String(toml_edit::Formatted::new(e)));
+            }
+        }
+
+        let doc_str = doc.to_string();
+
+        let mut output = String::with_capacity(doc_str.len());
+        let mut parsing_events = false;
+        for line in doc_str.lines() {
+            let mut line = line.to_string();
+
+            if parsing_events {
+                if line.contains(']') {
+                    parsing_events = false;
+                } else {
+                    let mut txt = line.trim();
+                    if let Some(stripped) = txt.strip_suffix(',') {
+                        txt = stripped
+                    }
+                    txt = txt.strip_prefix('"').unwrap();
+                    txt = txt.strip_suffix('"').unwrap();
+
+                    let has_event = events.iter().any(|v| v == txt);
+                    if has_event == false {
+                        let non_whitespace = line.chars().position(|v| !v.is_whitespace()).unwrap();
+                        line.insert(non_whitespace, ' ');
+                        line.insert(non_whitespace, '#');
+                    }
+                }
+            } else if line.starts_with("events = [") {
+                parsing_events = true;
+            } else if (parent.is_none() && line.starts_with("parent ="))
+                || (sprite.is_none() && line.starts_with("sprite ="))
+            {
+                line.insert(0, ' ');
+                line.insert(0, '#');
+            }
+            output.push_str(&line);
+            output.push('\n');
+        }
+
+        output
+    };
 
     if target_folder.exists() == false && std::fs::create_dir_all(target_folder).is_err() {
         println!("{}: couldn't make target folder", "error".bright_red());
     }
 
     let path = target_folder.join("object_manifest.toml");
-    std::fs::write(&path, doc.to_string()).unwrap();
+    std::fs::write(&path, doc_str).unwrap();
 
     if view == false {
         println!("opening in editor...close editor window to proceed");
@@ -568,9 +643,6 @@ pub fn edit(name: String, view: bool, target_folder: &Utf8Path) -> ExitCode {
     }
 
     if view == false {
-        let term = console::Term::stdout();
-        term.clear_last_lines(1).unwrap();
-
         let Ok(Ok(request)) =
             fs::read_to_string(&path).map(|v| toml::from_str::<ObjectEditRequest>(&v))
         else {
@@ -579,40 +651,17 @@ pub fn edit(name: String, view: bool, target_folder: &Utf8Path) -> ExitCode {
             return ExitCode::FAILURE;
         };
 
+        // we don't need this to succeed, but it'd be better if it did!
+        let _ = std::fs::remove_file(&path);
+
         // first, handle a rename
-        if is_new == false && request.name != name {
+        if request.name != name {
             if let Err(e) = yyp_boss.rename_resource::<Object>(&name, request.name.clone()) {
                 println!("{}: couldn't rename because {}", "error".bright_red(), e)
             }
         }
 
         let root_folder = yyp_boss.project_metadata().root_file.clone();
-
-        if is_new {
-            if let Err(e) = yyp_boss.add_resource(
-                Object {
-                    common_data: CommonData::new(request.name.clone()),
-                    managed: true,
-                    persistent: false,
-                    visible: true,
-                    parent: root_folder.clone(),
-                    ..Default::default()
-                },
-                HashMap::new(),
-            ) {
-                println!("{}: {}", console::style("error").bright().red(), e);
-                return ExitCode::FAILURE;
-            }
-        } else {
-            yyp_boss
-                .objects
-                .load_resource_associated_data(
-                    &request.name,
-                    yyp_boss.directory_manager.root_directory(),
-                    &TrailingCommaUtility::new(),
-                )
-                .unwrap();
-        }
 
         let ObjectEditRequest {
             name,
@@ -645,17 +694,21 @@ pub fn edit(name: String, view: bool, target_folder: &Utf8Path) -> ExitCode {
 
         let vfs = match folder {
             Some(folder_name) => {
-                let Some(path) = find_vfs_path(&yyp_boss, &folder_name) else {
-                    println!(
-                        "{}: folder `{}` not found.",
-                        "error".bright_red(),
-                        folder_name
-                    );
+                if folder_name == "root_folder" {
+                    root_folder
+                } else {
+                    let Some(path) = find_vfs_path(&yyp_boss, &folder_name) else {
+                        println!(
+                            "{}: folder `{}` not found.",
+                            "error".bright_red(),
+                            folder_name
+                        );
 
-                    return ExitCode::FAILURE;
-                };
+                        return ExitCode::FAILURE;
+                    };
 
-                path
+                    path
+                }
             }
             None => root_folder,
         };
@@ -872,11 +925,12 @@ fn gm_object_to_object_configuration(
         events: events.into_iter().map(|v| v.to_human_readable()).collect(),
         parent: gm_object.parent_object_id.as_ref().map(|v| v.name.clone()),
         sprite: gm_object.sprite_id.as_ref().map(|v| v.name.clone()),
-        folder: if gm_object.parent.path.0.starts_with("folders/") {
-            Some(gm_object.parent.name.clone())
-        } else {
-            None
-        },
+        folder: gm_object
+            .parent
+            .path
+            .0
+            .strip_prefix("folders/")
+            .map(|v| v.strip_suffix(".yy").unwrap().to_owned()),
         visible: Some(gm_object.visible),
         tags: Some(gm_object.tags.clone()),
     }

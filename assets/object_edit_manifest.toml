@@ -2,40 +2,40 @@
 # EDIT and then CLOSE this document, and adam will continue.
 
 # the name of the object. You can change this field to rename the object
-name = "obj_name"
+name = ""
 
 # these are the events of the object. comment out the events you do want.
 # there are other events not placed in this document for brevity,
 # and you can add them only by file name.
 events = [
-    # "create",
-    # "step_begin",
-    # "step",
-    # "step_end",
-    # "draw_begin",
-    # "draw",
-    # "draw_end",
-    # "draw_gui_begin",
-    # "draw_gui",
-    # "draw_gui_end",
-    # "animation_end",
-    # "room_start",
-    # "room_end",
-    # "game_start",
-    # "game_end",
-    # "cleanup",
-    # "destroy",
+    "create",
+    "step_begin",
+    "step",
+    "step_end",
+    "draw_begin",
+    "draw",
+    "draw_end",
+    "draw_gui_begin",
+    "draw_gui",
+    "draw_gui_end",
+    "animation_end",
+    "room_start",
+    "room_end",
+    "game_start",
+    "game_end",
+    "cleanup",
+    "destroy",
 ]
 
 # the parent object reference. Comment out for none.
-parent = "obj_parent"
+parent = "__none__"
 
 # the sprite assigned. Comment out for none.
-sprite = "spr_sprite"
+sprite = "__none__"
 
 # where to place the object within the virtual file system.
-# comment out to place at the room.
-folder = "Objects/ParentFolder"
+# use `root_folder` to place at root
+folder = "root_folder"
 
 # whether the object is visible or not.
 visible = true

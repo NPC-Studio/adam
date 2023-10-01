@@ -56,18 +56,7 @@ pub enum ClapOperation {
     Clean(BuildOptions),
 
     /// Views the asset's manifest as a toml file.
-    Edit {
-        /// The name of the asset to view. Only objects are currently supported.
-        asset_name: String,
-
-        /// Views the asset only. This will show the manifest and exit.
-        #[clap(short, long)]
-        view: bool,
-
-        /// The relative path to the output folder. Defaults to `target`.
-        #[clap(short, long)]
-        output_folder: Option<Utf8PathBuf>,
-    },
+    Edit(EditManifest),
 
     /// Adds or edits a script to the project.
     #[clap(alias = "s")]
@@ -140,6 +129,20 @@ pub struct ObjectEditRequest {
     /// Sets the tags on an object. This replaces all the tags on the object if it already exists.
     #[clap(long)]
     pub tags: Option<Vec<String>>,
+}
+
+#[derive(Debug, Parser)]
+pub struct EditManifest {
+    /// The name of the asset to view. Only objects are currently supported.
+    pub asset_name: String,
+
+    /// Views the asset only. This will show the manifest and exit.
+    #[clap(short, long)]
+    pub view: bool,
+
+    /// The relative path to the output folder. Defaults to `target`.
+    #[clap(short, long)]
+    pub output_folder: Option<Utf8PathBuf>,
 }
 
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]

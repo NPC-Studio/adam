@@ -129,21 +129,23 @@ fn main() -> ExitCode {
         ClapOperation::Object(data) => {
             return project_editing::add_object(data);
         }
-        ClapOperation::Edit {
-            asset_name,
-            view,
-            output_folder,
-        } => {
+        ClapOperation::Edit(edit_manifest) => {
             let current_dir = std::env::current_dir().unwrap();
             let target_folder = camino::Utf8PathBuf::from_path_buf(
                 current_dir.join(
-                    output_folder
+                    edit_manifest
+                        .output_folder
                         .as_deref()
                         .unwrap_or_else(|| camino::Utf8Path::new("target")),
                 ),
             )
             .unwrap();
-            return project_editing::edit_manifest(asset_name, view, &target_folder);
+
+            return project_editing::edit_manifest(
+                edit_manifest.asset_name,
+                edit_manifest.view,
+                &target_folder,
+            );
         }
         ClapOperation::Remove { name } => {
             return project_editing::remove(name);

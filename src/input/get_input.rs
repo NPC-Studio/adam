@@ -78,7 +78,7 @@ pub fn parse_inputs(
 
         // we won't get here for these
         ClapOperation::UserConfig(_)
-        | ClapOperation::Edit { .. }
+        | ClapOperation::Edit(_)
         | ClapOperation::Vfs { .. }
         | ClapOperation::Script(_)
         | ClapOperation::Object(_)

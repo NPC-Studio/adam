@@ -3,9 +3,7 @@ use std::{collections::HashMap, fs, process::ExitCode};
 use camino::Utf8Path;
 use colored::Colorize;
 use yy_boss::{Resource, YypBoss};
-use yy_typings::{
-    CommonData, EventType, EventTypeConvertErrors, Object, ObjectEvent, TrailingCommaUtility,
-};
+use yy_typings::{CommonData, EventType, EventTypeConvertErrors, Object, ObjectEvent};
 
 use crate::input::ObjectEditRequest;
 
@@ -40,7 +38,7 @@ pub fn add_object(request: ObjectEditRequest) -> ExitCode {
         } else {
             println!(
                 "{}: no sprite named `{}` found",
-                console::style("error").bright().red(),
+                "error".bright_red(),
                 sprite
             );
             return ExitCode::FAILURE;
@@ -60,7 +58,7 @@ pub fn add_object(request: ObjectEditRequest) -> ExitCode {
         } else {
             println!(
                 "{}: no object named `{}` found",
-                console::style("error").bright().red(),
+                "error".bright_red(),
                 parent_object_id
             );
             return ExitCode::FAILURE;
@@ -79,44 +77,26 @@ pub fn add_object(request: ObjectEditRequest) -> ExitCode {
     let event_list = match event_result {
         Ok(v) => v,
         Err(e) => {
-            println!(
-                "{}: failed to parse event_name {}",
-                console::style("error").bright().red(),
-                e
-            );
+            println!("{}: failed to parse event_name {}", "error".bright_red(), e);
 
             return ExitCode::FAILURE;
         }
     };
 
-    let is_new = yyp_boss.objects.get(&request.name).is_none();
-
-    if is_new {
-        if let Err(e) = yyp_boss.add_resource(
-            Object {
-                common_data: CommonData::new(request.name.clone()),
-                managed: true,
-                persistent: false,
-                visible: true,
-                parent: yyp_boss.project_metadata().root_file.clone(),
-                ..Default::default()
-            },
-            HashMap::new(),
-        ) {
-            println!("{}: {}", console::style("error").bright().red(), e);
-            return ExitCode::FAILURE;
-        }
-    } else {
-        yyp_boss
-            .objects
-            .load_resource_associated_data(
-                &request.name,
-                yyp_boss.directory_manager.root_directory(),
-                &TrailingCommaUtility::new(),
-            )
-            .unwrap();
+    if let Err(e) = yyp_boss.add_resource(
+        Object {
+            common_data: CommonData::new(request.name.clone()),
+            managed: true,
+            persistent: false,
+            visible: true,
+            parent: yyp_boss.project_metadata().root_file.clone(),
+            ..Default::default()
+        },
+        HashMap::new(),
+    ) {
+        println!("{}: {}", "error".bright_red(), e);
+        return ExitCode::FAILURE;
     }
-
     let obj_data = unsafe { yyp_boss.objects.get_mut(&request.name).unwrap() };
 
     if let Some(vfs) = &vfs {
@@ -147,19 +127,11 @@ pub fn add_object(request: ObjectEditRequest) -> ExitCode {
         .unwrap();
 
     if let Err(e) = yyp_boss.serialize() {
-        println!(
-            "{}: could not serialize {}",
-            console::style("error").bright().red(),
-            e
-        );
+        println!("{}: could not serialize {}", "error".bright_red(), e);
         return ExitCode::FAILURE;
     }
 
-    println!(
-        "{}: {}",
-        if is_new { "created" } else { "edited" }.bright_green(),
-        request.name
-    );
+    println!("{}: {}", "created".bright_green(), request.name);
 
     if let Some(vfs) = &vfs {
         println!("vfs_parent: `{}`", vfs.name.bold());
@@ -386,11 +358,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
         let new_events = match event_result {
             Ok(v) => v,
             Err(e) => {
-                println!(
-                    "{}: failed to parse event_name {}",
-                    console::style("error").bright().red(),
-                    e
-                );
+                println!("{}: failed to parse event_name {}", "error".bright_red(), e);
 
                 return ExitCode::FAILURE;
             }
@@ -427,7 +395,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
                 else {
                     println!(
                         "{}: no sprite named `{}` found",
-                        console::style("error").bright().red(),
+                        "error".bright_red(),
                         sprite
                     );
                     return ExitCode::FAILURE;
@@ -451,7 +419,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
                 let Some(parent) = maybe_parent else {
                     println!(
                         "{}: no object named `{}` found",
-                        console::style("error").bright().red(),
+                        "error".bright_red(),
                         parent
                     );
                     return ExitCode::FAILURE;

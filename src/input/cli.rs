@@ -118,6 +118,10 @@ pub struct ObjectEditRequest {
     #[clap(short, long)]
     pub sprite: Option<String>,
 
+    /// The override sprite mask to set.
+    #[clap(short, long)]
+    pub mask_index: Option<String>,
+
     /// Where to place the script within the virtual file system. If not provided, placed at the root.
     #[clap(long)]
     pub folder: Option<String>,

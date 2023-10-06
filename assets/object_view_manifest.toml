@@ -13,6 +13,9 @@ parent = "__DEFAULT_PARENT__"
 # the sprite assigned.
 sprite = "__DEFAULT_SPRITE__"
 
+# the sprite assigned as a mask_index.
+mask_index = "__none__"
+
 # where to place the object within the virtual file system.
 folder = "__DEFAULT_FOLDER__"
 

@@ -33,6 +33,9 @@ parent = "__none__"
 # the sprite assigned. Comment out for none.
 sprite = "__none__"
 
+# the sprite assigned as a mask_index. Comment out for none.
+mask_index = "__none__"
+
 # where to place the object within the virtual file system.
 # use `root_folder` to place at root
 folder = "root_folder"

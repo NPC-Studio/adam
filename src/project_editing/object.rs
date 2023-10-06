@@ -224,6 +224,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
             folder,
             visible,
             tags,
+            mask_index,
         } = configuration;
 
         // we always override these fields
@@ -241,6 +242,9 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
         }
         if let Some(sprite) = &sprite {
             doc["sprite"] = toml_edit::value(sprite);
+        }
+        if let Some(mask_index) = &mask_index {
+            doc["mask_index"] = toml_edit::value(mask_index);
         }
         if let Some(folder) = &folder {
             doc["folder"] = toml_edit::value(folder);
@@ -396,6 +400,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
             folder,
             visible,
             tags,
+            mask_index,
         } = request;
 
         // okay now we transform the event list...
@@ -455,6 +460,27 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
             None => None,
         };
 
+        let mask_index = match mask_index {
+            Some(mask_index) => {
+                let Some(mask_index) = yyp_boss
+                    .yyp()
+                    .resources
+                    .iter()
+                    .find(|v| v.id.name == mask_index)
+                else {
+                    println!(
+                        "{}: no sprite for mask_index named `{}` found",
+                        "error".bright_red(),
+                        mask_index
+                    );
+                    return ExitCode::FAILURE;
+                };
+
+                Some(mask_index.id.clone())
+            }
+            None => None,
+        };
+
         let parent = match parent {
             Some(parent) => {
                 let maybe_parent = yyp_boss.yyp().resources.iter().find_map(|v| {
@@ -483,6 +509,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
 
         obj_data.yy_resource.parent = vfs;
         obj_data.yy_resource.sprite_id = sprite;
+        obj_data.yy_resource.sprite_mask_id = mask_index;
         obj_data.yy_resource.parent_object_id = parent;
         obj_data.yy_resource.visible = visible.unwrap_or(true);
         obj_data.yy_resource.tags = tags.unwrap_or_default();
@@ -548,6 +575,7 @@ fn gm_object_to_object_configuration(gm_object: &Object) -> ObjectEditRequest {
         events: events.into_iter().map(|v| v.to_human_readable()).collect(),
         parent: gm_object.parent_object_id.as_ref().map(|v| v.name.clone()),
         sprite: gm_object.sprite_id.as_ref().map(|v| v.name.clone()),
+        mask_index: gm_object.sprite_id.as_ref().map(|v| v.name.clone()),
         folder: gm_object
             .parent
             .path
@@ -568,6 +596,7 @@ fn manifest_maker(edit_request: &ObjectEditRequest, base_doc: &mut toml_edit::Do
         visible,
         tags,
         events: _,
+        mask_index,
     } = edit_request;
 
     fn opter<T>(doc: &mut toml_edit::Document, t: &Option<T>, case: &str)
@@ -587,6 +616,7 @@ fn manifest_maker(edit_request: &ObjectEditRequest, base_doc: &mut toml_edit::Do
     base_doc["name"] = toml_edit::value(name);
     opter(base_doc, parent, "parent");
     opter(base_doc, sprite, "sprite");
+    opter(base_doc, mask_index, "spriteMaskId");
     opter(base_doc, folder, "folder");
     opter(base_doc, visible, "visible");
 
@@ -626,6 +656,7 @@ mod tests {
             parent: Some("obj_depth".to_string()),
             sprite: Some("spr_player".to_string()),
             folder: Some("Objects/Player".to_string()),
+            mask_index: Some("spr_player_mask".to_string()),
             visible: Some(true),
             tags: Some(vec!["Dungeon".to_string()]),
         };

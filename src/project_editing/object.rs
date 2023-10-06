@@ -575,7 +575,7 @@ fn gm_object_to_object_configuration(gm_object: &Object) -> ObjectEditRequest {
         events: events.into_iter().map(|v| v.to_human_readable()).collect(),
         parent: gm_object.parent_object_id.as_ref().map(|v| v.name.clone()),
         sprite: gm_object.sprite_id.as_ref().map(|v| v.name.clone()),
-        mask_index: gm_object.sprite_id.as_ref().map(|v| v.name.clone()),
+        mask_index: gm_object.sprite_mask_id.as_ref().map(|v| v.name.clone()),
         folder: gm_object
             .parent
             .path

@@ -13,7 +13,7 @@ pub fn add_script(script: ScriptEditRequest) -> ExitCode {
         .quick_name()
         .expect("bad yyp entry -- couldn't add.");
 
-    let Some(parent) = super::maybe_find_vfs_path(&yyp_boss, script.vfs) else {
+    let Some(parent) = super::maybe_find_vfs_path(&yyp_boss, script.folder) else {
         return ExitCode::FAILURE;
     };
 

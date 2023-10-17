@@ -96,9 +96,9 @@ pub struct ScriptEditRequest {
     /// The name of the script, such as `FileUtilities`. Do not include `gml` in it.
     pub name: String,
 
-    /// Where to place the script within the vfs. If not provided, placed at the root.
+    /// Which folder to place the script in the VFS. If not provided, placed at the root.
     #[clap(short, long)]
-    pub vfs: Option<String>,
+    pub folder: Option<String>,
 }
 
 #[derive(Debug, Parser, serde::Serialize, serde::Deserialize, Default, PartialEq, Eq, Clone)]

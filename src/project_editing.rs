@@ -6,9 +6,9 @@ pub use script::add_script;
 mod object;
 pub use object::{add_object, edit_manifest};
 
-mod vfs;
+mod folders;
 use colored::Colorize;
-pub use vfs::{remove, rename, vfs_request};
+pub use folders::{folder_request, remove, rename};
 use yy_boss::YypBoss;
 use yy_typings::{ViewPath, ViewPathLocation};
 

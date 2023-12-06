@@ -7,16 +7,16 @@ use yy_typings::{
     Sprite, TileSet, Timeline, ViewPathLocation,
 };
 
-use crate::input::VfsRequest;
+use crate::input::FolderRequest;
 
-pub fn vfs_request(vfs: VfsRequest) -> ExitCode {
+pub fn folder_request(vfs: FolderRequest) -> ExitCode {
     let Some(mut yyp_boss) = super::create_yyp_boss(|path_to_yyp| YypBoss::new(path_to_yyp, &[]))
     else {
         return ExitCode::FAILURE;
     };
 
     match vfs {
-        VfsRequest::View { folder } => {
+        FolderRequest::View { folder } => {
             let starter = folder
                 .as_ref()
                 .map(|v| format!("{}/", v).bright_blue())
@@ -49,7 +49,7 @@ pub fn vfs_request(vfs: VfsRequest) -> ExitCode {
                 println!("{}{}", starter, &file.name);
             }
         }
-        VfsRequest::Move {
+        FolderRequest::Move {
             target,
             new_directory,
         } => {
@@ -82,14 +82,16 @@ pub fn vfs_request(vfs: VfsRequest) -> ExitCode {
                 return ExitCode::FAILURE;
             }
         }
-        VfsRequest::Where { asset_name } => match yyp_boss.vfs.get_folder_by_fname(&asset_name) {
-            Ok(v) => {
-                println!("{}", v.view_path_location());
+        FolderRequest::Where { asset_name } => {
+            match yyp_boss.vfs.get_folder_by_fname(&asset_name) {
+                Ok(v) => {
+                    println!("{}", v.view_path_location());
+                }
+                Err(_) => {
+                    println!("{}: `{}` does not exist", "error".bright_red(), asset_name);
+                }
             }
-            Err(_) => {
-                println!("{}: `{}` does not exist", "error".bright_red(), asset_name);
-            }
-        },
+        }
     }
     ExitCode::SUCCESS
 }

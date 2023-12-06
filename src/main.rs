@@ -120,8 +120,8 @@ fn main() -> ExitCode {
                 return ExitCode::SUCCESS;
             }
         },
-        ClapOperation::Vfs(vfs) => {
-            return project_editing::vfs_request(vfs);
+        ClapOperation::Folder(vfs) => {
+            return project_editing::folder_request(vfs);
         }
         ClapOperation::Script(data) => {
             return project_editing::add_script(data);

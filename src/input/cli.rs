@@ -84,7 +84,7 @@ pub enum ClapOperation {
 
     /// Virtual File System commands for a project.
     #[clap(subcommand)]
-    Vfs(VfsRequest),
+    Folder(FolderRequest),
 
     /// Edits the user's personal configuration file
     #[clap(subcommand)]
@@ -168,7 +168,7 @@ pub enum UserConfigOptions {
 
 /// The kinds of things which can be added to a project.
 #[derive(Parser, Debug, PartialEq, Eq, Clone, Ord, PartialOrd)]
-pub enum VfsRequest {
+pub enum FolderRequest {
     /// View a folder and its contents with the given path. Without a path, will
     /// show the root directory.
     View {
@@ -182,6 +182,7 @@ pub enum VfsRequest {
         /// This is the file, such as `obj_player` or `spr_bullet`.
         target: String,
         /// This is the new directory to move it to, such as `Scripts/Player/Data`.
+        /// Note: if the directory does not exist, it will be created.
         new_directory: String,
     },
 

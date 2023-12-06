@@ -294,6 +294,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
                 parsing_events = true;
             } else if (parent.is_none() && line.starts_with("parent ="))
                 || (sprite.is_none() && line.starts_with("sprite ="))
+                || (mask_index.is_none() && line.starts_with("mask_index ="))
             {
                 line.insert(0, ' ');
                 line.insert(0, '#');

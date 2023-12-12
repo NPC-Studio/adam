@@ -28,7 +28,19 @@ pub enum ClapOperation {
     /// Creates a release executable, running `clean` first.
     Release(BuildOptions),
 
-    /// Runs some presumably shorter "check" script
+    /// Runs some presumably shorter "check" script. These scripts will also have the following environment variables set:
+    /// 
+    /// `ADAM_CHECK`: 1
+    /// 
+    /// `ADAM_YYC`:  0 or 1
+    /// 
+    /// `ADAM_CONFIG`:  String
+    /// 
+    /// `ADAM_VERBOSITY`:  Number
+    /// 
+    /// `ADAM_OUTPUT_FOLDER`:  String
+    /// 
+    /// `ADAM_IGNORE_CACHE`:  Number
     #[clap(alias = "c")]
     Check {
         /// This is the shell script which we will run.

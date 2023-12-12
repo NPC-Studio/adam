@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "adam"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "aho-corasick 0.7.20",
  "camino",
@@ -236,9 +236,9 @@ checksum = "374d28ec25809ee0e23827c2ab573d729e293f281dfe393500e7ad618baa61c6"
 
 [[package]]
 name = "byteorder"
-version = "1.4.3"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
+checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "camino"
@@ -1031,9 +1031,9 @@ dependencies = [
 
 [[package]]
 name = "num-traits"
-version = "0.2.16"
+version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f30b0abd723be7e2ffca1272140fac1a2f084c77ec3e123c192b66af1ee9e6c2"
+checksum = "39e3200413f237f41ab11ad6d161bc7239c84dcb631773ccd7de3dfe4b5c267c"
 dependencies = [
  "autocfg",
 ]
@@ -1311,9 +1311,9 @@ dependencies = [
 
 [[package]]
 name = "serde_repr"
-version = "0.1.16"
+version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8725e1dfadb3a50f7e5ce0b1a540466f6ed3fe7a0fca2ac2b8b831d31316bd00"
+checksum = "3081f5ffbb02284dda55132aa26daecedd7372a42417bbbab6f14ab7d6bb9145"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1890,7 +1890,9 @@ dependencies = [
 
 [[package]]
 name = "yy-boss"
-version = "0.7.1"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2589361e4f43dec55077ab3a55b3a392b0d63de8a8b2567206c02e5a33a2c4b8"
 dependencies = [
  "anyhow",
  "camino",
@@ -1915,7 +1917,9 @@ dependencies = [
 
 [[package]]
 name = "yy-typings"
-version = "0.5.3"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a2d0cac58e8c0259a024b43c09892353d23e4c08b35c146635ccfb6150a6b30"
 dependencies = [
  "heck 0.4.1",
  "num-derive",

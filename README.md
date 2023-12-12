@@ -53,6 +53,20 @@ Of special note, please see `--yyc`, which will allow users to compile using the
 
 However, passing in numerous values every compile can become tiresome. To support this, users can create a config file in either `JSON` or `TOML`, where these options can be specified. To create an adam configuration file, please follow [this guide](docs/CONFIG_FILE_GUIDE.md).
 
+## CHECK
+
+Running `adam check` will invoke scripts *if you set up them up in your configuration file.*
+These scripts will also have the following environment variables set:
+
+| Name              | Value   |
+| ------------------|---------|
+| `ADAM_CHECK`        | 1       |
+| `ADAM_YYC`          | 0 or 1  |
+| `ADAM_CONFIG`       | String  |
+| `ADAM_VERBOSITY`    | Number  |
+| `ADAM_OUTPUT_FOLDER`| String  |
+| `ADAM_IGNORE_CACHE` | Number  |
+
 ## LICENSE
 
 Dual-licensed under MIT or APACHE 2.0.

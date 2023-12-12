@@ -244,7 +244,7 @@ fn main() -> ExitCode {
     let run_kind = match operation {
         input::Operation::Run(inner) => {
             if let Some(check_options) = check_options {
-                if runner::run_check(check_options).is_err() {
+                if runner::run_check(&options.task, check_options).is_err() {
                     return ExitCode::FAILURE;
                 }
             }
@@ -262,7 +262,7 @@ fn main() -> ExitCode {
                     return ExitCode::FAILURE;
                 }
             };
-            if runner::run_check(check_options).is_ok() {
+            if runner::run_check(&options.task, check_options).is_ok() {
                 return ExitCode::SUCCESS;
             } else {
                 return ExitCode::FAILURE;

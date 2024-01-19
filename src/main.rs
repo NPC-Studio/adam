@@ -156,6 +156,9 @@ fn main() -> ExitCode {
         } => {
             return project_editing::rename(current_name, new_name);
         }
+        ClapOperation::Reserialize => {
+            return project_editing::reserialize()
+        }
 
         _ => {}
     }

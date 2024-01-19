@@ -83,6 +83,7 @@ pub fn parse_inputs(
         | ClapOperation::Script(_)
         | ClapOperation::Object(_)
         | ClapOperation::Remove { .. }
+        | ClapOperation::Reserialize
         | ClapOperation::Rename { .. } => {
             unimplemented!()
         }

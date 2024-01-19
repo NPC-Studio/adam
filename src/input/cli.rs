@@ -67,6 +67,10 @@ pub enum ClapOperation {
     /// Cleans a project target directory.
     Clean(BuildOptions),
 
+    /// Reserializes all available files, and deletes all unknown files.
+    /// Warning: use caution!
+    Reserialize,
+
     /// Views the asset's manifest as a toml file.
     Edit(EditManifest),
 

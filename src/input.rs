@@ -1,7 +1,7 @@
 mod cli;
-mod manifest;
 mod get_input;
+mod manifest;
 
 pub use cli::*;
-pub use manifest::Manifest;
 pub use get_input::{parse_inputs, Operation, RunKind};
+pub use manifest::Manifest;

@@ -7,6 +7,9 @@ mod object;
 pub use object::{add_object, edit_manifest};
 
 mod folders;
+mod reserialize;
+pub use reserialize::reserialize;
+
 use colored::Colorize;
 pub use folders::{folder_request, remove, rename};
 use yy_boss::YypBoss;
@@ -47,8 +50,8 @@ fn create_yyp_boss(
         Ok(v) => v,
         Err(e) => {
             println!(
-                "{}: {}",
-                console::style("adam error").bright().red(),
+                "{}: couldn't load yyp because {}",
+                console::style("error").bright().red(),
                 console::style(e).bold()
             );
 

@@ -260,7 +260,7 @@ impl GmMacros {
             common_templates: path!("/usr/share/templates"),
             temp_path: build_data
                 .user_dir
-                .join("/var/folders/v_/r1l809l94_vbd75s98fbd6rr0000gn"),
+                .join("var/folders/v_/r1l809l94_vbd75s98fbd6rr0000gn"),
             update_uri: "https://gms.yoyogames.com/update-mac.rss".to_owned(),
             java_exe_path: path!("bin/java"),
             adb_exe_path: path!("platform-tools/adb"),

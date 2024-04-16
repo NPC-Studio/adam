@@ -16,12 +16,18 @@ pub fn invoke_run(
     }
 
     // add the platform
-    igor.arg("--")
+    let o = igor
+        .arg("--")
         .arg(gm_artifacts::PLATFORM_KIND.to_string())
         .arg("Run")
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .unwrap()
+        .stdout(std::process::Stdio::piped());
+
+    // add the verbosity
+    if sub_command.task.verbosity > 1 {
+        println!("igor: {:?}", o);
+    }
+
+    o.spawn().unwrap()
 }
 
 pub fn invoke_release(

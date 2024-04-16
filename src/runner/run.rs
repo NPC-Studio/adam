@@ -46,7 +46,7 @@ pub fn run_command(
 
     if run_options.task.verbosity > 0 || *run_kind == RunKind::Release {
         let reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
-        for line in reader.flatten() {
+        for line in reader.map_while(Result::ok) {
             println!("{}", line.trim());
         }
 

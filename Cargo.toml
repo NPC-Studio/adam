@@ -33,6 +33,7 @@ aho-corasick = "0.7.20"
 rustc-hash = "1.1.0"
 dunce = "1.0.3"
 const_format = "0.2.30"
+gml_log_parser = "0.1.1"
 
 sysinfo = "0.28.4"
 

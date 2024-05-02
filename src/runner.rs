@@ -15,7 +15,6 @@ mod invoke_win;
 pub(super) use invoke_win::{invoke_release, invoke_run};
 
 mod compiler_handler;
-mod gm_uri_parse;
 mod printer;
 mod run_options;
 

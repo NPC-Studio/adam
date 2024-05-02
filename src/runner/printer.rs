@@ -1,11 +1,11 @@
-use super::gm_uri_parse::*;
 use aho_corasick::AhoCorasickBuilder;
+use gml_log_parser::ScriptMappings;
 use std::{collections::HashMap, path::Path};
 
 #[derive(Debug)]
 pub struct Printer {
     str_to_style: std::collections::HashMap<String, console::Style>,
-    gm_uri_parser: GmUriParser,
+    script_mappings: ScriptMappings,
     aho_corasick: aho_corasick::AhoCorasick,
 }
 
@@ -33,7 +33,7 @@ impl Printer {
 
         Self {
             str_to_style,
-            gm_uri_parser: GmUriParser::new(scripts_directory),
+            script_mappings: ScriptMappings::from_path(scripts_directory),
             aho_corasick,
         }
     }
@@ -54,7 +54,13 @@ impl Printer {
 
                 true
             });
-        self.gm_uri_parser.parse(&mut output);
+
+        let output =
+            if let Some(parsed_output) = gml_log_parser::parse(&output, &self.script_mappings) {
+                parsed_output
+            } else {
+                output
+            };
 
         println!("{}", output);
     }

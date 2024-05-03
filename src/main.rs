@@ -156,9 +156,7 @@ fn main() -> ExitCode {
         } => {
             return project_editing::rename(current_name, new_name);
         }
-        ClapOperation::Reserialize => {
-            return project_editing::reserialize()
-        }
+        ClapOperation::Reserialize => return project_editing::reserialize(),
 
         _ => {}
     }
@@ -294,6 +292,12 @@ fn main() -> ExitCode {
         // we set this fella every time too
         std::env::set_var("ADAM_TEST", value);
     }
+
+    // tell the runner where we are
+    std::env::set_var(
+        "ADAM_PROJECT_PATH",
+        application_data.current_directory.as_os_str(),
+    );
 
     // check if we have a valid yyc bat
     if options.task.yyc {

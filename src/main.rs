@@ -241,6 +241,12 @@ fn main() -> ExitCode {
         }
     };
 
+    // tell the runner where we are
+    std::env::set_var(
+        "ADAM_PROJECT_PATH",
+        application_data.current_directory.as_os_str(),
+    );
+
     // handle a clean, extract the build_data
     let run_kind = match operation {
         input::Operation::Run(inner) => {
@@ -292,12 +298,6 @@ fn main() -> ExitCode {
         // we set this fella every time too
         std::env::set_var("ADAM_TEST", value);
     }
-
-    // tell the runner where we are
-    std::env::set_var(
-        "ADAM_PROJECT_PATH",
-        application_data.current_directory.as_os_str(),
-    );
 
     // check if we have a valid yyc bat
     if options.task.yyc {

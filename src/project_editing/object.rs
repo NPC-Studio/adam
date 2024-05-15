@@ -249,7 +249,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
         if let Some(folder) = &folder {
             doc["folder"] = toml_edit::value(folder);
         } else {
-            doc["folder"] = toml_edit::value("project_root");
+            doc["folder"] = toml_edit::value("root_folder");
         }
 
         // first, we need to handle events. Do we have any events which AREN'T listed?

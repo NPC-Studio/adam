@@ -1,6 +1,7 @@
 #![allow(clippy::bool_comparison)]
 #![deny(rust_2018_idioms)]
 #![deny(rust_2021_compatibility)]
+#![allow(clippy::assigning_clones)]
 
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
 compile_error!("we only support `windows` and `macos` targets!");

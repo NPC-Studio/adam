@@ -57,23 +57,23 @@ pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
         target_mask: 64,
         stable_cached_data: Lazy::new(|| home_dir().join("AppData/Roaming/GameMakerStudio2")),
         beta_cached_data: Lazy::new(|| home_dir().join("AppData/Roaming/GameMakerStudio2-Beta")),
-        home_dir: Lazy::new(home_dir),
     }
 };
 
 fn home_dir() -> Utf8PathBuf {
-    directories::BaseDirs::new()
-        .unwrap()
-        .config_dir()
-        .to_owned()
-        .try_into()
-        .unwrap()
-
-    // this could be needed on windows?
-    // directories::UserDirs::new()
-    //     .unwrap()
-    //     .home_dir()
-    //     .to_owned()
-    //     .try_into()
-    //     .unwrap()
+    if cfg!(target_os = "windows") {
+        directories::UserDirs::new()
+            .unwrap()
+            .home_dir()
+            .to_owned()
+            .try_into()
+            .unwrap()
+    } else {
+        directories::BaseDirs::new()
+            .unwrap()
+            .config_dir()
+            .to_owned()
+            .try_into()
+            .unwrap()
+    }
 }

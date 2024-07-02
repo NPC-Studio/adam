@@ -145,9 +145,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.83"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25bdb32cbbdce2b519a9cd7df3a678443100e265d5e25ca763b7572a5104f5f3"
+checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
 
 [[package]]
 name = "async-channel"
@@ -243,9 +243,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.16.0"
+version = "1.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78834c15cb5d5efe3452d58b1e8ba890dd62d21907f867f383358198e56ebca5"
+checksum = "b236fc92302c97ed75b38da1f4917b5cdda4984745740f153a5d3059e48d725e"
 
 [[package]]
 name = "byteorder"
@@ -468,9 +468,9 @@ checksum = "e496a50fda8aacccc86d7529e2c1e0892dbd0f898a6b5645b5561b89c3210efa"
 
 [[package]]
 name = "crc32fast"
-version = "1.4.0"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3855a8a784b474f333699ef2bbca9db2c4a1f6d9088a90a2d25b1eb53111eaa"
+checksum = "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3"
 dependencies = [
  "cfg-if",
 ]
@@ -979,9 +979,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.21"
+version = "0.4.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
+checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
 name = "log-panics"
@@ -2009,8 +2009,6 @@ checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
 [[package]]
 name = "yy-boss"
 version = "0.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "902297b8966723ed1368d8c0c456e7ea894ae46e8ff96aa332f03aeb897099c8"
 dependencies = [
  "anyhow",
  "camino",
@@ -2036,8 +2034,6 @@ dependencies = [
 [[package]]
 name = "yy-typings"
 version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc05ef4f19dda6f2bfd6daeadda06e22bc58c618e2e25413129955a4a8e9803a"
 dependencies = [
  "heck 0.4.1",
  "num-derive",

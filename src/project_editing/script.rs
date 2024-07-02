@@ -23,6 +23,7 @@ pub fn add_script(script: ScriptEditRequest) -> ExitCode {
             is_compatibility: false,
             is_dn_d: false,
             parent,
+            gm_version_stamp: yy_typings::VersionStamp,
         },
         String::new(),
     ) {

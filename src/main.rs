@@ -184,7 +184,6 @@ fn main() -> ExitCode {
             runtime_location: DEFAULT_PLATFORM_DATA.stable_runtime_location.into(),
             visual_studio_path: Default::default(),
             user_license_folder: Default::default(),
-            home_dir: DEFAULT_PLATFORM_DATA.home_dir.clone(),
             compiler_cache: DEFAULT_PLATFORM_DATA.stable_cached_data.clone(),
         };
         let task = TaskOptions::default();
@@ -364,8 +363,7 @@ fn main() -> ExitCode {
             .as_std_path()
             .to_owned(),
         runtime_location: options.platform.runtime_location.as_std_path().to_owned(),
-        // target_mask: options.platform.target_mask,
-        target_mask: 0,
+        target_mask: DEFAULT_PLATFORM_DATA.target_mask,
         application_path: options
             .platform
             .gms2_application_location

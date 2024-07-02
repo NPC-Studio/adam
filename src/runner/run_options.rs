@@ -71,7 +71,6 @@ pub struct PlatformOptions {
     /// `user_folder` at all.
     pub user_license_folder: Utf8PathBuf,
 
-    pub home_dir: Utf8PathBuf,
     pub compiler_cache: Utf8PathBuf,
 }
 

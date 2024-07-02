@@ -13,8 +13,10 @@ serde = { version = "1.0.159", features = ["derive"] }
 serde_json = "1.0.95"
 toml = "0.7.3"
 confy = "0.5.1"
-yy-boss = "0.9.3"
-yy-typings = "0.7.3"
+# yy-boss = "0.9.3"
+# yy-typings = "0.7.3"
+yy-boss = { path = "../yy-boss" }
+yy-typings = { path = "../yy-typings" }
 
 clap = { version = "4.4", features = ["derive", "cargo"] }
 

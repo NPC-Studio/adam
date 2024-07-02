@@ -15,11 +15,10 @@ pub struct DefaultPlatformData {
     pub beta_application_path: &'static str,
 
     pub target_mask: usize,
-    pub home_dir: Lazy<Utf8PathBuf>,
     pub stable_cached_data: Lazy<Utf8PathBuf>,
     pub beta_cached_data: Lazy<Utf8PathBuf>,
 }
-pub const DEFAULT_RUNTIME_NAME: &str = "2023.6.0.139";
+pub const DEFAULT_RUNTIME_NAME: &str = "2024.6.0.205";
 
 #[cfg(not(target_os = "windows"))]
 pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
@@ -36,9 +35,8 @@ pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
         beta_application_path: "/Applications/GameMaker Beta.app/Contents",
 
         target_mask: 2,
-        stable_cached_data: Lazy::new(|| home_dir().join(".config/GameMakerStudio2")),
-        beta_cached_data: Lazy::new(|| home_dir().join(".config/GameMakerStudio2-Beta")),
-        home_dir: Lazy::new(home_dir),
+        stable_cached_data: Lazy::new(|| home_dir().join("GameMakerStudio2")),
+        beta_cached_data: Lazy::new(|| home_dir().join("GameMakerStudio2-Beta")),
     }
 };
 
@@ -64,10 +62,18 @@ pub static DEFAULT_PLATFORM_DATA: DefaultPlatformData = {
 };
 
 fn home_dir() -> Utf8PathBuf {
-    directories::UserDirs::new()
+    directories::BaseDirs::new()
         .unwrap()
-        .home_dir()
+        .config_dir()
         .to_owned()
         .try_into()
         .unwrap()
+
+    // this could be needed on windows?
+    // directories::UserDirs::new()
+    //     .unwrap()
+    //     .home_dir()
+    //     .to_owned()
+    //     .try_into()
+    //     .unwrap()
 }

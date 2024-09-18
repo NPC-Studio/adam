@@ -657,7 +657,7 @@ mod tests {
             parent: Some("obj_depth".to_string()),
             sprite: Some("spr_player".to_string()),
             folder: Some("Objects/Player".to_string()),
-            mask_index: Some("spr_player_mask".to_string()),
+            mask_index: Some("__none__".to_string()),
             visible: Some(true),
             tags: Some(vec!["Dungeon".to_string()]),
         };

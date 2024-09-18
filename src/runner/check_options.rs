@@ -33,7 +33,7 @@ pub fn run_check(task_options: &TaskOptions, path_to_run: Utf8PathBuf) -> Result
         .env("ADAM_CONFIG", &task_options.config)
         .env("ADAM_VERBOSITY", task_options.verbosity.to_string())
         .env("ADAM_OUTPUT_FOLDER", &task_options.output_folder)
-        .env("ADAM_IGNORE_CACHE", &task_options.ignore_cache.to_string())
+        .env("ADAM_IGNORE_CACHE", task_options.ignore_cache.to_string())
         .output()
         .expect("Failed to execute command");
 

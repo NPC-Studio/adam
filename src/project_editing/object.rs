@@ -355,7 +355,7 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
         let term = term.clone();
 
         std::thread::spawn(move || loop {
-            if term.read_char().map_or(false, |c| c == 'q') {
+            if term.read_char().is_ok_and(|c| c == 'q') {
                 sndr.send(Message::Canceled).unwrap();
                 break;
             }

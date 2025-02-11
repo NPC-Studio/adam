@@ -287,7 +287,7 @@ impl Manifest {
                 let mut iterator = current_directory.read_dir().ok()?.flatten();
                 iterator
                     .find(|entry| {
-                        entry.file_name().to_str().map_or(false, |file| {
+                        entry.file_name().to_str().is_some_and(|file| {
                             matches!(
                                 file,
                                 ".adam" | "adam.toml" | ".adam.toml" | "adam.json" | ".adam.json"

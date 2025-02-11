@@ -1,111 +1,110 @@
 use crate::igor::BuildData;
+use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 macro_rules! path {
     ($($arg:tt)*) => {{
-        let res = std::path::PathBuf::from(std::fmt::format(format_args!($($arg)*)));
-        res
+        camino::Utf8PathBuf::from(std::fmt::format(format_args!($($arg)*)))
     }}
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GmMacros {
     #[serde(rename = "Desktop")]
-    desktop: PathBuf,
+    desktop: Utf8PathBuf,
     #[serde(rename = "Programs")]
-    programs: PathBuf,
+    programs: Utf8PathBuf,
     #[serde(rename = "MyDocuments")]
-    my_documents: PathBuf,
+    my_documents: Utf8PathBuf,
     #[serde(rename = "Favorites")]
-    favorites: PathBuf,
+    favorites: Utf8PathBuf,
     #[serde(rename = "Startup")]
-    startup: PathBuf,
+    startup: Utf8PathBuf,
     #[serde(rename = "Recent")]
-    recent: PathBuf,
+    recent: Utf8PathBuf,
     #[serde(rename = "SendTo")]
-    send_to: PathBuf,
+    send_to: Utf8PathBuf,
     #[serde(rename = "StartMenu")]
-    start_menu: PathBuf,
+    start_menu: Utf8PathBuf,
     #[serde(rename = "MyMusic")]
-    my_music: PathBuf,
+    my_music: Utf8PathBuf,
     #[serde(rename = "MyVideos")]
-    my_videos: PathBuf,
+    my_videos: Utf8PathBuf,
     #[serde(rename = "DesktopDirectory")]
-    desktop_directory: PathBuf,
+    desktop_directory: Utf8PathBuf,
     #[serde(rename = "MyComputer")]
-    my_computer: PathBuf,
+    my_computer: Utf8PathBuf,
     #[serde(rename = "NetworkShortcuts")]
-    network_shortcuts: PathBuf,
+    network_shortcuts: Utf8PathBuf,
     #[serde(rename = "Fonts")]
-    fonts: PathBuf,
+    fonts: Utf8PathBuf,
     #[serde(rename = "Templates")]
-    templates: PathBuf,
+    templates: Utf8PathBuf,
     #[serde(rename = "CommonStartMenu")]
-    common_startup_menu: PathBuf,
+    common_startup_menu: Utf8PathBuf,
     #[serde(rename = "CommonPrograms")]
-    common_programs: PathBuf,
+    common_programs: Utf8PathBuf,
     #[serde(rename = "CommonStartup")]
-    common_startup: PathBuf,
+    common_startup: Utf8PathBuf,
     #[serde(rename = "CommonDesktopDirectory")]
-    common_desktop_directory: PathBuf,
+    common_desktop_directory: Utf8PathBuf,
     #[serde(rename = "ApplicationData")]
-    application_data: PathBuf,
+    application_data: Utf8PathBuf,
     #[serde(rename = "PrinterShortcuts")]
-    printer_shortcuts: PathBuf,
+    printer_shortcuts: Utf8PathBuf,
     #[serde(rename = "LocalApplicationData")]
-    local_application_data: PathBuf,
+    local_application_data: Utf8PathBuf,
     #[serde(rename = "InternetCache")]
-    internet_cache: PathBuf,
+    internet_cache: Utf8PathBuf,
     #[serde(rename = "Cookies")]
-    cookies: PathBuf,
+    cookies: Utf8PathBuf,
     #[serde(rename = "History")]
-    history: PathBuf,
+    history: Utf8PathBuf,
     #[serde(rename = "CommonApplicationData")]
-    common_application_data: PathBuf,
+    common_application_data: Utf8PathBuf,
     #[serde(rename = "Windows")]
-    windows: PathBuf,
+    windows: Utf8PathBuf,
     #[serde(rename = "System")]
-    system: PathBuf,
+    system: Utf8PathBuf,
     #[serde(rename = "ProgramFiles")]
-    program_files: PathBuf,
+    program_files: Utf8PathBuf,
     #[serde(rename = "MyPictures")]
-    my_pictures: PathBuf,
+    my_pictures: Utf8PathBuf,
     #[serde(rename = "UserProfile")]
-    user_profile: PathBuf,
+    user_profile: Utf8PathBuf,
     #[serde(rename = "SystemX86")]
-    system_x86: PathBuf,
+    system_x86: Utf8PathBuf,
     #[serde(rename = "ProgramFilesX86")]
-    program_files_x86: PathBuf,
+    program_files_x86: Utf8PathBuf,
     #[serde(rename = "CommonProgramFiles")]
-    common_program_files: PathBuf,
+    common_program_files: Utf8PathBuf,
     #[serde(rename = "CommonProgramFilesX86")]
-    common_program_files_x86: PathBuf,
+    common_program_files_x86: Utf8PathBuf,
     #[serde(rename = "CommonTemplates")]
-    common_templates: PathBuf,
+    common_templates: Utf8PathBuf,
     #[serde(rename = "CommonDocuments")]
-    common_documents: PathBuf,
+    common_documents: Utf8PathBuf,
     #[serde(rename = "CommonAdminTools")]
-    common_admin_tools: PathBuf,
+    common_admin_tools: Utf8PathBuf,
     #[serde(rename = "AdminTools")]
-    admin_tools: PathBuf,
+    admin_tools: Utf8PathBuf,
     #[serde(rename = "CommonMusic")]
-    common_music: PathBuf,
+    common_music: Utf8PathBuf,
     #[serde(rename = "CommonPictures")]
-    common_pictures: PathBuf,
+    common_pictures: Utf8PathBuf,
     #[serde(rename = "CommonVideos")]
-    common_videos: PathBuf,
+    common_videos: Utf8PathBuf,
     #[serde(rename = "Resources")]
-    resources: PathBuf,
+    resources: Utf8PathBuf,
     #[serde(rename = "LocalizedResources")]
-    localized_resources: PathBuf,
+    localized_resources: Utf8PathBuf,
     #[serde(rename = "CommonOemLinks")]
-    common_oem_links: PathBuf,
+    common_oem_links: Utf8PathBuf,
     #[serde(rename = "CDBurning")]
-    cd_burning: PathBuf,
+    cd_burning: Utf8PathBuf,
     #[serde(rename = "TempPath")]
-    temp_path: PathBuf,
-    exe_path: PathBuf,
+    temp_path: Utf8PathBuf,
+    exe_path: Utf8PathBuf,
     program_dir_name: String,
     program_name: String,
     program_name_pretty: String,
@@ -118,36 +117,36 @@ pub struct GmMacros {
     #[serde(rename = "runtimeReleaseNotesURI")]
     runtime_release_notes_uri: String,
     #[serde(rename = "runtimeBaseLocation")]
-    runtime_base_location: PathBuf,
+    runtime_base_location: Utf8PathBuf,
     #[serde(rename = "runtimeLocation")]
-    runtime_location: PathBuf,
-    base_options_dir: PathBuf,
-    asset_compiler_path: PathBuf,
-    pub igor_path: PathBuf,
-    lib_compatibility_path: PathBuf,
-    pub runner_path: PathBuf,
-    pub x64_runner_path: PathBuf,
-    html5_runner_path: PathBuf,
-    webserver_path: PathBuf,
-    licenses_path: PathBuf,
-    java_exe_path: PathBuf,
-    adb_exe_path: PathBuf,
-    keytool_exe_path: PathBuf,
-    openssl_exe_path: PathBuf,
-    skin_path: PathBuf,
-    user_skin_path: PathBuf,
-    user_override_directory: PathBuf,
-    default_skin: PathBuf,
-    current_skin: PathBuf,
-    system_directory: PathBuf,
-    system_cache_directory: PathBuf,
-    local_directory: PathBuf,
-    local_cache_directory: PathBuf,
-    temp_directory: PathBuf,
-    asset_compiler_cache_directory: PathBuf,
-    ide_cache_directory: PathBuf,
-    my_projects_directory: PathBuf,
-    base_project: PathBuf,
+    runtime_location: Utf8PathBuf,
+    base_options_dir: Utf8PathBuf,
+    asset_compiler_path: Utf8PathBuf,
+    pub igor_path: Utf8PathBuf,
+    lib_compatibility_path: Utf8PathBuf,
+    pub runner_path: Utf8PathBuf,
+    pub x64_runner_path: Utf8PathBuf,
+    html5_runner_path: Utf8PathBuf,
+    webserver_path: Utf8PathBuf,
+    licenses_path: Utf8PathBuf,
+    java_exe_path: Utf8PathBuf,
+    adb_exe_path: Utf8PathBuf,
+    keytool_exe_path: Utf8PathBuf,
+    openssl_exe_path: Utf8PathBuf,
+    skin_path: Utf8PathBuf,
+    user_skin_path: Utf8PathBuf,
+    user_override_directory: Utf8PathBuf,
+    default_skin: Utf8PathBuf,
+    current_skin: Utf8PathBuf,
+    system_directory: Utf8PathBuf,
+    system_cache_directory: Utf8PathBuf,
+    local_directory: Utf8PathBuf,
+    local_cache_directory: Utf8PathBuf,
+    temp_directory: Utf8PathBuf,
+    asset_compiler_cache_directory: Utf8PathBuf,
+    ide_cache_directory: Utf8PathBuf,
+    my_projects_directory: Utf8PathBuf,
+    base_project: Utf8PathBuf,
     default_font: String,
     default_style: String,
     default_font_size: String,
@@ -165,13 +164,13 @@ pub struct GmMacros {
     marketplace_api_uri: String,
     #[serde(rename = "carouselSlidesURI")]
     carousel_slides_uri: String,
-    pub user_directory: PathBuf,
-    user_cache_directory: PathBuf,
-    pub project_full_filename: PathBuf,
-    pub project_dir: PathBuf,
+    pub user_directory: Utf8PathBuf,
+    user_cache_directory: Utf8PathBuf,
+    pub project_full_filename: Utf8PathBuf,
+    pub project_dir: Utf8PathBuf,
     pub project_name: String,
     project_cache_directory_name: String,
-    options_dir: PathBuf,
+    options_dir: Utf8PathBuf,
 }
 
 impl GmMacros {
@@ -338,42 +337,42 @@ impl GmMacros {
 impl Default for GmMacros {
     fn default() -> Self {
         Self {
-            desktop: PathBuf::new(),
+            desktop: Utf8PathBuf::new(),
             programs: path!(""),
-            my_documents: PathBuf::new(),
-            favorites: PathBuf::new(),
+            my_documents: Utf8PathBuf::new(),
+            favorites: Utf8PathBuf::new(),
             startup: path!(""),
             recent: path!(""),
             send_to: path!(""),
-            start_menu: PathBuf::new(),
-            my_music: PathBuf::new(),
-            my_videos: PathBuf::new(),
-            desktop_directory: PathBuf::new(),
+            start_menu: Utf8PathBuf::new(),
+            my_music: Utf8PathBuf::new(),
+            my_videos: Utf8PathBuf::new(),
+            desktop_directory: Utf8PathBuf::new(),
             my_computer: path!(""),
             network_shortcuts: path!(""),
-            fonts: PathBuf::new(),
-            templates: PathBuf::new(),
+            fonts: Utf8PathBuf::new(),
+            templates: Utf8PathBuf::new(),
             common_startup_menu: path!(""),
             common_programs: path!(""),
             common_startup: path!(""),
             common_desktop_directory: path!(""),
-            application_data: PathBuf::new(),
+            application_data: Utf8PathBuf::new(),
             printer_shortcuts: path!(""),
-            local_application_data: PathBuf::new(),
-            internet_cache: PathBuf::new(),
+            local_application_data: Utf8PathBuf::new(),
+            internet_cache: Utf8PathBuf::new(),
             cookies: path!(""),
             history: path!(""),
-            common_application_data: PathBuf::new(),
+            common_application_data: Utf8PathBuf::new(),
             windows: path!(""),
             system: path!(""),
-            program_files: PathBuf::new(),
-            my_pictures: PathBuf::new(),
-            user_profile: PathBuf::new(),
+            program_files: Utf8PathBuf::new(),
+            my_pictures: Utf8PathBuf::new(),
+            user_profile: Utf8PathBuf::new(),
             system_x86: path!(""),
             program_files_x86: path!(""),
             common_program_files: path!(""),
             common_program_files_x86: path!(""),
-            common_templates: PathBuf::new(),
+            common_templates: Utf8PathBuf::new(),
             common_documents: path!(""),
             common_admin_tools: path!(""),
             admin_tools: path!(""),
@@ -384,8 +383,8 @@ impl Default for GmMacros {
             localized_resources: path!(""),
             common_oem_links: path!(""),
             cd_burning: path!(""),
-            temp_path: PathBuf::new(),
-            exe_path: PathBuf::new(),
+            temp_path: Utf8PathBuf::new(),
+            exe_path: Utf8PathBuf::new(),
             program_dir_name: "GameMakerStudio2".to_owned(),
             program_name: "GameMakerStudio2".to_owned(),
             program_name_pretty: "GameMaker Studio 2".to_owned(),
@@ -394,35 +393,35 @@ impl Default for GmMacros {
             release_notes_uri: "https://gms.yoyogames.com/ReleaseNotes.html".to_owned(),
             runtime_release_notes_uri: "https://gms.yoyogames.com/release-notes-runtime.html"
                 .to_owned(),
-            runtime_base_location: PathBuf::new(),
-            runtime_location: PathBuf::new(),
-            base_options_dir: PathBuf::new(),
-            asset_compiler_path: PathBuf::new(),
-            igor_path: PathBuf::new(),
-            lib_compatibility_path: PathBuf::new(),
-            runner_path: PathBuf::new(),
-            x64_runner_path: PathBuf::new(),
-            html5_runner_path: PathBuf::new(),
-            webserver_path: PathBuf::new(),
-            licenses_path: PathBuf::new(),
-            java_exe_path: PathBuf::new(),
-            adb_exe_path: PathBuf::new(),
-            keytool_exe_path: PathBuf::new(),
-            openssl_exe_path: PathBuf::new(),
-            skin_path: PathBuf::new(),
-            user_skin_path: PathBuf::new(),
-            user_override_directory: PathBuf::new(),
-            default_skin: PathBuf::new(),
-            current_skin: PathBuf::new(),
-            system_directory: PathBuf::new(),
-            system_cache_directory: PathBuf::new(),
-            local_directory: PathBuf::new(),
-            local_cache_directory: PathBuf::new(),
-            temp_directory: PathBuf::new(),
-            asset_compiler_cache_directory: PathBuf::new(),
-            ide_cache_directory: PathBuf::new(),
-            my_projects_directory: PathBuf::new(),
-            base_project: PathBuf::new(),
+            runtime_base_location: Utf8PathBuf::new(),
+            runtime_location: Utf8PathBuf::new(),
+            base_options_dir: Utf8PathBuf::new(),
+            asset_compiler_path: Utf8PathBuf::new(),
+            igor_path: Utf8PathBuf::new(),
+            lib_compatibility_path: Utf8PathBuf::new(),
+            runner_path: Utf8PathBuf::new(),
+            x64_runner_path: Utf8PathBuf::new(),
+            html5_runner_path: Utf8PathBuf::new(),
+            webserver_path: Utf8PathBuf::new(),
+            licenses_path: Utf8PathBuf::new(),
+            java_exe_path: Utf8PathBuf::new(),
+            adb_exe_path: Utf8PathBuf::new(),
+            keytool_exe_path: Utf8PathBuf::new(),
+            openssl_exe_path: Utf8PathBuf::new(),
+            skin_path: Utf8PathBuf::new(),
+            user_skin_path: Utf8PathBuf::new(),
+            user_override_directory: Utf8PathBuf::new(),
+            default_skin: Utf8PathBuf::new(),
+            current_skin: Utf8PathBuf::new(),
+            system_directory: Utf8PathBuf::new(),
+            system_cache_directory: Utf8PathBuf::new(),
+            local_directory: Utf8PathBuf::new(),
+            local_cache_directory: Utf8PathBuf::new(),
+            temp_directory: Utf8PathBuf::new(),
+            asset_compiler_cache_directory: Utf8PathBuf::new(),
+            ide_cache_directory: Utf8PathBuf::new(),
+            my_projects_directory: Utf8PathBuf::new(),
+            base_project: Utf8PathBuf::new(),
             default_font: "Open Sans".to_string(),
             default_style: "Regular".to_string(),
             default_font_size: "9".to_string(),
@@ -436,13 +435,13 @@ impl Default for GmMacros {
             marketplace_uri: "https://marketplace.yoyogames.com".to_string(),
             marketplace_api_uri: "https://api.yoyogames.com".to_string(),
             carousel_slides_uri: "https://api.yoyogames.com/api/2/slideshow.json".to_string(),
-            user_directory: PathBuf::new(),
-            user_cache_directory: PathBuf::new(),
-            project_full_filename: PathBuf::new(),
-            project_dir: PathBuf::new(),
+            user_directory: Utf8PathBuf::new(),
+            user_cache_directory: Utf8PathBuf::new(),
+            project_full_filename: Utf8PathBuf::new(),
+            project_dir: Utf8PathBuf::new(),
             project_name: String::new(),
             project_cache_directory_name: String::new(),
-            options_dir: PathBuf::new(),
+            options_dir: Utf8PathBuf::new(),
         }
     }
 }

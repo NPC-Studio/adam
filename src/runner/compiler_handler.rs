@@ -1,14 +1,14 @@
 use crate::{gm_artifacts, input::RunKind, RunOptions};
 
+use camino::Utf8Path;
 use heck::ToTitleCase;
 use indicatif::ProgressBar;
-use std::{io::BufRead, io::BufReader, path::Path, process::Child};
+use std::{io::BufRead, io::BufReader, process::Child};
 
 use super::Cache;
 
 pub struct CompilerHandler {
     state: CompilerState,
-    is_build: bool,
 }
 
 enum CompilerState {
@@ -22,14 +22,12 @@ impl CompilerHandler {
     pub fn new_run() -> Self {
         Self {
             state: CompilerState::Initialize,
-            is_build: false,
         }
     }
 
-    pub fn new_build() -> Self {
+    pub fn new_re_run() -> Self {
         Self {
-            state: CompilerState::Initialize,
-            is_build: false,
+            state: CompilerState::PreRunToMainLoop(vec![]),
         }
     }
 
@@ -37,7 +35,7 @@ impl CompilerHandler {
         mut self,
         child: &mut Child,
         project_name: &str,
-        project_path: &Path,
+        project_path: &Utf8Path,
         run_kind: &RunKind,
         run_options: &RunOptions,
         cache: &Cache,
@@ -53,7 +51,7 @@ impl CompilerHandler {
             "{} {} ({})",
             console::style("Compiling").green().bright(),
             project_name.to_title_case(),
-            project_path.display()
+            project_path,
         ));
 
         // make a lil thread guy!
@@ -111,30 +109,7 @@ impl CompilerHandler {
                     if line.contains(CHUNK_ENDER) {
                         progress_bar.set_message("adam compile complete");
 
-                        if self.is_build {
-                            progress_bar.finish_and_clear();
-                            if let Err(e) = child.kill() {
-                                println!(
-                                    "{}: could not kill the compiler process, {}",
-                                    console::style("error").red().bright(),
-                                    e
-                                );
-                            }
-                            progress_bar.finish_and_clear();
-                            println!(
-                                "{} {} {} {}:{} in {}",
-                                console::style("Completed").green().bright(),
-                                gm_artifacts::PLATFORM_KIND,
-                                if run_options.task.yyc { "yyc" } else { "vm" },
-                                run_kind,
-                                console::style(&run_options.task.config).yellow().bright(),
-                                indicatif::HumanDuration(start_time.elapsed())
-                            );
-
-                            return CompilerOutput::SuccessAndBuild;
-                        } else {
-                            self.state = CompilerState::PreRunToMainLoop(vec![]);
-                        }
+                        self.state = CompilerState::PreRunToMainLoop(vec![]);
                     } else {
                         progress_bar.set_message(line[..max_size].to_string());
                     }
@@ -191,6 +166,5 @@ impl CompilerHandler {
 
 pub enum CompilerOutput {
     Errors(Vec<String>),
-    SuccessAndBuild,
     SuccessAndRun(Vec<String>),
 }

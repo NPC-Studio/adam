@@ -188,7 +188,11 @@ fn main() -> ExitCode {
         };
         let task = TaskOptions::default();
 
-        RunOptions { task, platform }
+        RunOptions {
+            task,
+            platform,
+            no_compile: false,
+        }
     };
     let mut check_options = None;
     config.write_to_options(&mut runtime_options, &mut check_options);
@@ -335,7 +339,7 @@ fn main() -> ExitCode {
 
     let folders = match TargetFolders::new(
         &application_data.current_directory,
-        options.task.output_folder.as_std_path(),
+        &options.task.output_folder,
         output_kind,
         &application_data.project_name,
     ) {
@@ -357,18 +361,10 @@ fn main() -> ExitCode {
         project_directory: application_data.current_directory,
         // user_dir: options.platform.user_data.clone(),
         user_dir: Default::default(),
-        license_folder: options
-            .platform
-            .user_license_folder
-            .as_std_path()
-            .to_owned(),
-        runtime_location: options.platform.runtime_location.as_std_path().to_owned(),
+        license_folder: options.platform.user_license_folder.clone(),
+        runtime_location: options.platform.runtime_location.clone(),
         target_mask: DEFAULT_PLATFORM_DATA.target_mask,
-        application_path: options
-            .platform
-            .gms2_application_location
-            .as_std_path()
-            .to_owned(),
+        application_path: options.platform.gms2_application_location.clone(),
         config: options.task.config.clone(),
     };
 

@@ -1,17 +1,21 @@
-use std::{env, path::PathBuf};
+use std::env;
+
+use camino::Utf8PathBuf;
 
 use crate::AnyResult;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct ApplicationData {
-    pub current_directory: PathBuf,
+    pub current_directory: Utf8PathBuf,
     pub project_name: String,
 }
 
 impl ApplicationData {
     pub fn new() -> AnyResult<Self> {
-        let current_directory =
-            env::current_dir().map_err(|_| color_eyre::eyre::anyhow!("cannot read directory"))?;
+        let current_directory = Utf8PathBuf::from_path_buf(
+            env::current_dir().map_err(|_| color_eyre::eyre::anyhow!("cannot read directory"))?,
+        )
+        .map_err(|_| color_eyre::eyre::anyhow!("current dir isn't utf8"))?;
 
         let mut project_name = None;
 

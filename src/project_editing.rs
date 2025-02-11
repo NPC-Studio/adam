@@ -62,7 +62,9 @@ fn create_yyp_boss(
     let output = make_yyp_boss(
         application_data
             .current_directory
-            .join(format!("{}.yyp", application_data.project_name)),
+            .join(format!("{}.yyp", application_data.project_name))
+            .as_std_path()
+            .to_owned(),
     );
 
     match output {

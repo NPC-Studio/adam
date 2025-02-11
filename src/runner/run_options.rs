@@ -4,6 +4,7 @@ use crate::AnyResult;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct RunOptions {
+    pub no_compile: bool,
     pub task: TaskOptions,
     pub platform: PlatformOptions,
 }

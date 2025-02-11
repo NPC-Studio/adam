@@ -29,17 +29,17 @@ pub enum ClapOperation {
     Release(BuildOptions),
 
     /// Runs some presumably shorter "check" script. These scripts will also have the following environment variables set:
-    /// 
+    ///
     /// `ADAM_CHECK`: 1
-    /// 
+    ///
     /// `ADAM_YYC`:  0 or 1
-    /// 
+    ///
     /// `ADAM_CONFIG`:  String
-    /// 
+    ///
     /// `ADAM_VERBOSITY`:  Number
-    /// 
+    ///
     /// `ADAM_OUTPUT_FOLDER`:  String
-    /// 
+    ///
     /// `ADAM_IGNORE_CACHE`:  Number
     #[clap(alias = "c")]
     Check {
@@ -217,6 +217,11 @@ pub struct SavePathOptions {
 
 #[derive(clap::Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct BuildOptions {
+    /// When set, we will not compile the game first and instead just immediately re_run the game based
+    /// on what was previously compiled. This can easily lead to errors.
+    #[clap(long, short)]
+    no_compile: bool,
+
     /// Uses the YYC instead of the default VM. If this is the case, then we'll need to check
     /// your Visual Studio path on Windows.
     #[clap(long, short)]
@@ -309,6 +314,11 @@ pub struct BuildOptions {
 
 impl BuildOptions {
     pub fn write_to_options(self, run_options: &mut RunOptions) {
+        // don't compile it if we don't wanna!
+        if self.no_compile {
+            run_options.no_compile = self.no_compile;
+        }
+
         if let Some(cfg) = self.config {
             run_options.task.config = cfg;
         }

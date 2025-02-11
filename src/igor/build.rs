@@ -1,5 +1,5 @@
+use camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
 
 use crate::AnyResult;
 
@@ -15,23 +15,23 @@ pub struct BuildData {
 
     /// The name of the project.
     pub project_filename: String,
-    pub project_directory: PathBuf,
+    pub project_directory: Utf8PathBuf,
 
     /// This is the home directory for the user. Ie, on Mac Os, this will be `~`.
-    pub user_dir: PathBuf,
+    pub user_dir: Utf8PathBuf,
 
     /// This is the folder of the license directory.
-    pub license_folder: PathBuf,
+    pub license_folder: Utf8PathBuf,
 
     /// This is the runtime location folder
-    pub runtime_location: PathBuf,
+    pub runtime_location: Utf8PathBuf,
 
     /// The target mask is nearly meaningless, but it appears to be `64`.
     pub target_mask: usize,
 
     /// The path to the application exe. On macOS, this is to the `.MacOS` folder
     /// within the application.
-    pub application_path: PathBuf,
+    pub application_path: Utf8PathBuf,
 
     /// The config to pass to the EXE. By default, this is `Default`.
     pub config: String,
@@ -40,21 +40,21 @@ pub struct BuildData {
 #[derive(Debug, Clone)]
 pub struct TargetFolders {
     /// This is the parent folder, such as `PROJECT/target/vm`.
-    pub main: PathBuf,
+    pub main: Utf8PathBuf,
     /// This is the folder we dump the important stuff inside.
-    pub output: PathBuf,
+    pub output: Utf8PathBuf,
     /// This is the cache folder.
-    pub cache: PathBuf,
+    pub cache: Utf8PathBuf,
     /// This is the temp folder.
-    pub tmp: PathBuf,
+    pub tmp: Utf8PathBuf,
     /// This is the end output of a zip in a build. It is meaningless otherwise.
-    pub target_file: PathBuf,
+    pub target_file: Utf8PathBuf,
 }
 
 impl TargetFolders {
     pub fn new(
-        current_directory: &Path,
-        output_folder: &Path,
+        current_directory: &Utf8Path,
+        output_folder: &Utf8Path,
         output_kind: OutputKind,
         project_name: &str,
     ) -> AnyResult<Self> {

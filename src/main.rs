@@ -191,7 +191,7 @@ fn main() -> ExitCode {
         RunOptions {
             task,
             platform,
-            no_compile: false,
+            no_compile: None,
         }
     };
     let mut check_options = None;

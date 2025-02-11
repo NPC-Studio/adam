@@ -219,8 +219,13 @@ pub struct SavePathOptions {
 pub struct BuildOptions {
     /// When set, we will not compile the game first and instead just immediately re_run the game based
     /// on what was previously compiled. This can easily lead to errors.
-    #[clap(long, short)]
+    #[clap(long)]
     no_compile: bool,
+
+    /// When set, when `no_compile` is given, we will use this location for a data.win file. This should be
+    /// a direct path ending in `data.win`.
+    #[clap(long)]
+    no_compile_data_win_location: Option<Utf8PathBuf>,
 
     /// Uses the YYC instead of the default VM. If this is the case, then we'll need to check
     /// your Visual Studio path on Windows.
@@ -316,7 +321,7 @@ impl BuildOptions {
     pub fn write_to_options(self, run_options: &mut RunOptions) {
         // don't compile it if we don't wanna!
         if self.no_compile {
-            run_options.no_compile = self.no_compile;
+            run_options.no_compile = Some(self.no_compile_data_win_location.unwrap_or_default());
         }
 
         if let Some(cfg) = self.config {

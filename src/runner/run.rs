@@ -49,14 +49,20 @@ pub fn run_command(
     };
 
     let time = std::time::Instant::now();
-    let mut child = if run_options.no_compile {
+    let mut child = if let Some(no_compile) = &run_options.no_compile {
         let mut igor = std::process::Command::new(format!(
             "{}/{}/x64/Runner.exe  ",
             run_options.platform.runtime_location, PLATFORM_KIND,
         ));
 
+        let data_win_path = if no_compile.as_str().is_empty() {
+            format!("{}/output/data.win", final_output)
+        } else {
+            no_compile.to_string()
+        };
+
         igor.arg("-game")
-            .arg(format!("{}/output/data.win", final_output))
+            .arg(data_win_path)
             .stdout(std::process::Stdio::piped());
 
         if run_options.task.verbosity > 0 {
@@ -82,7 +88,7 @@ pub fn run_command(
             Err(_) => false,
         }
     } else {
-        let compiler_handler = if run_options.no_compile {
+        let compiler_handler = if run_options.no_compile.is_some() {
             CompilerHandler::new_re_run()
         } else {
             CompilerHandler::new_run()
@@ -140,7 +146,7 @@ pub fn run_command(
                 }
 
                 run_game(&mut reader, &mut printer, run_kind, &run_options)
-                    || run_options.no_compile
+                    || run_options.no_compile.is_some()
             }
         }
     }

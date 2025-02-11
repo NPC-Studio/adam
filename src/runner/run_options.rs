@@ -4,7 +4,7 @@ use crate::AnyResult;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct RunOptions {
-    pub no_compile: bool,
+    pub no_compile: Option<Utf8PathBuf>,
     pub task: TaskOptions,
     pub platform: PlatformOptions,
 }

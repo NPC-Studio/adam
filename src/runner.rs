@@ -26,7 +26,7 @@ pub fn invoke_igor(
 ) -> Child {
     let word = match run_kind {
         RunKind::Run | RunKind::Test(_) => "Run",
-        RunKind::Build => "PackageNsis", // we do this as a BS option basically
+        RunKind::Build => "PackageZip", // we do this as a BS option basically
         RunKind::Release => "PackageZip",
     };
 

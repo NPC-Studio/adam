@@ -68,7 +68,10 @@ pub fn run_command(
         invoke_igor(run_kind, &macros, build_bff, run_options.task.verbosity)
     };
 
-    if run_options.task.verbosity > 0 || *run_kind == RunKind::Release {
+    if run_options.task.verbosity > 0
+        || *run_kind == RunKind::Release
+        || *run_kind == RunKind::Build
+    {
         let reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
         for line in reader.map_while(Result::ok) {
             println!("{}", line.trim());

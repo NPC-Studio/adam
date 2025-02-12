@@ -312,10 +312,18 @@ fn main() -> ExitCode {
         std::env::set_var("ADAM_TEST", value);
     }
 
+    // hey don't do that!
+    if cfg!(not(target_family = "windows")) && options.no_compile.is_some() {
+        println!(
+            "{}: only windows can `no_compile`",
+            console::style("error").bright().red()
+        );
+
+        return ExitCode::FAILURE;
+    }
+
     // crazy branch right here: if we're a no_compile run op, then we get outta there!
     if let Some(no_compile) = &options.no_compile {
-        // if we're on macOS, yell and say we can't do that!
-
         let mut igor = std::process::Command::new(format!(
             "{}/{}/x64/Runner.exe  ",
             &options.platform.runtime_location,
@@ -323,14 +331,23 @@ fn main() -> ExitCode {
         ));
 
         let data_win_path = if no_compile.as_str().is_empty() {
-            format!(
-                "./{}/{}/output/data.win",
-                options.task.output_folder,
-                if options.task.yyc { "yyc" } else { "vm" },
-            )
+            options
+                .task
+                .output_folder
+                .join(if options.task.yyc { "yyc" } else { "vm" })
+                .join("output/data.win")
         } else {
-            no_compile.to_string()
+            no_compile.clone()
         };
+
+        if data_win_path.exists() == false {
+            println!(
+                "{}: `win` path given (or inferred) does not exist",
+                console::style("error").bright().red()
+            );
+
+            return ExitCode::FAILURE;
+        }
 
         igor.arg("-game")
             .arg(data_win_path)

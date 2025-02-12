@@ -1,5 +1,5 @@
 use crate::{gm_artifacts, input::RunKind};
-use std::{os::windows::process::CommandExt, process::Child};
+use std::process::Child;
 
 mod run;
 pub use run::run_command;
@@ -26,43 +26,49 @@ pub fn invoke_igor(
 ) -> Child {
     // we do all build operations directly with the Gmac
     if *run_kind == RunKind::Build {
-        let cache = macros.asset_compiler_cache_directory.join("cache");
+        #[cfg(target_os = "windows")]
+        {
+            let cache = macros.asset_compiler_cache_directory.join("cache");
 
-        let mut gmac = std::process::Command::new(macros.asset_compiler_path.clone());
-        gmac.raw_arg("-c")
-            .raw_arg("--mv=1")
-            .raw_arg("--zpex")
-            .raw_arg("--iv=0")
-            .raw_arg("--rv=0")
-            .raw_arg("-j=8")
-            .raw_arg(format!("--gn=\"{}\"", macros.project_name))
-            .raw_arg(format!("--td=\"{}\"", macros.temp_directory))
-            .raw_arg(format!("--cd=\"{}\"", cache))
-            .raw_arg(format!("--rtp=\"{}\"", macros.runtime_location))
-            .raw_arg(format!("--zpuf=\"{}\"", macros.user_directory))
-            .raw_arg("--prefabs=\"\"")
-            .raw_arg("/ffe=\"fm+Cfg==\"")
-            .raw_arg("-m=windows")
-            .raw_arg("--tgt=64")
-            .raw_arg("--nodnd")
-            .raw_arg(format!("--cfg=\"{}\"", run_options.task.config))
-            .raw_arg(format!(
-                "-o=\"{}\"",
-                macros.asset_compiler_cache_directory.join("output")
-            ))
-            .raw_arg("-sh=True")
-            .raw_arg("--cvm")
-            .raw_arg(format!("--baseproject=\"{}\"", macros.base_project))
-            .raw_arg(format!("\"{}\"", macros.project_full_filename))
-            .raw_arg("--debug")
-            .raw_arg("--bt=compile")
-            .raw_arg("--rt=vm")
-            .raw_arg("--64bitgame=true");
+            let mut gmac = std::process::Command::new(macros.asset_compiler_path.clone());
+            gmac.raw_arg("-c")
+                .raw_arg("--mv=1")
+                .raw_arg("--zpex")
+                .raw_arg("--iv=0")
+                .raw_arg("--rv=0")
+                .raw_arg("-j=8")
+                .raw_arg(format!("--gn=\"{}\"", macros.project_name))
+                .raw_arg(format!("--td=\"{}\"", macros.temp_directory))
+                .raw_arg(format!("--cd=\"{}\"", cache))
+                .raw_arg(format!("--rtp=\"{}\"", macros.runtime_location))
+                .raw_arg(format!("--zpuf=\"{}\"", macros.user_directory))
+                .raw_arg("--prefabs=\"\"")
+                .raw_arg("/ffe=\"fm+Cfg==\"")
+                .raw_arg("-m=windows")
+                .raw_arg("--tgt=64")
+                .raw_arg("--nodnd")
+                .raw_arg(format!("--cfg=\"{}\"", run_options.task.config))
+                .raw_arg(format!(
+                    "-o=\"{}\"",
+                    macros.asset_compiler_cache_directory.join("output")
+                ))
+                .raw_arg("-sh=True")
+                .raw_arg("--cvm")
+                .raw_arg(format!("--baseproject=\"{}\"", macros.base_project))
+                .raw_arg(format!("\"{}\"", macros.project_full_filename))
+                .raw_arg("--debug")
+                .raw_arg("--bt=compile")
+                .raw_arg("--rt=vm")
+                .raw_arg("--64bitgame=true");
 
-        return gmac
-            .stdout(std::process::Stdio::piped())
-            .spawn()
-            .expect("failed to spawn gmac process");
+            return gmac
+                .stdout(std::process::Stdio::piped())
+                .spawn()
+                .expect("failed to spawn gmac process");
+        }
+
+        #[cfg(target_family = "unix")]
+        panic!("Unix targets cannot execute a bare build!");
     }
 
     let word = match run_kind {

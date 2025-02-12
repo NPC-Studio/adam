@@ -502,10 +502,9 @@ fn main() -> ExitCode {
         use interprocess::local_socket::LocalSocketListener;
 
         let socket_name = gm_build.temp_folder.join("ipc_log.log");
-        let socket_name = socket_name.to_str().unwrap();
-        std::env::set_var("ADAM_IPC_SOCKET", socket_name);
+        std::env::set_var("ADAM_IPC_SOCKET", socket_name.clone());
 
-        if let Ok(listener) = LocalSocketListener::bind(socket_name) {
+        if let Ok(listener) = LocalSocketListener::bind(socket_name.as_std_path()) {
             std::thread::Builder::new()
                 .name("adam-ipc".into())
                 .spawn(move || {

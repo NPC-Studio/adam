@@ -19,6 +19,7 @@ pub struct InputOpts {
 pub enum ClapOperation {
     /// Builds a project *without* running it.
     #[clap(alias = "b")]
+    #[cfg(target_os = "windows")]
     Build(BuildOptions),
 
     /// Compiles, if necessary, and then runs a project.

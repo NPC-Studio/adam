@@ -56,6 +56,7 @@ pub fn parse_inputs(
 ) -> AnyResult<(RunOptions, Operation)> {
     let (build_options, operation) = match clap_op {
         ClapOperation::Run(b) => (b, Operation::Run(RunKind::Run)),
+        #[cfg(target_os = "windows")]
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
         ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),
         ClapOperation::Test {

@@ -103,7 +103,7 @@ pub struct GmMacros {
     #[serde(rename = "CDBurning")]
     cd_burning: Utf8PathBuf,
     #[serde(rename = "TempPath")]
-    temp_path: Utf8PathBuf,
+    pub temp_path: Utf8PathBuf,
     exe_path: Utf8PathBuf,
     program_dir_name: String,
     program_name: String,
@@ -119,9 +119,9 @@ pub struct GmMacros {
     #[serde(rename = "runtimeBaseLocation")]
     runtime_base_location: Utf8PathBuf,
     #[serde(rename = "runtimeLocation")]
-    runtime_location: Utf8PathBuf,
+    pub runtime_location: Utf8PathBuf,
     base_options_dir: Utf8PathBuf,
-    asset_compiler_path: Utf8PathBuf,
+    pub asset_compiler_path: Utf8PathBuf,
     pub igor_path: Utf8PathBuf,
     lib_compatibility_path: Utf8PathBuf,
     pub runner_path: Utf8PathBuf,
@@ -142,11 +142,11 @@ pub struct GmMacros {
     system_cache_directory: Utf8PathBuf,
     local_directory: Utf8PathBuf,
     local_cache_directory: Utf8PathBuf,
-    temp_directory: Utf8PathBuf,
-    asset_compiler_cache_directory: Utf8PathBuf,
+    pub temp_directory: Utf8PathBuf,
+    pub asset_compiler_cache_directory: Utf8PathBuf,
     ide_cache_directory: Utf8PathBuf,
     my_projects_directory: Utf8PathBuf,
-    base_project: Utf8PathBuf,
+    pub base_project: Utf8PathBuf,
     default_font: String,
     default_style: String,
     default_font_size: String,

@@ -227,6 +227,10 @@ pub struct BuildOptions {
     #[clap(long)]
     no_compile_data_win_location: Option<Utf8PathBuf>,
 
+    /// When set, no build scripts will be invoked which may be in the manifest.
+    #[clap(long)]
+    no_build_script: bool,
+
     /// Uses the YYC instead of the default VM. If this is the case, then we'll need to check
     /// your Visual Studio path on Windows.
     #[clap(long, short)]
@@ -322,6 +326,10 @@ impl BuildOptions {
         // don't compile it if we don't wanna!
         if self.no_compile {
             run_options.no_compile = Some(self.no_compile_data_win_location.unwrap_or_default());
+        }
+
+        if self.no_build_script {
+            run_options.task.no_build_script = true;
         }
 
         if let Some(cfg) = self.config {

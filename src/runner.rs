@@ -1,5 +1,5 @@
 use crate::{gm_artifacts, input::RunKind};
-use std::process::Child;
+use std::{os::windows::process::CommandExt, process::Child};
 
 mod run;
 pub use run::run_command;
@@ -22,8 +22,49 @@ pub fn invoke_igor(
     run_kind: &RunKind,
     macros: &gm_artifacts::GmMacros,
     build_bff: &Utf8Path,
-    verbosity: u8,
+    run_options: &RunOptions,
 ) -> Child {
+    // we do all build operations directly with the Gmac
+    if *run_kind == RunKind::Build {
+        let cache = macros.asset_compiler_cache_directory.join("cache");
+
+        let mut gmac = std::process::Command::new(macros.asset_compiler_path.clone());
+        gmac.raw_arg("-c")
+            .raw_arg("--mv=1")
+            .raw_arg("--zpex")
+            .raw_arg("--iv=0")
+            .raw_arg("--rv=0")
+            .raw_arg("-j=8")
+            .raw_arg(format!("--gn=\"{}\"", macros.project_name))
+            .raw_arg(format!("--td=\"{}\"", macros.temp_directory))
+            .raw_arg(format!("--cd=\"{}\"", cache))
+            .raw_arg(format!("--rtp=\"{}\"", macros.runtime_location))
+            .raw_arg(format!("--zpuf=\"{}\"", macros.user_directory))
+            .raw_arg("--prefabs=\"\"")
+            .raw_arg("/ffe=\"fm+Cfg==\"")
+            .raw_arg("-m=windows")
+            .raw_arg("--tgt=64")
+            .raw_arg("--nodnd")
+            .raw_arg(format!("--cfg=\"{}\"", run_options.task.config))
+            .raw_arg(format!(
+                "-o=\"{}\"",
+                macros.asset_compiler_cache_directory.join("output")
+            ))
+            .raw_arg("-sh=True")
+            .raw_arg("--cvm")
+            .raw_arg(format!("--baseproject=\"{}\"", macros.base_project))
+            .raw_arg(format!("\"{}\"", macros.project_full_filename))
+            .raw_arg("--debug")
+            .raw_arg("--bt=compile")
+            .raw_arg("--rt=vm")
+            .raw_arg("--64bitgame=true");
+
+        return gmac
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .expect("failed to spawn gmac process");
+    }
+
     let word = match run_kind {
         RunKind::Run | RunKind::Test(_) => "Run",
         RunKind::Build => "PackageZip", // we do this as a BS option basically
@@ -34,7 +75,7 @@ pub fn invoke_igor(
     igor.arg("-j=8").arg(format!("-options={}", build_bff));
 
     // add the verbosity
-    if verbosity > 1 {
+    if run_options.task.verbosity > 1 {
         igor.arg("-v");
     }
 
@@ -44,7 +85,7 @@ pub fn invoke_igor(
         .arg(word)
         .stdout(std::process::Stdio::piped());
 
-    if verbosity > 1 {
+    if run_options.task.verbosity > 1 {
         println!("{:?}", igor);
     }
 

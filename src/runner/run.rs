@@ -4,12 +4,7 @@ use super::{
     compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_igor,
     printer::Printer,
 };
-use crate::{
-    gm_artifacts::{self, PLATFORM_KIND},
-    input::RunKind,
-    runner::cache::Cache,
-    RunOptions,
-};
+use crate::{gm_artifacts::GmMacros, input::RunKind, runner::cache::Cache, RunOptions};
 use std::{
     io::Lines,
     io::{BufRead, BufReader},
@@ -17,7 +12,7 @@ use std::{
 
 pub fn run_command(
     build_bff: &Utf8Path,
-    macros: gm_artifacts::GmMacros,
+    macros: GmMacros,
     run_options: RunOptions,
     run_kind: &RunKind,
 ) -> bool {
@@ -49,30 +44,7 @@ pub fn run_command(
     };
 
     let time = std::time::Instant::now();
-    let mut child = if let Some(no_compile) = &run_options.no_compile {
-        let mut igor = std::process::Command::new(format!(
-            "{}/{}/x64/Runner.exe  ",
-            run_options.platform.runtime_location, PLATFORM_KIND,
-        ));
-
-        let data_win_path = if no_compile.as_str().is_empty() {
-            format!("{}/output/data.win", final_output)
-        } else {
-            no_compile.to_string()
-        };
-
-        igor.arg("-game")
-            .arg(data_win_path)
-            .stdout(std::process::Stdio::piped());
-
-        if run_options.task.verbosity > 0 {
-            println!("{:?}", igor);
-        }
-
-        igor.spawn().unwrap()
-    } else {
-        invoke_igor(run_kind, &macros, build_bff, run_options.task.verbosity)
-    };
+    let mut child = invoke_igor(run_kind, &macros, build_bff, &run_options);
 
     if run_options.task.verbosity > 0
         || *run_kind == RunKind::Release

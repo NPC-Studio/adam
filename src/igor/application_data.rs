@@ -7,7 +7,7 @@ use crate::AnyResult;
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct ApplicationData {
     pub current_directory: Utf8PathBuf,
-    pub project_name: String,
+    pub project_name: Option<String>,
 }
 
 impl ApplicationData {
@@ -34,13 +34,9 @@ impl ApplicationData {
             }
         }
 
-        if let Some(project_name) = project_name {
-            Ok(Self {
-                current_directory,
-                project_name,
-            })
-        } else {
-            color_eyre::eyre::bail!("could not find a .yyp in current directory")
-        }
+        Ok(Self {
+            current_directory,
+            project_name,
+        })
     }
 }

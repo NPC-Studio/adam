@@ -40,6 +40,9 @@ pub struct TaskOptions {
 
     /// If true, will try to find the PID of a runner game and force it to close.
     pub close_on_sig_kill: bool,
+
+    /// When set, we won't do `check` before anything.
+    pub no_build_script: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -127,6 +130,7 @@ impl Default for TaskOptions {
             test_env_variables: vec![],
             test_success_needle: "RUN_SUCCESS".to_string(),
             close_on_sig_kill: false,
+            no_build_script: false,
         }
     }
 }

@@ -7,7 +7,7 @@
 compile_error!("we only support `windows` and `macos` targets!");
 
 use clap::Parser;
-use std::process::ExitCode;
+use std::{io::BufRead, process::ExitCode};
 
 type AnyResult<T = ()> = color_eyre::eyre::Result<T>;
 
@@ -210,6 +210,10 @@ fn main() -> ExitCode {
             }
         };
 
+    if options.task.no_build_script {
+        check_options = None;
+    }
+
     if let Err(e) = options.platform.canonicalize() {
         println!(
             "{}: invalid {} path (file does not exist). Is everything installed correctly?",
@@ -303,6 +307,55 @@ fn main() -> ExitCode {
         std::env::set_var("ADAM_TEST", value);
     }
 
+    // crazy branch right here: if we're a no_compile run op, then we get outta there!
+    if let Some(no_compile) = &options.no_compile {
+        // if we're on macOS, yell and say we can't do that!
+
+        let mut igor = std::process::Command::new(format!(
+            "{}/{}/x64/Runner.exe  ",
+            &options.platform.runtime_location,
+            gm_artifacts::PLATFORM_KIND,
+        ));
+
+        let data_win_path = if no_compile.as_str().is_empty() {
+            format!(
+                "./{}/{}/output/data.win",
+                options.task.output_folder,
+                if options.task.yyc { "yyc" } else { "vm" },
+            )
+        } else {
+            no_compile.to_string()
+        };
+
+        igor.arg("-game")
+            .arg(data_win_path)
+            .stdout(std::process::Stdio::piped());
+
+        if options.task.verbosity > 0 {
+            println!("{:?}", igor);
+        }
+
+        let mut child = igor.spawn().unwrap();
+        let reader = std::io::BufReader::new(child.stdout.as_mut().unwrap()).lines();
+        for line in reader.map_while(Result::ok) {
+            println!("{}", line.trim());
+        }
+
+        let success = match child.wait() {
+            Ok(e) => e.success(),
+            Err(_) => false,
+        };
+
+        let (style_value, exit_code) = if success {
+            (console::style("ok").green().bright(), ExitCode::SUCCESS)
+        } else {
+            (console::style("FAILED").red().bright(), ExitCode::FAILURE)
+        };
+        println!("adam test result: {}", style_value);
+
+        return exit_code;
+    }
+
     // check if we have a valid yyc bat
     if options.task.yyc {
         if cfg!(not(target_os = "windows")) {
@@ -337,11 +390,21 @@ fn main() -> ExitCode {
         igor::OutputKind::Vm
     };
 
+    let Some(project_filename) = application_data.project_name else {
+        println!(
+            "{}: {}",
+            console::style("adam error").bright().red(),
+            console::style("could not find a .yyp in the current directory!").bold()
+        );
+
+        return ExitCode::FAILURE;
+    };
+
     let folders = match TargetFolders::new(
         &application_data.current_directory,
         &options.task.output_folder,
         output_kind,
-        &application_data.project_name,
+        &project_filename,
     ) {
         Ok(v) => v,
         Err(e) => {
@@ -357,7 +420,7 @@ fn main() -> ExitCode {
     let build_data = igor::BuildData {
         folders,
         output_kind,
-        project_filename: application_data.project_name,
+        project_filename,
         project_directory: application_data.current_directory,
         // user_dir: options.platform.user_data.clone(),
         user_dir: Default::default(),

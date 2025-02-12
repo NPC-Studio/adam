@@ -284,16 +284,21 @@ fn main() -> ExitCode {
             }
         }
         input::Operation::Clean => {
-            // clean up the output folder...
-            if let Err(e) = std::fs::remove_dir_all(
-                application_data
-                    .current_directory
-                    .join(&options.task.output_folder),
-            ) {
-                println!("{} on clean: {}", console::style("error").bright().red(), e);
-                return ExitCode::FAILURE;
+            // no need to crash or show an error here. it's fine!
+            if options.task.output_folder.exists() {
+                // clean up the output folder...
+                if let Err(e) = std::fs::remove_dir_all(
+                    application_data
+                        .current_directory
+                        .join(&options.task.output_folder),
+                ) {
+                    println!("{} on clean: {}", console::style("error").bright().red(), e);
+                    return ExitCode::FAILURE;
+                }
+                return ExitCode::SUCCESS;
+            } else {
+                return ExitCode::SUCCESS;
             }
-            return ExitCode::SUCCESS;
         }
     };
 

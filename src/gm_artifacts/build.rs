@@ -1,32 +1,32 @@
 use crate::igor::BuildData;
+use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GmBuild {
-    pub target_file: PathBuf,
+    pub target_file: Utf8PathBuf,
     pub asset_compiler: String,
     pub debug: String,
     #[serde(rename = "compile_output_file_name")]
-    pub compile_output_file_name: PathBuf,
+    pub compile_output_file_name: Utf8PathBuf,
     pub use_shaders: String,
-    pub steam_options: PathBuf,
+    pub steam_options: Utf8PathBuf,
     pub config: String,
-    pub output_folder: PathBuf,
+    pub output_folder: Utf8PathBuf,
     pub project_name: String,
-    pub macros: PathBuf,
-    pub project_dir: PathBuf,
-    pub preferences: PathBuf,
-    pub project_path: PathBuf,
-    pub temp_folder: PathBuf,
-    pub temp_folder_unmapped: PathBuf,
+    pub macros: Utf8PathBuf,
+    pub project_dir: Utf8PathBuf,
+    pub preferences: Utf8PathBuf,
+    pub project_path: Utf8PathBuf,
+    pub temp_folder: Utf8PathBuf,
+    pub temp_folder_unmapped: Utf8PathBuf,
     #[serde(rename = "userDir")]
-    pub license_dir: PathBuf,
-    pub runtime_location: PathBuf,
-    pub target_options: PathBuf,
+    pub license_dir: Utf8PathBuf,
+    pub runtime_location: Utf8PathBuf,
+    pub target_options: Utf8PathBuf,
     pub target_mask: String,
-    pub application_path: PathBuf,
+    pub application_path: Utf8PathBuf,
     pub verbose: String,
     #[serde(rename = "SteamIDE")]
     pub steam_ide: String,
@@ -73,23 +73,23 @@ impl GmBuild {
 impl Default for GmBuild {
     fn default() -> Self {
         Self {
-            compile_output_file_name: PathBuf::new(),
-            steam_options: PathBuf::new(),
+            compile_output_file_name: Utf8PathBuf::new(),
+            steam_options: Utf8PathBuf::new(),
             project_name: String::new(),
-            macros: PathBuf::new(),
-            project_dir: PathBuf::new(),
-            preferences: PathBuf::new(),
-            project_path: PathBuf::new(),
-            temp_folder: PathBuf::new(),
-            temp_folder_unmapped: PathBuf::new(),
-            license_dir: PathBuf::new(),
-            runtime_location: PathBuf::new(),
-            target_options: PathBuf::new(),
+            macros: Utf8PathBuf::new(),
+            project_dir: Utf8PathBuf::new(),
+            preferences: Utf8PathBuf::new(),
+            project_path: Utf8PathBuf::new(),
+            temp_folder: Utf8PathBuf::new(),
+            temp_folder_unmapped: Utf8PathBuf::new(),
+            license_dir: Utf8PathBuf::new(),
+            runtime_location: Utf8PathBuf::new(),
+            target_options: Utf8PathBuf::new(),
             target_mask: String::new(),
-            application_path: PathBuf::new(),
-            output_folder: PathBuf::new(),
+            application_path: Utf8PathBuf::new(),
+            output_folder: Utf8PathBuf::new(),
 
-            target_file: PathBuf::new(),
+            target_file: Utf8PathBuf::new(),
             asset_compiler: String::new(),
             debug: "False".to_string(),
             use_shaders: "True".to_string(),

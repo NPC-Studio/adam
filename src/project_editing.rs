@@ -59,10 +59,22 @@ fn create_yyp_boss(
         }
     };
 
+    let Some(project_filename) = application_data.project_name else {
+        println!(
+            "{}: {}",
+            console::style("adam error").bright().red(),
+            console::style("could not find a .yyp in the current directory!").bold()
+        );
+
+        return None;
+    };
+
     let output = make_yyp_boss(
         application_data
             .current_directory
-            .join(format!("{}.yyp", application_data.project_name)),
+            .join(format!("{}.yyp", project_filename))
+            .as_std_path()
+            .to_owned(),
     );
 
     match output {
@@ -92,10 +104,20 @@ fn create_yyp_boss_with_data() -> Option<yy_boss::YypBoss> {
         }
     };
 
+    let Some(project_filename) = application_data.project_name else {
+        println!(
+            "{}: {}",
+            console::style("adam error").bright().red(),
+            console::style("could not find a .yyp in the current directory!").bold()
+        );
+
+        return None;
+    };
+
     match yy_boss::YypBoss::new(
         application_data
             .current_directory
-            .join(format!("{}.yyp", application_data.project_name)),
+            .join(format!("{}.yyp", project_filename)),
         &[],
     ) {
         Ok(v) => Some(v),

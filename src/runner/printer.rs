@@ -1,6 +1,7 @@
 use aho_corasick::AhoCorasickBuilder;
+use camino::Utf8Path;
 use gml_log_parser::ScriptMappings;
-use std::{collections::HashMap, path::Path};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Printer {
@@ -19,7 +20,7 @@ impl Printer {
         "Unsetting previous scheduler resolution",
     ];
 
-    pub fn new(scripts_directory: &Path) -> Self {
+    pub fn new(scripts_directory: &Utf8Path) -> Self {
         let str_to_style = HashMap::from([
             ("error".to_string(), console::Style::new().red().bright()),
             ("warn".to_string(), console::Style::new().yellow().bright()),

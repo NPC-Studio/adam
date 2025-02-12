@@ -1,17 +1,18 @@
+use camino::Utf8Path;
+
 use super::{
-    compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_release,
-    invoke_run, printer::Printer,
+    compiler_handler::CompilerHandler, compiler_handler::CompilerOutput, invoke_igor,
+    printer::Printer,
 };
-use crate::{gm_artifacts, input::RunKind, runner::cache::Cache, RunOptions};
+use crate::{gm_artifacts::GmMacros, input::RunKind, runner::cache::Cache, RunOptions};
 use std::{
     io::Lines,
     io::{BufRead, BufReader},
-    path::Path,
 };
 
 pub fn run_command(
-    build_bff: &Path,
-    macros: gm_artifacts::GmMacros,
+    build_bff: &Utf8Path,
+    macros: GmMacros,
     run_options: RunOptions,
     run_kind: &RunKind,
 ) -> bool {
@@ -36,15 +37,19 @@ pub fn run_command(
         .unwrap();
     }
 
-    let time = std::time::Instant::now();
-    let mut child = match run_kind {
-        RunKind::Run | RunKind::Build | RunKind::Test(_) => {
-            invoke_run(&macros, build_bff, &run_options)
-        }
-        RunKind::Release => invoke_release(&macros, build_bff, &run_options),
+    // read the cache if it doesn't exist...
+    let final_output = {
+        let sub_str = if run_options.task.yyc { "yyc" } else { "vm" };
+        format!("./{}/{}", run_options.task.output_folder, sub_str)
     };
 
-    if run_options.task.verbosity > 0 || *run_kind == RunKind::Release {
+    let time = std::time::Instant::now();
+    let mut child = invoke_igor(run_kind, &macros, build_bff, &run_options);
+
+    if run_options.task.verbosity > 0
+        || *run_kind == RunKind::Release
+        || *run_kind == RunKind::Build
+    {
         let reader = BufReader::new(child.stdout.as_mut().unwrap()).lines();
         for line in reader.map_while(Result::ok) {
             println!("{}", line.trim());
@@ -55,8 +60,8 @@ pub fn run_command(
             Err(_) => false,
         }
     } else {
-        let compiler_handler = if *run_kind == RunKind::Build {
-            CompilerHandler::new_build()
+        let compiler_handler = if run_options.no_compile.is_some() {
+            CompilerHandler::new_re_run()
         } else {
             CompilerHandler::new_run()
         };
@@ -65,12 +70,7 @@ pub fn run_command(
         let printer_handler =
             std::thread::spawn(move || Printer::new(&project_dir.join("scripts")));
 
-        // read the cache if it doesn't exist...
-        let sub_str = if run_options.task.yyc { "yyc" } else { "vm" };
-        let cache_path = format!(
-            "./{}/{}/cache.toml",
-            run_options.task.output_folder, sub_str
-        );
+        let cache_path = format!("{}/cache.toml", final_output);
         let mut cache: Cache = std::fs::read_to_string(&cache_path)
             .ok()
             .and_then(|txt| toml::from_str(&txt).ok())
@@ -118,8 +118,8 @@ pub fn run_command(
                 }
 
                 run_game(&mut reader, &mut printer, run_kind, &run_options)
+                    || run_options.no_compile.is_some()
             }
-            CompilerOutput::SuccessAndBuild => true,
         }
     }
 }

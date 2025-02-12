@@ -7,7 +7,7 @@
 compile_error!("we only support `windows` and `macos` targets!");
 
 use clap::Parser;
-use std::process::ExitCode;
+use std::{io::BufRead, process::ExitCode};
 
 type AnyResult<T = ()> = color_eyre::eyre::Result<T>;
 
@@ -188,7 +188,11 @@ fn main() -> ExitCode {
         };
         let task = TaskOptions::default();
 
-        RunOptions { task, platform }
+        RunOptions {
+            task,
+            platform,
+            no_compile: None,
+        }
     };
     let mut check_options = None;
     config.write_to_options(&mut runtime_options, &mut check_options);
@@ -205,6 +209,10 @@ fn main() -> ExitCode {
                 return ExitCode::FAILURE;
             }
         };
+
+    if options.task.no_build_script {
+        check_options = None;
+    }
 
     if let Err(e) = options.platform.canonicalize() {
         println!(
@@ -276,16 +284,21 @@ fn main() -> ExitCode {
             }
         }
         input::Operation::Clean => {
-            // clean up the output folder...
-            if let Err(e) = std::fs::remove_dir_all(
-                application_data
-                    .current_directory
-                    .join(&options.task.output_folder),
-            ) {
-                println!("{} on clean: {}", console::style("error").bright().red(), e);
-                return ExitCode::FAILURE;
+            // no need to crash or show an error here. it's fine!
+            if options.task.output_folder.exists() {
+                // clean up the output folder...
+                if let Err(e) = std::fs::remove_dir_all(
+                    application_data
+                        .current_directory
+                        .join(&options.task.output_folder),
+                ) {
+                    println!("{} on clean: {}", console::style("error").bright().red(), e);
+                    return ExitCode::FAILURE;
+                }
+                return ExitCode::SUCCESS;
+            } else {
+                return ExitCode::SUCCESS;
             }
-            return ExitCode::SUCCESS;
         }
     };
 
@@ -297,6 +310,72 @@ fn main() -> ExitCode {
 
         // we set this fella every time too
         std::env::set_var("ADAM_TEST", value);
+    }
+
+    // hey don't do that!
+    if cfg!(not(target_family = "windows")) && options.no_compile.is_some() {
+        println!(
+            "{}: only windows can `no_compile`",
+            console::style("error").bright().red()
+        );
+
+        return ExitCode::FAILURE;
+    }
+
+    // crazy branch right here: if we're a no_compile run op, then we get outta there!
+    if let Some(no_compile) = &options.no_compile {
+        let mut igor = std::process::Command::new(format!(
+            "{}/{}/x64/Runner.exe  ",
+            &options.platform.runtime_location,
+            gm_artifacts::PLATFORM_KIND,
+        ));
+
+        let data_win_path = if no_compile.as_str().is_empty() {
+            options
+                .task
+                .output_folder
+                .join(if options.task.yyc { "yyc" } else { "vm" })
+                .join("output/data.win")
+        } else {
+            no_compile.clone()
+        };
+
+        if data_win_path.exists() == false {
+            println!(
+                "{}: `win` path given (or inferred) does not exist",
+                console::style("error").bright().red()
+            );
+
+            return ExitCode::FAILURE;
+        }
+
+        igor.arg("-game")
+            .arg(data_win_path)
+            .stdout(std::process::Stdio::piped());
+
+        if options.task.verbosity > 0 {
+            println!("{:?}", igor);
+        }
+
+        let mut child = igor.spawn().unwrap();
+        let reader = std::io::BufReader::new(child.stdout.as_mut().unwrap()).lines();
+        for line in reader.map_while(Result::ok) {
+            println!("{}", line.trim());
+        }
+
+        let success = match child.wait() {
+            Ok(e) => e.success(),
+            Err(_) => false,
+        };
+
+        let (style_value, exit_code) = if success {
+            (console::style("ok").green().bright(), ExitCode::SUCCESS)
+        } else {
+            (console::style("FAILED").red().bright(), ExitCode::FAILURE)
+        };
+        println!("adam test result: {}", style_value);
+
+        return exit_code;
     }
 
     // check if we have a valid yyc bat
@@ -333,11 +412,21 @@ fn main() -> ExitCode {
         igor::OutputKind::Vm
     };
 
+    let Some(project_filename) = application_data.project_name else {
+        println!(
+            "{}: {}",
+            console::style("adam error").bright().red(),
+            console::style("could not find a .yyp in the current directory!").bold()
+        );
+
+        return ExitCode::FAILURE;
+    };
+
     let folders = match TargetFolders::new(
         &application_data.current_directory,
-        options.task.output_folder.as_std_path(),
+        &options.task.output_folder,
         output_kind,
-        &application_data.project_name,
+        &project_filename,
     ) {
         Ok(v) => v,
         Err(e) => {
@@ -353,22 +442,14 @@ fn main() -> ExitCode {
     let build_data = igor::BuildData {
         folders,
         output_kind,
-        project_filename: application_data.project_name,
+        project_filename,
         project_directory: application_data.current_directory,
         // user_dir: options.platform.user_data.clone(),
         user_dir: Default::default(),
-        license_folder: options
-            .platform
-            .user_license_folder
-            .as_std_path()
-            .to_owned(),
-        runtime_location: options.platform.runtime_location.as_std_path().to_owned(),
+        license_folder: options.platform.user_license_folder.clone(),
+        runtime_location: options.platform.runtime_location.clone(),
         target_mask: DEFAULT_PLATFORM_DATA.target_mask,
-        application_path: options
-            .platform
-            .gms2_application_location
-            .as_std_path()
-            .to_owned(),
+        application_path: options.platform.gms2_application_location.clone(),
         config: options.task.config.clone(),
     };
 
@@ -438,10 +519,9 @@ fn main() -> ExitCode {
         use interprocess::local_socket::LocalSocketListener;
 
         let socket_name = gm_build.temp_folder.join("ipc_log.log");
-        let socket_name = socket_name.to_str().unwrap();
-        std::env::set_var("ADAM_IPC_SOCKET", socket_name);
+        std::env::set_var("ADAM_IPC_SOCKET", socket_name.clone());
 
-        if let Ok(listener) = LocalSocketListener::bind(socket_name) {
+        if let Ok(listener) = LocalSocketListener::bind(socket_name.as_std_path()) {
             std::thread::Builder::new()
                 .name("adam-ipc".into())
                 .spawn(move || {

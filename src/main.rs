@@ -25,6 +25,24 @@ mod project_editing;
 mod runner;
 use runner::{PlatformOptions, RunOptions, TaskOptions};
 
+macro_rules! adam_error {
+    ($msg:expr) => {
+        println!("{}: {}", console::style("error").bright().red(), $msg);
+    };
+    ($($args:tt)*) => {
+        println!("{}: {}", console::style("error").bright().red(), format_args!($($args)*));
+    };
+}
+
+macro_rules! adam_warning {
+    ($msg:expr) => {
+        println!("{}: {}", console::style("error").bright().yellow(), $msg);
+    };
+    ($($args:tt)*) => {
+        println!("{}: {}", console::style("error").bright().yellow(), format_args!($($args)*));
+    };
+}
+
 fn main() -> ExitCode {
     color_eyre::install().unwrap();
     let inputs = input::InputOpts::parse();
@@ -55,11 +73,7 @@ fn main() -> ExitCode {
                         let v: usize = match value.parse() {
                             Ok(v) => v,
                             Err(e) => {
-                                println!(
-                                    "{} invalid value: {:?}",
-                                    console::style("error").bright().red(),
-                                    e
-                                );
+                                adam_error!("invalid value: {:?}", e);
 
                                 return ExitCode::FAILURE;
                             }
@@ -71,11 +85,7 @@ fn main() -> ExitCode {
                         let v: bool = match value.parse() {
                             Ok(v) => v,
                             Err(e) => {
-                                println!(
-                                    "{} invalid value: {:?}",
-                                    console::style("error").bright().red(),
-                                    e
-                                );
+                                adam_error!("invalid value: {:?}", e);
 
                                 return ExitCode::FAILURE;
                             }
@@ -87,10 +97,7 @@ fn main() -> ExitCode {
                         serde_json::Value::Array(vec![serde_json::Value::String(value)])
                     }
                     "x64_windows" => {
-                        println!(
-                            "{}: `x64_windows` is deprecated",
-                            console::style("error").bright().red(),
-                        );
+                        adam_error!("`x64_windows` is deprecated");
 
                         return ExitCode::FAILURE;
                     }
@@ -103,11 +110,7 @@ fn main() -> ExitCode {
                 let edit = match serde_json::from_value::<input::Manifest>(json_flash) {
                     Ok(v) => v,
                     Err(e) => {
-                        println!(
-                            "{}: invalid input: {:?}",
-                            console::style("error").bright().red(),
-                            e
-                        );
+                        adam_error!("invalid input: {:?}", e);
                         return ExitCode::FAILURE;
                     }
                 };
@@ -165,11 +168,7 @@ fn main() -> ExitCode {
     let mut config: input::Manifest = match confy::load("adam", None) {
         Ok(v) => v,
         Err(e) => {
-            println!(
-                "{}: user-config was invalid ({}). replacing with default...",
-                e,
-                console::style("warning").green().bright()
-            );
+            adam_warning!("user-config was invalid ({}). replacing with default...", e,);
 
             input::Manifest::default()
         }
@@ -194,30 +193,25 @@ fn main() -> ExitCode {
             no_compile: None,
         }
     };
-    let mut check_options = None;
-    config.write_to_options(&mut runtime_options, &mut check_options);
+    let mut script_path_to_run = None;
+    config.write_to_options(&mut runtime_options, &mut script_path_to_run);
 
     let (mut options, operation) =
-        match input::parse_inputs(inputs.subcmd, runtime_options, &mut check_options) {
+        match input::parse_inputs(inputs.subcmd, runtime_options, &mut script_path_to_run) {
             Ok(v) => v,
             Err(e) => {
-                println!(
-                    "{} parsing inputs: {}",
-                    console::style("error").bright().red(),
-                    e
-                );
+                adam_error!("parsing inputs: {}", e);
                 return ExitCode::FAILURE;
             }
         };
 
     if options.task.no_build_script {
-        check_options = None;
+        script_path_to_run = None;
     }
 
     if let Err(e) = options.platform.canonicalize() {
-        println!(
-            "{}: invalid {} path (file does not exist). Is everything installed correctly?",
-            console::style("adam error").bright().red(),
+        adam_error!(
+            "invalid {} path (file does not exist). Is everything installed correctly?",
             console::style(e).bold()
         );
 
@@ -226,9 +220,8 @@ fn main() -> ExitCode {
 
     if options.task.yyc {
         if let Err(_e) = options.platform.canonicalize_yyc() {
-            println!(
-                "{}: invalid yyc path `{}` (file does not exist). Is everything installed correctly?",
-                console::style("adam error").bright().red(),
+            adam_error!(
+                "invalid yyc path `{}` (file does not exist). Is everything installed correctly?",
                 console::style(options.platform.visual_studio_path).bold()
             );
 
@@ -239,11 +232,7 @@ fn main() -> ExitCode {
     let application_data = match igor::ApplicationData::new() {
         Ok(v) => v,
         Err(e) => {
-            println!(
-                "{}: {}",
-                console::style("adam error").bright().red(),
-                console::style(e).bold()
-            );
+            adam_error!("{}", e);
 
             return ExitCode::FAILURE;
         }
@@ -258,7 +247,7 @@ fn main() -> ExitCode {
     // handle a clean, extract the build_data
     let run_kind = match operation {
         input::Operation::Run(inner) => {
-            if let Some(check_options) = check_options {
+            if let Some(check_options) = script_path_to_run {
                 if runner::run_check(&options.task, check_options).is_err() {
                     return ExitCode::FAILURE;
                 }
@@ -266,39 +255,40 @@ fn main() -> ExitCode {
             inner
         }
         input::Operation::Check => {
-            let check_options = match check_options {
-                Some(v) => v,
-                None => {
-                    println!(
-                        "{}: no script given to run via CLI or config",
-                        console::style("error").bright().red()
-                    );
-
-                    return ExitCode::FAILURE;
+            let exit_code = if let Some(check_options) = script_path_to_run {
+                if runner::run_check(&options.task, check_options).is_ok() {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::FAILURE
                 }
-            };
-            if runner::run_check(&options.task, check_options).is_ok() {
-                return ExitCode::SUCCESS;
             } else {
-                return ExitCode::FAILURE;
-            }
+                adam_error!("no script given to run via CLI or config",);
+
+                ExitCode::FAILURE
+            };
+
+            return exit_code;
         }
         input::Operation::Clean => {
             // no need to crash or show an error here. it's fine!
-            if options.task.output_folder.exists() {
+            let exit_code = if options.task.output_folder.exists() {
                 // clean up the output folder...
-                if let Err(e) = std::fs::remove_dir_all(
+                match std::fs::remove_dir_all(
                     application_data
                         .current_directory
                         .join(&options.task.output_folder),
                 ) {
-                    println!("{} on clean: {}", console::style("error").bright().red(), e);
-                    return ExitCode::FAILURE;
+                    Ok(()) => ExitCode::SUCCESS,
+                    Err(e) => {
+                        adam_error!("on clean: {}", e);
+                        ExitCode::FAILURE
+                    }
                 }
-                return ExitCode::SUCCESS;
             } else {
-                return ExitCode::SUCCESS;
-            }
+                ExitCode::SUCCESS
+            };
+
+            return exit_code;
         }
     };
 
@@ -314,90 +304,38 @@ fn main() -> ExitCode {
 
     // hey don't do that!
     if cfg!(not(target_family = "windows")) && options.no_compile.is_some() {
-        println!(
-            "{}: only windows can `no_compile`",
-            console::style("error").bright().red()
-        );
+        adam_error!("only windows can `no_compile`",);
 
         return ExitCode::FAILURE;
     }
 
     // crazy branch right here: if we're a no_compile run op, then we get outta there!
     if let Some(no_compile) = &options.no_compile {
-        let mut igor = std::process::Command::new(format!(
-            "{}/{}/x64/Runner.exe  ",
-            &options.platform.runtime_location,
-            gm_artifacts::PLATFORM_KIND,
-        ));
-
-        let data_win_path = if no_compile.as_str().is_empty() {
-            options
-                .task
-                .output_folder
-                .join(if options.task.yyc { "yyc" } else { "vm" })
-                .join("output/data.win")
-        } else {
-            no_compile.clone()
-        };
-
-        if data_win_path.exists() == false {
-            println!(
-                "{}: `win` path given (or inferred) does not exist",
-                console::style("error").bright().red()
-            );
-
-            return ExitCode::FAILURE;
-        }
-
-        igor.arg("-game")
-            .arg(data_win_path)
-            .stdout(std::process::Stdio::piped());
-
-        if options.task.verbosity > 0 {
-            println!("{:?}", igor);
-        }
-
-        let mut child = igor.spawn().unwrap();
-        let reader = std::io::BufReader::new(child.stdout.as_mut().unwrap()).lines();
-        for line in reader.map_while(Result::ok) {
-            println!("{}", line.trim());
-        }
-
-        let success = match child.wait() {
-            Ok(e) => e.success(),
-            Err(_) => false,
-        };
-
-        let (style_value, exit_code) = if success {
-            (console::style("ok").green().bright(), ExitCode::SUCCESS)
-        } else {
-            (console::style("FAILED").red().bright(), ExitCode::FAILURE)
-        };
-        println!("adam test result: {}", style_value);
-
-        return exit_code;
+        run_no_compile(
+            no_compile,
+            &options,
+            application_data.project_name.as_deref(),
+        );
     }
 
     // check if we have a valid yyc bat
     if options.task.yyc {
         if cfg!(not(target_os = "windows")) {
-            println!(
-                "{}: {}\nPlease log a feature request at https://github.com/NPC-Studio/adam/issues",
-                console::style("adam error",).bright().red(),
+            adam_error!(
+                "{}\nPlease log a feature request at https://github.com/NPC-Studio/adam/issues",
                 console::style("adam does not support macOS YYC compilation, yet.").bold(),
             );
             return ExitCode::FAILURE;
         }
 
         if options.platform.visual_studio_path.exists() == false {
-            println!(
-                "{}: {}.\n\
+            adam_error!(
+                "{}.\n\
             Supplied path in preferences was \"{}\" but it did not exist.\n\
             To use yyc, we must have a visual studio .bat file.\n\
         Please specify a path in the Gms2 IDE. \n\
         For more information, see \
         https://help.yoyogames.com/hc/en-us/articles/227860547-GMS2-Required-SDKs",
-                console::style("error").bright().red(),
                 console::style("no valid path to visual studio .bat build file").bold(),
                 options.platform.visual_studio_path,
             );
@@ -413,11 +351,7 @@ fn main() -> ExitCode {
     };
 
     let Some(project_filename) = application_data.project_name else {
-        println!(
-            "{}: {}",
-            console::style("adam error").bright().red(),
-            console::style("could not find a .yyp in the current directory!").bold()
-        );
+        adam_error!("no project found to compile");
 
         return ExitCode::FAILURE;
     };
@@ -430,11 +364,7 @@ fn main() -> ExitCode {
     ) {
         Ok(v) => v,
         Err(e) => {
-            println!(
-                "{} on creating output folders: {}",
-                console::style("error").bright().red(),
-                e
-            );
+            adam_error!("failed to make build output folders because {}", e);
             return ExitCode::FAILURE;
         }
     };
@@ -460,11 +390,7 @@ fn main() -> ExitCode {
 
     // clear the temp files...
     if let Err(e) = build_data.folders.clear_tmp() {
-        println!(
-            "{} creating temp folder: {}",
-            console::style("error").bright().red(),
-            e
-        );
+        adam_error!("failed to make temp folder because {}", e);
         return ExitCode::FAILURE;
     }
 
@@ -576,4 +502,79 @@ fn main() -> ExitCode {
 
         ExitCode::FAILURE
     }
+}
+
+fn run_no_compile(
+    no_compile: &camino::Utf8Path,
+    options: &RunOptions,
+    project_name: Option<&str>,
+) -> ExitCode {
+    // issue warnings!
+    if options.task.config != "Default" {
+        adam_warning!(
+            "config `{}` was given, but also `no-compile`, so config is meaningless",
+            options.task.config
+        );
+    }
+
+    let mut runner_command = std::process::Command::new(format!(
+        "{}/{}/x64/Runner.exe  ",
+        &options.platform.runtime_location,
+        gm_artifacts::PLATFORM_KIND,
+    ));
+
+    let inferred = no_compile.as_str().is_empty();
+
+    let data_win_path = if no_compile.as_str().is_empty() {
+        let sub_folder = options.task.output_folder.join(if options.task.yyc {
+            "yyc/output"
+        } else {
+            "vm/output"
+        });
+
+        let last_bit = project_name.unwrap_or("data");
+        sub_folder.join(last_bit).with_extension("win")
+    } else {
+        no_compile.to_owned()
+    };
+
+    if data_win_path.exists() == false {
+        if inferred {
+            adam_error!("`win` path was inferred but does not exist",);
+            adam_error!("inferred path was `{}`", data_win_path);
+        } else {
+            adam_error!("`win` path given does not exist",);
+        }
+
+        return ExitCode::FAILURE;
+    }
+
+    runner_command
+        .arg("-game")
+        .arg(data_win_path)
+        .stdout(std::process::Stdio::piped());
+
+    if options.task.verbosity > 0 {
+        println!("{:?}", runner_command);
+    }
+
+    let mut child = runner_command.spawn().unwrap();
+    let reader = std::io::BufReader::new(child.stdout.as_mut().unwrap()).lines();
+    for line in reader.map_while(Result::ok) {
+        println!("{}", line.trim());
+    }
+
+    let success = match child.wait() {
+        Ok(e) => e.success(),
+        Err(_) => false,
+    };
+
+    let (style_value, exit_code) = if success {
+        (console::style("ok").green().bright(), ExitCode::SUCCESS)
+    } else {
+        (console::style("FAILED").red().bright(), ExitCode::FAILURE)
+    };
+    println!("adam test result: {}", style_value);
+
+    exit_code
 }

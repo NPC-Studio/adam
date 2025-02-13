@@ -196,6 +196,8 @@ fn main() -> ExitCode {
     let mut script_path_to_run = None;
     config.write_to_options(&mut runtime_options, &mut script_path_to_run);
 
+    let manifest_only_runtime_options = runtime_options.clone();
+
     let (mut options, operation) =
         match input::parse_inputs(inputs.subcmd, runtime_options, &mut script_path_to_run) {
             Ok(v) => v,
@@ -311,7 +313,15 @@ fn main() -> ExitCode {
 
     // crazy branch right here: if we're a no_compile run op, then we get outta there!
     if let Some(no_compile) = &options.no_compile {
-        run_no_compile(
+        // this only get triggered when you have some explicit change
+        if options.task.config != manifest_only_runtime_options.task.config {
+            adam_warning!(
+                "config `{}` was given, but also `no-compile`, so config is meaningless",
+                options.task.config
+            );
+        }
+
+        return run_no_compile(
             no_compile,
             &options,
             application_data.project_name.as_deref(),
@@ -504,19 +514,12 @@ fn main() -> ExitCode {
     }
 }
 
+#[must_use]
 fn run_no_compile(
     no_compile: &camino::Utf8Path,
     options: &RunOptions,
     project_name: Option<&str>,
 ) -> ExitCode {
-    // issue warnings!
-    if options.task.config != "Default" {
-        adam_warning!(
-            "config `{}` was given, but also `no-compile`, so config is meaningless",
-            options.task.config
-        );
-    }
-
     let mut runner_command = std::process::Command::new(format!(
         "{}/{}/x64/Runner.exe  ",
         &options.platform.runtime_location,

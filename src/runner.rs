@@ -28,6 +28,8 @@ pub fn invoke_igor(
     if *run_kind == RunKind::Build {
         #[cfg(target_os = "windows")]
         {
+            use std::os::windows::process::CommandExt;
+            
             let cache = macros.asset_compiler_cache_directory.join("cache");
 
             let mut gmac = std::process::Command::new(macros.asset_compiler_path.clone());

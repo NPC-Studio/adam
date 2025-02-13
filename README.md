@@ -5,7 +5,7 @@
 </p>
 
 > I am thy creature: I ought to be thy Adam, but I am rather the fallen angel, whom thou drivest from joy for no misdeed.
-> -- Frankenstein's Monster in *Frankenstein* by Mary Shelly
+> -- Frankenstein's Monster in _Frankenstein_ by Mary Shelly
 
 adam is a command-line utility for compiling GameMaker projects on Windows and macOS. Invoking adam is trivial:
 
@@ -21,7 +21,7 @@ This will compile your project, run it, and give you stdout (`"show_debug_messag
 
 `run`: Builds and runs the project.
 
-`build`: Builds a project without running it (but will report compile errors)
+`build`: Builds a project without running it (but will report compile errors). This only works on Windows.
 
 `release`: Builds a zip of the project (only available for users with an Enterprise license)
 
@@ -39,7 +39,7 @@ The best way to install adam is through cargo:
 cargo install adam
 ```
 
-You can get cargo by install Rust.
+You can get cargo by installing Rust.
 
 ## CHANGELOG AND ROADMAP
 
@@ -55,17 +55,18 @@ However, passing in numerous values every compile can become tiresome. To suppor
 
 ## CHECK
 
-Running `adam check` will invoke scripts *if you set up them up in your configuration file.*
+Running `adam check` will invoke scripts _if you set up them up in your configuration file._
 These scripts will also have the following environment variables set:
 
-| Name              | Value   |
-| ------------------|---------|
-| `ADAM_CHECK`        | 1       |
-| `ADAM_YYC`          | 0 or 1  |
-| `ADAM_CONFIG`       | String  |
-| `ADAM_VERBOSITY`    | Number  |
-| `ADAM_OUTPUT_FOLDER`| String  |
-| `ADAM_IGNORE_CACHE` | Number  |
+| Name                 | Value  |
+| -------------------- | ------ |
+| `ADAM_CHECK`         | 1      |
+| `ADAM_YYC`           | 0 or 1 |
+| `ADAM_CONFIG`        | String |
+| `ADAM_VERBOSITY`     | Number |
+| `ADAM_OUTPUT_FOLDER` | String |
+| `ADAM_IGNORE_CACHE`  | Number |
+| `ADAM_PROJECT_PATH`  | String |
 
 ## LICENSE
 

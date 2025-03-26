@@ -327,7 +327,15 @@ pub fn edit_manifest(name: String, view: bool, target_folder: &Utf8Path) -> Exit
 
     // make the process thread..
     {
+        #[cfg(target_os = "windows")]
+        let mut process_builder = std::process::Command::new("cmd");
+
+        #[cfg(target_os = "windows")]
+        process_builder.args(["/C", "code"]);
+
+        #[cfg(not(target_os = "windows"))]
         let mut process_builder = std::process::Command::new("code");
+
         process_builder.arg(&path);
 
         if view == false {

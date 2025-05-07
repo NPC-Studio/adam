@@ -62,10 +62,18 @@ pub fn parse_inputs(
         ClapOperation::Test {
             adam_test: adam_test_value,
             build_options,
-        } => (
-            build_options,
-            Operation::Run(RunKind::Test(adam_test_value)),
-        ),
+        } => {
+            // we need to concatenate these back into a single string...
+            let concat = adam_test_value
+                .into_iter()
+                .fold(String::new(), |mut accum, element| {
+                    accum.push(',');
+                    accum.push_str(&element);
+
+                    accum
+                });
+            (build_options, Operation::Run(RunKind::Test(concat)))
+        }
         ClapOperation::Check {
             path_to_run,
             build_options,

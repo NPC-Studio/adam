@@ -241,10 +241,13 @@ fn main() -> ExitCode {
     };
 
     // tell the runner where we are
-    std::env::set_var(
-        "ADAM_PROJECT_PATH",
-        application_data.current_directory.as_os_str(),
-    );
+    // safety: we are fully single-threaded at this point, so it's fine
+    unsafe {
+        std::env::set_var(
+            "ADAM_PROJECT_PATH",
+            application_data.current_directory.as_os_str(),
+        );
+    }
 
     // handle a clean, extract the build_data
     let run_kind = match operation {
@@ -297,11 +300,17 @@ fn main() -> ExitCode {
     // fire any specific behavior to this run kind
     if let input::RunKind::Test(value) = &run_kind {
         for var in options.task.test_env_variables.iter() {
-            std::env::set_var(var, "1");
+            // safety: we are fully single-threaded at this point, so it's fine
+            unsafe {
+                std::env::set_var(var, "1");
+            }
         }
 
         // we set this fella every time too
-        std::env::set_var("ADAM_TEST", value);
+        // safety: we are fully single-threaded at this point, so it's fine
+        unsafe {
+            std::env::set_var("ADAM_TEST", value);
+        }
     }
 
     // hey don't do that!
@@ -455,7 +464,10 @@ fn main() -> ExitCode {
         use interprocess::local_socket::LocalSocketListener;
 
         let socket_name = gm_build.temp_folder.join("ipc_log.log");
-        std::env::set_var("ADAM_IPC_SOCKET", socket_name.clone());
+        // we are single-threaded, but this is sicko-mode
+        unsafe {
+            std::env::set_var("ADAM_IPC_SOCKET", socket_name.clone());
+        }
 
         if let Ok(listener) = LocalSocketListener::bind(socket_name.as_std_path()) {
             std::thread::Builder::new()

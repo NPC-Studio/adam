@@ -60,18 +60,21 @@ pub fn parse_inputs(
         ClapOperation::Build(b) => (b, Operation::Run(RunKind::Build)),
         ClapOperation::Release(b) => (b, Operation::Run(RunKind::Release)),
         ClapOperation::Test {
-            adam_test: adam_test_value,
+            adam_test,
             build_options,
         } => {
             // we need to concatenate these back into a single string...
-            let concat = adam_test_value
+            let mut concat = adam_test
                 .into_iter()
                 .fold(String::new(), |mut accum, element| {
-                    accum.push(',');
                     accum.push_str(&element);
+                    accum.push(' ');
 
                     accum
                 });
+            // and then pop off the extra space
+            concat.pop();
+
             (build_options, Operation::Run(RunKind::Test(concat)))
         }
         ClapOperation::Check {

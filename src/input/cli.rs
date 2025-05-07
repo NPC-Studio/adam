@@ -1,7 +1,7 @@
 use camino::Utf8PathBuf;
 use clap::Parser;
 
-use crate::{RunOptions, DEFAULT_PLATFORM_DATA};
+use crate::{DEFAULT_PLATFORM_DATA, RunOptions};
 
 /// A CLI intended for use by humans and machines to build GameMakerStudio 2 projects.
 #[derive(Parser, Debug)]
@@ -56,13 +56,12 @@ pub enum ClapOperation {
     /// Runs the project, enabling any `test_env_variables` and searches for the `test_success_code`, set in the config.
     #[clap(alias = "t")]
     Test {
-        /// We set `ADAM_TEST` to this value, or an empty string if not provided.
-        #[clap(default_value = "")]
-        #[arg(hide_default_value = true)]
-        adam_test: String,
-
         #[clap(flatten)]
         build_options: BuildOptions,
+
+        /// We set `ADAM_TEST` to these values.
+        #[arg(trailing_var_arg = true)]
+        adam_test: Vec<String>,
     },
 
     /// Cleans a project target directory.

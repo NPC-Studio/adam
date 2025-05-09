@@ -59,7 +59,7 @@ pub enum ClapOperation {
         #[clap(flatten)]
         build_options: BuildOptions,
 
-        /// We set `ADAM_TEST` to these values.
+        /// We set `ADAM_TEST` to these values, generally after a `--`, such as `adam test -- foo --bar=baz`.
         #[arg(trailing_var_arg = true)]
         adam_test: Vec<String>,
     },

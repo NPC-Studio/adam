@@ -6,6 +6,24 @@
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
 compile_error!("we only support `windows` and `macos` targets!");
 
+macro_rules! adam_error {
+    ($msg:expr) => {
+        println!("{}: {}", console::style("error").bright().red(), $msg);
+    };
+    ($($args:tt)*) => {
+        println!("{}: {}", console::style("error").bright().red(), format_args!($($args)*));
+    };
+}
+
+macro_rules! adam_warning {
+    ($msg:expr) => {
+        println!("{}: {}", console::style("error").bright().yellow(), $msg);
+    };
+    ($($args:tt)*) => {
+        println!("{}: {}", console::style("error").bright().yellow(), format_args!($($args)*));
+    };
+}
+
 use clap::Parser;
 use std::{io::BufRead, process::ExitCode};
 
@@ -24,24 +42,6 @@ mod project_editing;
 
 mod runner;
 use runner::{PlatformOptions, RunOptions, TaskOptions};
-
-macro_rules! adam_error {
-    ($msg:expr) => {
-        println!("{}: {}", console::style("error").bright().red(), $msg);
-    };
-    ($($args:tt)*) => {
-        println!("{}: {}", console::style("error").bright().red(), format_args!($($args)*));
-    };
-}
-
-macro_rules! adam_warning {
-    ($msg:expr) => {
-        println!("{}: {}", console::style("error").bright().yellow(), $msg);
-    };
-    ($($args:tt)*) => {
-        println!("{}: {}", console::style("error").bright().yellow(), format_args!($($args)*));
-    };
-}
 
 fn main() -> ExitCode {
     color_eyre::install().unwrap();
@@ -132,6 +132,9 @@ fn main() -> ExitCode {
         }
         ClapOperation::Object(data) => {
             return project_editing::add_object(data);
+        }
+        ClapOperation::Shader(data) => {
+            return project_editing::add_shader(data);
         }
         ClapOperation::Edit(edit_manifest) => {
             let current_dir = std::env::current_dir().unwrap();

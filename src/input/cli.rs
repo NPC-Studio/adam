@@ -82,6 +82,9 @@ pub enum ClapOperation {
     #[clap(alias = "o", alias = "objects")]
     Object(ObjectEditRequest),
 
+    /// Adds or edits a shader to the project.
+    Shader(ShaderEditRequest),
+
     /// Removes an asset of the given name from the project.
     #[clap(visible_alias = "rm")]
     Remove {
@@ -115,6 +118,31 @@ pub struct ScriptEditRequest {
     /// Which folder to place the script in the VFS. If not provided, placed at the root.
     #[clap(short, long)]
     pub folder: Option<String>,
+}
+
+#[derive(Debug, Parser)]
+pub struct ShaderEditRequest {
+    /// The name of the shader, such as `shd_outline`. Do not include any file extension.
+    pub name: String,
+
+    /// Which folder to place the script in the VFS.
+    ///
+    /// If the provided folder, including the default value, does not exist, then it will be placed
+    /// at the root of the project.
+    #[clap(short, long, default_value = "Shaders")]
+    pub folder: String,
+
+    /// What shader type to create.
+    #[clap(short, long, default_value_t, value_enum)]
+    pub shader_type: ShaderEditShaderType,
+}
+
+#[derive(Debug, clap::ValueEnum, PartialEq, Eq, Default, Clone)]
+pub enum ShaderEditShaderType {
+    #[default]
+    GlslEs,
+    Glsl,
+    Hlsl,
 }
 
 #[derive(Debug, Parser, serde::Serialize, serde::Deserialize, Default, PartialEq, Eq, Clone)]

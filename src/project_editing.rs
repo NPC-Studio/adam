@@ -6,6 +6,9 @@ pub use script::add_script;
 mod object;
 pub use object::{add_object, edit_manifest};
 
+mod shader;
+pub use shader::add_shader;
+
 mod folders;
 mod reserialize;
 pub use reserialize::reserialize;

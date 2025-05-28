@@ -94,6 +94,7 @@ pub fn parse_inputs(
         | ClapOperation::Folder { .. }
         | ClapOperation::Script(_)
         | ClapOperation::Object(_)
+        | ClapOperation::Shader(_)
         | ClapOperation::Remove { .. }
         | ClapOperation::Reserialize
         | ClapOperation::Rename { .. } => {
